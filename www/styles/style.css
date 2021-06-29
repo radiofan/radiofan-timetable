@@ -15,6 +15,19 @@
 	cursor:pointer;
 }
 
+.additior-item{
+	height:400px;
+	width:100%;
+}
+
+.display-none{
+	display:none;
+}
+
+.additor-block>div{
+	width:70%;
+}
+
 /*недостатки бутстрапа*/
 
 body{
@@ -24,6 +37,15 @@ body{
 
 .a{
 	cursor:pointer;
+}
+
+.close{
+	font-size:25px;
+	line-height:1.42857143;
+}
+
+.modal-title{
+	display:inline;
 }
 
 .card{
@@ -61,7 +83,7 @@ body{
 /*стиди таблицы*/
 .timetable-block{
 	position: relative;
-	border: 1px solid #ccc;
+	border: 1px solid #909090;
 	padding: 10px 10px 0 10px;
 	margin:0;
 	overflow-x: hidden;
@@ -90,7 +112,7 @@ body{
 
 .timetable-head th{
 	text-align:center;
-	border:1px solid #ddd;
+	border:1px solid #909090;
 }
 
 .timetable-body{
@@ -108,7 +130,19 @@ body{
 }
 
 .timetable-body .default-row td{
-	border:1px solid #ddd;
+	border:1px solid #909090;
+}
+
+.timetable-body .today-row{
+	background-color:#ddd;
+}
+
+.timetable-body .curr-week-row{
+	background-color:#eee;
+}
+
+.timetable-body .curr-lesson-row{
+	background-color:#ccc;
 }
 
 .timetable-body .row .cell{
@@ -164,7 +198,7 @@ body{
 	overflow: hidden;
 	position: absolute;
 	background-color: #f1f1f1;
-	border-top: 1px solid #ccc;
+	border-top: 1px solid #909090;
 	text-align: center;
 	cursor: row-resize;
 	bottom: 0;
@@ -184,6 +218,79 @@ body{
 	box-sizing: content-box;
 }
 
+/*конец*/
+
+/*search-select*/
+.radiofan-search{
+	text-align:left;
+	margin:0;
+	display:inline-block;
+	width:40%;
+	margin-bottom:15px;
+	padding:0;
+	position:relative;
+	font-size:16px;
+	line-height:1.8;
+}
+
+div.radiofan-input{
+	font-size:12px;
+	display:block;
+	padding:0;
+	position:relative;
+}
+
+input.radiofan-input{
+	width:100%;
+	font-style:normal;
+	margin:0;
+	padding-left:9px;
+}
+
+.radiofan-select{
+	margin:0;
+	border-top-style:none;
+	border-right-style:solid;
+	border-bottom-style:solid;
+	border-left-style:solid;
+	border-width:1px;
+	border-radius:0px 0px 2px 2px;
+	border-color:#5b9dd9;
+	overflow-y:auto;
+	position:absolute;
+	background-color:#fff;
+	width:100%;
+	top:100%;
+	z-index:8000;
+	display:none;
+	max-height:150px;
+	box-sizing: border-box;
+}
+
+.radiofan-select > ul{
+	margin:0 !important;
+	list-style-type:none;
+	padding-left:0;
+}
+
+.radiofan-select  hr{
+	margin-top:10px;
+}
+
+.radiofan-option{
+	margin:0;
+	padding:0 2px 0 10px;
+	cursor:pointer;
+	min-height:21px;
+}
+
+.radiofan-option:hover{
+	background-color:rgba(0,0,0,0.1);
+}
+
+.select-region{
+	background-color:rgba(140, 140, 140, 0.3);
+}
 /*конец*/
 
 /*checkbox, radio*/

@@ -6,11 +6,13 @@ jQuery(document).ready(function($){
 		$table_head,
 		$table_sticks,
 		$table_extender,
+		cookie_elements = [],
 		$body = $('body'),
 		$settings = $('#settings_collapse .setting-row'),
 		settings_func = {
 			'teacher_add_hide':teacher_add_hide,
-			'go2curr_day':go2curr_day
+			'go2curr_day':go2curr_day,
+			'cell_word_wrap':cell_word_wrap
 		};
 
 	$table_body = $table.children('.timetable-body');
@@ -18,8 +20,20 @@ jQuery(document).ready(function($){
 	$table_sticks = $table.children('.sticks');
 	$table_extender = $table.children('.timetable-extender');
 
+	let tmp;
+	for(let i=0; i<DATA.max_elements_timetable; i++){
+		tmp = $.cookie('timetable[elements]['+i+'][type]');
+		if(!tmp)
+			break;
+		cookie_elements.push({
+			'type': tmp,
+			'id': $.cookie('timetable[elements]['+i+'][id]'),
+			'gr_name': $.cookie('timetable[elements]['+i+'][gr_name]')
+		});
+	}
+
 	//генерирование массива столбцов
-	let tmp = $table.find('.cell[class *= "col-"]'), len=0;
+	tmp = $table.find('.cell[class *= "col-"]'), len=0;
 	len = tmp.length;
 	for(let i=0; i<len; i++){
 		tmp[i] = $(tmp[i]);
@@ -139,6 +153,90 @@ jQuery(document).ready(function($){
 	//инициализация
 
 	set_sticks();
+	//передвижение к текущему дню/неделе
+	tmp = $.cookie('timetable[options][go2curr_day]');
+	if(tmp == 'week'){
+		tmp = $table_body.find('tr.curr-week-row').first();
+	}else if(tmp == 'day'){
+		tmp = $table_body.find('tr.today-row').first();
+	}else{
+		tmp = false;
+	}
+	if(tmp){
+		$table_body.scrollTop(tmp.position().top);
+	}
+
+	//инициализация окна добавки
+	var $additor_carousel = $('#additor-carousel'),
+		$additor_block = $additor_carousel.find('.additor-block'),
+		carousel_step = 1,
+		$search_select,
+		$additor_butt = $('#additor-modal-submit');
+
+	$additor_butt.on('click.additor', function(e){
+		if($additor_butt.prop('disabled'))
+			return;
+		let tmp = $('#additor-gr-name').val(),
+			end = cookie_elements.length - 1;
+		cookie_elements[end].gr_name = tmp;
+		tmp = cookie_elements[end];
+		$.cookie('timetable[elements]['+end+'][type]', tmp.type, {raw:1, expires:30});
+		$.cookie('timetable[elements]['+end+'][id]', tmp.id, {raw:1, expires:30});
+		$.cookie('timetable[elements]['+end+'][gr_name]', tmp.gr_name, {raw:1, expires:30});
+		carousel_step++;
+		location.reload();
+		$('#additor-modal').modal('hide');
+	});
+
+	$('#additor-modal').on('hidden.bs.modal', function(e){
+		if(carousel_step == 3){
+			cookie_elements.pop();
+		}
+		carousel_step = 1;
+		$additor_carousel.carousel(0);
+		$additor_block.children().hide();
+		$search_select.searchSelect('resetOpt');
+		$additor_butt.addClass('disabled').prop('disabled', 1);
+	});
+	$additor_carousel.find('.additor-buttons').find('button').on('click.additor', function(e){
+		if(carousel_step != 1)
+			return;
+		carousel_step++;
+		$additor_block.children('.'+$(this).data('additor')+'-additor-block').show();
+		$additor_carousel.carousel('next');
+	});
+	$search_select = $additor_block.find('select').searchSelect().on('rad_select_complete.additor', function(e, $opt){
+		if(carousel_step != 2)
+			return;
+		let $this = $(this);
+		let name = $this.data('searchSelect').name;
+		if(name == 'faculty_id'){
+
+		}else{
+			let type;
+			switch(name){
+				case 'group_id':
+					type = 'group';
+					break;
+				case 'cabinet_id':
+					type = 'cabinet';
+					break;
+				case 'teacher_id':
+					type = 'teacher';
+					break;
+			}
+			cookie_elements.push({
+				'type': type,
+				'id': $opt.data('value'),
+				'gr_name': false
+			});
+			carousel_step++;
+			$additor_carousel.carousel('next');
+			if(cookie_elements.length <= DATA.max_elements_timetable)
+				$additor_butt.removeClass('disabled').prop('disabled', 0);
+		}
+	});
+
 
 	//устанавливает положения палок начиная с offset
 	function set_sticks(offset = 1){
@@ -168,7 +266,21 @@ jQuery(document).ready(function($){
 		$.cookie('timetable[options][teacher_add_hide]', +this.prop('checked'), {raw:1, expires:30});
 	}
 
-	function go2curr_day(){
+	function cell_word_wrap(){
+		let f = !this.prop('checked');
+		for(let i in cols){
+			for(let j in cols[i]){
+				if(f){
+					cols[i][j].css('white-space', 'nowrap');
+				}else{
+					cols[i][j].css('white-space', 'normal');
+				}
+			}
+		}
+		$.cookie('timetable[options][cell_word_wrap]', +this.prop('checked'), {raw:1, expires:30});
+	}
 
+	function go2curr_day(){
+		$.cookie('timetable[options][go2curr_day]', this.val(), {raw:1, expires:30});
 	}
 });

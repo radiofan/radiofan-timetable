@@ -15,12 +15,12 @@ TODO: панель отдладки для админа
 ?>
 
 <!-- Modal -->
-<div class="modal fade" id="main-modal" tabindex="-1" role="dialog" aria-labelledby="main-modal-title" aria-hidden="true">
+<div class="modal fade" id="main-modal" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
 		<div class="modal-content">
 			<div class="modal-header">
 				<h4 class="modal-title" id="main-modal-title"></h4>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-dismiss="modal" >
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -34,6 +34,10 @@ TODO: панель отдладки для админа
 </div>
 
 <?php
+if($URL->get_current_id() === 'main_page'){
+	echo gen_additor_modal_html();
+}
+
 /*
 if(can_user('view_debug_info')){
 	echo '<!--'.print_r($DB->getStats(), 1).'-->';

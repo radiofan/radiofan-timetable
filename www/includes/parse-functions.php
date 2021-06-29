@@ -91,6 +91,68 @@ function reload_timetable(){
 		}
 	}
 	
+	$f_week_day = $DATA->get('first_week_day');
+	if(!$f_week_day || (time() - $f_week_day->getTimestamp()) / 86400.0 >= (int)$DATA->get('update_interval_first_week_day'))
+		update_first_week_day();
+	
+	return true;
+}
+
+function update_first_week_day(){
+	global $DB, $DATA;
+	$gr_id = $DB->getOne('SELECT `group_id` FROM `stud_timetable` LIMIT 1');
+	if($gr_id === false){
+		$DATA->set('first_week_day', null);
+		$DATA->update('first_week_day');
+		trigger_error('stud_timetable is empty', E_USER_WARNING);
+		return false;
+	}
+	
+	$week_n = false;
+	$matches = array();
+	for($i=0; $i<10;$i++){
+		$ret = rad_parser::get_page_content(
+			'https://www.altstu.ru/main/schedule/?group_id='.$gr_id,
+			array(
+				'post_data' => array(
+					'group'   => $gr_id
+			),
+			'useragent' => rad_parser::get_rand_user_agent(MAIN_DIR.'files/user_agents.txt'),
+			'referer'   => 'https://www.altstu.ru/main/schedule/',
+			'headers'   => array(
+				'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+				'accept-language: ru,en;q=0.8',
+				'dnt: 1',
+				'origin: https://www.altstu.ru',
+				'upgrade-insecure-requests: 1'
+			)
+		));
+		if(!$ret['status']){
+			preg_match('#<h3[^>]*?class=["\']?current[\'"]?[^>]*?>(.*?)</h3>#isu', $ret['content'], $matches);
+			if(isset($matches[1])){
+				$week_n = $matches[1];
+				break;
+			}
+		}
+		usleep((rand()%375+125)*1000);
+	}
+	if(!$week_n){
+		$DATA->set('first_week_day', null);
+		$DATA->update('first_week_day');
+		trigger_error('can\'t load current week gr_id='.$gr_id, E_USER_WARNING);
+		return false;
+	}
+	
+	preg_match('#[0-9]+#isu',$week_n, $matches);
+	$week_n = (int)$matches[0];
+	$today = new DateTime();
+	$tmp = (int)$today->format('N')-1;
+	$tmp += ($week_n-1)*7;
+	$today->sub(new DateInterval('P'.$tmp.'D'));
+	$today->setTime(0, 0);
+	$DATA->set('first_week_day', $today);
+	$DATA->update('first_week_day');
+	
 	return true;
 }
 
