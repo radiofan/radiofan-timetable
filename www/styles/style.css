@@ -43,7 +43,6 @@ body{
 	border-radius: calc(.25rem - 1px) calc(.25rem - 1px) 0 0;
 }
 .card-header{
-	padding: .75rem 1.25rem;
 	margin-bottom: 0;
 	background-color: rgba(0,0,0,.03);
 	border-bottom: 1px solid rgba(0,0,0,.125);
@@ -54,6 +53,9 @@ body{
 	min-height:1px;
 	padding:1.25rem;
 }
+.mb-0{
+	margin:0;
+}
 /*конец*/
 
 /*стиди таблицы*/
@@ -61,7 +63,8 @@ body{
 	position: relative;
 	border: 1px solid #ccc;
 	padding: 10px 10px 0 10px;
-	margin:50px 0;
+	margin:0;
+	overflow-x: hidden;
 }
 
 .sticks{

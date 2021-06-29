@@ -5,10 +5,12 @@ function gen_timetable_html(){
 	 * TODO список опций
 	 * Переход к текущей неделе/дню
 	 * Скрытие пустых дней/строк
-	 * Выделение текущих неделя/дня/пары
+	 * Выделение текущих неделя/дня/пары .
 	 * Добавлять плюшку препода +
 	 * Скрытие столбцов
 	 * Сохранение размеров столбцов и таблицы +
+	 * Выгрузка загрузка кук
+	 * Режим печати
 	 */
 	$elems = isset($_COOKIE['timetable']['elements']) ? array_values($_COOKIE['timetable']['elements']) : array();
 	$elems_len = sizeof($elems);
@@ -169,8 +171,10 @@ ORDER BY
 			$elems[$i]['col_id'],
 			$elems[$i]['id']
 		);
-		prepare_timetable_for_html($res, $i+1, $table);
+		add_data_to_timetable($res, $i+1, $table);
 	}
+	prepare_data_to_timetable_html($elems_len, $table);
+	
 	
 	return gen_settings_block_html().'
 			<div class="timetable-block">
@@ -197,12 +201,89 @@ ORDER BY
 			</div>';
 }
 
-function prepare_timetable_for_html($tm_t, $gr_n, &$table){
+function prepare_data_to_timetable_html($gr_c, &$table){
+	foreach($table as &$week){
+		foreach($week as &$day){
+			foreach($day as &$time){
+				$line_c = sizeof($time);
+				for($gr_n=1; $gr_n<=$gr_c; $gr_n++){
+					//$time[$gr_n] = array_pad($time[$gr_n], $line_c, array());
+					$row_la = 0;
+					$row_l = 0;
+					$row_g = 0;
+					$row_c = 0;
+					$row_t = 0;
+					for($i=1; $i<$line_c; $i++){
+						//проверка урока
+						if(!isset($time[$i][$gr_n]['lesson']) || $time[$i][$gr_n]['lesson'] === $time[$row_l][$gr_n]['lesson']){
+							unset($time[$i][$gr_n]['lesson']);
+							if(!isset($time[$row_l][$gr_n]['row_l'])){
+								$time[$row_l][$gr_n]['row_l'] = 1;
+							}
+							$time[$row_l][$gr_n]['row_l']++;
+						}else{
+							$row_l = $i;
+						}
+						
+						//проверка типа урока
+						if(!isset($time[$i][$gr_n]['lesson_type']) || $time[$i][$gr_n]['lesson_type'] === $time[$row_la][$gr_n]['lesson_type']){
+							unset($time[$i][$gr_n]['lesson_type']);
+							if(!isset($time[$row_la][$gr_n]['row_la'])){
+								$time[$row_la][$gr_n]['row_la'] = 1;
+							}
+							$time[$row_la][$gr_n]['row_la']++;
+						}else{
+							$row_la = $i;
+						}
+						
+						//проверка группы
+						if(!isset($time[$i][$gr_n]['group_id']) || $time[$i][$gr_n]['group_id'] === $time[$row_g][$gr_n]['group_id']){
+							unset($time[$i][$gr_n]['group_id'], $time[$i][$gr_n]['group_name']);
+							if(!isset($time[$row_g][$gr_n]['row_g'])){
+								$time[$row_g][$gr_n]['row_g'] = 1;
+							}
+							$time[$row_g][$gr_n]['row_g']++;
+						}else{
+							$row_g = $i;
+						}
+						
+						//проверка кабинета
+						if(!isset($time[$i][$gr_n]['cabinet_id']) || $time[$i][$gr_n]['cabinet_id'] === $time[$row_c][$gr_n]['cabinet_id']){
+							unset($time[$i][$gr_n]['cabinet_id'], $time[$i][$gr_n]['cabinet'], $time[$i][$gr_n]['cabinet_additive'], $time[$i][$gr_n]['building']);
+							if(!isset($time[$row_c][$gr_n]['row_c'])){
+								$time[$row_c][$gr_n]['row_c'] = 1;
+							}
+							$time[$row_c][$gr_n]['row_c']++;
+						}else{
+							$row_c = $i;
+						}
+						
+						//проверка препода
+						if(!isset($time[$i][$gr_n]['teacher_id']) || $time[$i][$gr_n]['teacher_id'] === $time[$row_t][$gr_n]['teacher_id']){
+							unset($time[$i][$gr_n]['teacher_id'], $time[$i][$gr_n]['fio'], $time[$i][$gr_n]['teacher_additive']);
+							if(!isset($time[$row_t][$gr_n]['row_t'])){
+								$time[$row_t][$gr_n]['row_t'] = 1;
+							}
+							$time[$row_t][$gr_n]['row_t']++;
+						}else{
+							$row_t = $i;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+function add_data_to_timetable($tm_t, $gr_n, &$table){
 	$len = sizeof($tm_t);
 	for($i=0; $i<$len; $i++){
 		$week = $tm_t[$i]['week'];
 		$day = $tm_t[$i]['day'];
 		$time = $tm_t[$i]['time'];
+		$tm_t[$i]['group_id'] = isset($tm_t[$i]['group_id']) ? $tm_t[$i]['group_id'] : '';
+		$tm_t[$i]['teacher_id'] = isset($tm_t[$i]['teacher_id']) ? $tm_t[$i]['teacher_id'] : '';
+		$tm_t[$i]['cabinet_id'] = isset($tm_t[$i]['cabinet_id']) ? $tm_t[$i]['cabinet_id'] : '';
 		unset($tm_t[$i]['week'], $tm_t[$i]['day'], $tm_t[$i]['time']);
 		
 		if(!isset($table[$week]))
@@ -215,7 +296,7 @@ function prepare_timetable_for_html($tm_t, $gr_n, &$table){
 		$line_c = sizeof($table[$week][$day][$time]);
 		$f = 0;
 		for($i1=0; $i1<$line_c; $i1++){
-			if(!isset($table[$week][$day][$time][$i1][$gr_n])){
+			if(empty($table[$week][$day][$time][$i1][$gr_n])){
 				$table[$week][$day][$time][$i1][$gr_n] = $tm_t[$i];
 				$f = 1;
 				break;
@@ -227,6 +308,97 @@ function prepare_timetable_for_html($tm_t, $gr_n, &$table){
 				$gr_n => $tm_t[$i]
 			);
 		}
+		
+		/*
+		for($i1 = 1; $i1<=$gr_n; $i1++){
+			if($end_l < 1)
+				continue;
+			//проверка на равенство урока
+			if(!isset($table[$week][$day][$time][$end_l][$i1]['row_l']) && $table[$week][$day][$time][$end_l][$i1]['lesson'] === $table[$week][$day][$time][$end_l-1][$i1]['lesson']){
+				$table[$week][$day][$time][$end_l][$i1]['row_l'] = 1;
+			}
+			if(isset($table[$week][$day][$time][$end_l][$i1]['row_l'])){
+				if(isset($table[$week][$day][$time][$end_l - 1][$i1]['row_l'])){
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_l'] = $table[$week][$day][$time][$end_l][$i1]['row_l'] + 1;
+					$tmp = $end_l - 2;
+					while($tmp >= 0 && isset($table[$week][$day][$time][$tmp][$i1]['row_l'])){
+						$table[$week][$day][$time][$tmp][$i1]['row_l'] = $table[$week][$day][$time][$tmp+1][$i1]['row_l']+1;
+						$tmp--;
+					}
+				}else{
+					$table[$week][$day][$time][$i1 - 1][$i1]['row_l'] = $table[$week][$day][$time][$end_l][$i1]['row_l'] + 1;
+				}
+			}
+			
+			//проверка на равенство типа урока
+			if($table[$week][$day][$time][$end_l][$i1]['lesson_type'] === $table[$week][$day][$time][$end_l-1][$i1]['lesson_type']){
+				$table[$week][$day][$time][$end_l][$i1]['row_la'] = 1;
+			}
+			if(isset($table[$week][$day][$time][$end_l][$i1]['row_la'])){
+				if(isset($table[$week][$day][$time][$end_l - 1][$i1]['row_la'])){
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_la'] = $table[$week][$day][$time][$end_l][$i1]['row_la'] + 1;
+					$tmp = $end_l - 2;
+					while($tmp >= 0 && isset($table[$week][$day][$time][$tmp][$i1]['row_la'])){
+						$table[$week][$day][$time][$tmp][$i1]['row_la'] = $table[$week][$day][$time][$tmp+1][$i1]['row_la']+1;
+						$tmp--;
+					}
+				}else{
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_la'] = $table[$week][$day][$time][$end_l][$i1]['row_la'] + 1;
+				}
+			}
+			
+			//проверка на равенство группы
+			if($table[$week][$day][$time][$end_l][$i1]['group_id'] === $table[$week][$day][$time][$end_l - 1][$i1]['group_id']){
+				$table[$week][$day][$time][$end_l][$i1]['row_g'] = 1;
+			}
+			if(isset($table[$week][$day][$time][$end_l][$i1]['row_g'])){
+				if(isset($table[$week][$day][$time][$end_l - 1][$i1]['row_g'])){
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_g'] = $table[$week][$day][$time][$end_l][$i1]['row_g'] + 1;
+					$tmp = $end_l - 2;
+					while($tmp >= 0 && isset($table[$week][$day][$time][$tmp][$i1]['row_g'])){
+						$table[$week][$day][$time][$tmp][$i1]['row_g'] = $table[$week][$day][$time][$tmp + 1][$i1]['row_g'] + 1;
+						$tmp--;
+					}
+				}else{
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_g'] = $table[$week][$day][$time][$end_l][$i1]['row_g'] + 1;
+				}
+			}
+			
+			//проверка на равенство учителя
+			if($table[$week][$day][$time][$end_l][$i1]['teacher_id'] === $table[$week][$day][$time][$end_l - 1][$i1]['teacher_id']){
+				$table[$week][$day][$time][$end_l][$i1]['row_t'] = 1;
+			}
+			if(isset($table[$week][$day][$time][$end_l][$i1]['row_t'])){
+				if(isset($table[$week][$day][$time][$end_l - 1][$i1]['row_t'])){
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_t'] = $table[$week][$day][$time][$end_l][$i1]['row_t'] + 1;
+					$tmp = $end_l - 2;
+					while($tmp >= 0 && isset($table[$week][$day][$time][$tmp][$i1]['row_t'])){
+						$table[$week][$day][$time][$tmp][$i1]['row_t'] = $table[$week][$day][$time][$tmp + 1][$i1]['row_t'] + 1;
+						$tmp--;
+					}
+				}else{
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_t'] = $table[$week][$day][$time][$end_l][$i1]['row_t'] + 1;
+				}
+			}
+			
+			//проверка на равенство кабинета
+			if($table[$week][$day][$time][$end_l][$i1]['cabinet_id'] === $table[$week][$day][$time][$end_l - 1][$i1]['cabinet_id']){
+				$table[$week][$day][$time][$end_l][$i1]['row_c'] = 1;
+			}
+			if(isset($table[$week][$day][$time][$end_l][$i1]['row_c'])){
+				if(isset($table[$week][$day][$time][$end_l - 1][$i1]['row_c'])){
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_c'] = $table[$week][$day][$time][$end_l][$i1]['row_c'] + 1;
+					$tmp = $end_l - 2;
+					while($tmp >= 0 && isset($table[$week][$day][$time][$tmp][$i1]['row_c'])){
+						$table[$week][$day][$time][$tmp][$i1]['row_c'] = $table[$week][$day][$time][$tmp + 1][$i1]['row_c'] + 1;
+						$tmp--;
+					}
+				}else{
+					$table[$week][$day][$time][$end_l - 1][$i1]['row_c'] = $table[$week][$day][$time][$end_l][$i1]['row_c'] + 1;
+				}
+			}
+		}
+		*/
 	}
 }
 
@@ -251,24 +423,79 @@ function gen_timetable_body_html($table, $elems_len){
 						</tr>';
 			for($less=1; $less<=8; $less++){
 				$len = isset($table[$week][$day][$less]) ? sizeof($table[$week][$day][$less]) : 1;
+				$all_rowspan = array_fill(1, $elems_len, array(
+					'row_l' => 0,
+					'row_la' => 0,
+					'row_g' => 0,
+					'row_c' => 0,
+					'row_t' => 0
+				));
 				for($line=0; $line<$len; $line++){
 					$html_table .= '
-						<tr class="default-row row">
-							<td><div class="cell col-number" data-col="1">'.$less.'</div></td>
-							<td><div class="cell col-time" data-col="2">'.$time_list[$less].'</div></td>';
-					for($i = 1; $i <= $elems_len; $i++){
-						$tmp = isset($table[$week][$day][$less][$line][$i]) ? $table[$week][$day][$less][$line][$i] : array();
-						$lesson = isset($tmp['lesson']) ? $tmp['lesson'] : '';
-						$lesson_add = isset($tmp['lesson_type']) ? $tmp['lesson_type'] : '';
-						$group_name = isset($tmp['group_name']) ? $tmp['group_name'] : '';
-						$cabinet = isset($tmp['cabinet_id']) ? $tmp['cabinet'].$tmp['cabinet_additive'].' '.$tmp['building'] : '';
-						$teacher = isset($tmp['teacher_id']) ? '<span class="teacher_fio">'.mb_convert_case($tmp['fio'], MB_CASE_TITLE).'</span> <span class="teacher_add">'.$tmp['teacher_additive'].'</span>' : '<span class="teacher_fio"></span><span class="teacher_add"></span>';
+						<tr class="default-row row">';
+					if(!$line){
+						$rowspan = $len > 1 ? ' rowspan ="'.$len.'"' : '';
 						$html_table .= '
-							<td><div class="cell gr-'.$i.' col-lesson" data-col="'.(3+($i-1)*5).'">'.$lesson.'</div></td>
-							<td><div class="cell gr-'.$i.' col-lesson-add" data-col="'.(4+($i-1)*5).'">'.$lesson_add.'</div></td>
-							<td><div class="cell gr-'.$i.' col-group" data-col="'.(5+($i-1)*5).'">'.$group_name.'</div></td>
-							<td><div class="cell gr-'.$i.' col-cabinet" data-col="'.(6+($i-1)*5).'">'.$cabinet.'</div></td>
-							<td><div class="cell gr-'.$i.' col-teacher" data-col="'.(7+($i-1)*5).'">'.$teacher.'</div></td>';
+							<td'.$rowspan.'><div class="cell col-number" data-col="1">'.$less.'</div></td>
+							<td'.$rowspan.'><div class="cell col-time" data-col="2">'.$time_list[$less].'</div></td>';
+					}
+					for($i=1; $i<=$elems_len; $i++){
+						$tmp = isset($table[$week][$day][$less][$line][$i]) ? $table[$week][$day][$less][$line][$i] : array();
+						
+						$lesson = isset($tmp['lesson']) ? mb_strtoupper($tmp['lesson']) : '';
+						if(isset($tmp['row_l'])){
+							$all_rowspan[$i]['row_l'] = $tmp['row_l'];
+							$lesson = '
+							<td rowspan="'.$tmp['row_l'].'"><div class="cell gr-'.$i.' col-lesson" data-col="'.(3+($i-1)*5).'">'.$lesson.'</div></td>';
+						}else{
+							$lesson = !$all_rowspan[$i]['row_l'] ? '
+							<td><div class="cell gr-'.$i.' col-lesson" data-col="'.(3+($i-1)*5).'">'.$lesson.'</div></td>' : '';
+						}
+						
+						$lesson_add = isset($tmp['lesson_type']) ? $tmp['lesson_type'] : '';
+						if(isset($tmp['row_la'])){
+							$all_rowspan[$i]['row_la'] = $tmp['row_la'];
+							$lesson_add = '
+							<td rowspan="'.$tmp['row_la'].'"><div class="cell gr-'.$i.' col-lesson-add" data-col="'.(4+($i-1)*5).'">'.$lesson_add.'</div></td>';
+						}else{
+							$lesson_add = !$all_rowspan[$i]['row_la'] ? '
+							<td><div class="cell gr-'.$i.' col-lesson-add" data-col="'.(4+($i-1)*5).'">'.$lesson_add.'</div></td>' : '';
+						}
+						
+						$group_name = isset($tmp['group_name']) ? $tmp['group_name'] : '';
+						if(isset($tmp['row_g'])){
+							$all_rowspan[$i]['row_g'] = $tmp['row_g'];
+							$group_name = '
+							<td rowspan="'.$tmp['row_g'].'"><div class="cell gr-'.$i.' col-group" data-col="'.(5+($i-1)*5).'">'.$group_name.'</div></td>';
+						}else{
+							$group_name = !$all_rowspan[$i]['row_g'] ? '
+							<td><div class="cell gr-'.$i.' col-group" data-col="'.(5+($i-1)*5).'">'.$group_name.'</div></td>' : '';
+						}
+						
+						$cabinet = isset($tmp['cabinet_id']) ? $tmp['cabinet'].$tmp['cabinet_additive'].' '.$tmp['building'] : '';
+						if(isset($tmp['row_c'])){
+							$all_rowspan[$i]['row_c'] = $tmp['row_c'];
+							$cabinet = '
+							<td rowspan="'.$tmp['row_c'].'"><div class="cell gr-'.$i.' col-cabinet" data-col="'.(6+($i-1)*5).'">'.$cabinet.'</div></td>';
+						}else{
+							$cabinet = !$all_rowspan[$i]['row_c'] ? '
+							<td><div class="cell gr-'.$i.' col-cabinet" data-col="'.(6+($i-1)*5).'">'.$cabinet.'</div></td>' : '';
+						}
+						
+						$teacher = isset($tmp['teacher_id']) ? '<span class="teacher_fio">'.mb_convert_case($tmp['fio'], MB_CASE_TITLE).'</span> <span class="teacher_add">'.$tmp['teacher_additive'].'</span>' : '<span class="teacher_fio"></span><span class="teacher_add"></span>';
+						if(isset($tmp['row_t'])){
+							$all_rowspan[$i]['row_t'] = $tmp['row_t'];
+							$teacher = '
+							<td rowspan="'.$tmp['row_t'].'"><div class="cell gr-'.$i.' col-teacher" data-col="'.(7+($i-1)*5).'">'.$teacher.'</div></td>';
+						}else{
+							$teacher = !$all_rowspan[$i]['row_t'] ? '
+							<td><div class="cell gr-'.$i.' col-teacher" data-col="'.(7+($i-1)*5).'">'.$teacher.'</div></td>' : '';
+						}
+						$html_table .= $lesson.$lesson_add.$group_name.$cabinet.$teacher;
+						foreach($all_rowspan[$i] as &$val){
+							if($val > 0)
+								$val--;
+						}
 					}
 					$html_table .= '
 						</tr>';

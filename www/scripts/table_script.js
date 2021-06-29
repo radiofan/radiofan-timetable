@@ -62,6 +62,8 @@ jQuery(document).ready(function($){
 		}
 	});
 
+	//TODO добавить скролл при наведении на палку
+
 	//прокручивание заголовка
 	$table_body.on('scroll.table', function(e){
 		$table_head.scrollLeft($table_body.scrollLeft());
