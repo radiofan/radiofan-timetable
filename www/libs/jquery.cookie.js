@@ -20,11 +20,8 @@
 
 	var pluses = /\+/g;
 
-	function encode(s) {
-		if(config.raw)
-			return s;
-		s = encodeURIComponent(s);
-		return s.replace(/%5b/ig, '[').replace(/%5d/ig, ']');
+	function encode(s, enc = 0) {
+		return (config.raw || enc) ? s : encodeURIComponent(s);
 	}
 
 	function decode(s) {
@@ -67,8 +64,10 @@
 				t.setTime(+t + days * 864e+5);
 			}
 
+			options.raw = options.raw ? 1 : 0;
+
 			return (document.cookie = [
-				encode(key), '=', stringifyCookieValue(value),
+				encode(key, options.raw), '=', stringifyCookieValue(value),
 				options.expires ? '; expires=' + options.expires.toUTCString() : '', // use expires attribute, max-age is not supported by IE
 				options.path    ? '; path=' + options.path : '',
 				options.domain  ? '; domain=' + options.domain : '',

@@ -8,6 +8,7 @@ require_once MAIN_DIR.'defines.php';
 
 require_once MAIN_DIR.'functions.php';
 require_once MAIN_DIR.'includes/parse-functions.php';
+require_once MAIN_DIR.'includes/timetable-functions.php';
 require_once MAIN_DIR.'includes/parser-class.php';
 
 require_once MAIN_DIR.'includes/log-class.php';

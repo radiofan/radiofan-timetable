@@ -6,13 +6,19 @@ jQuery(document).ready(function($){
 		$table_head,
 		$table_sticks,
 		$table_extender,
-		$body = $('body');
+		$body = $('body'),
+		$settings = $('#settings_collapse .setting-row'),
+		settings_func = {
+			'teacher_add_hide':teacher_add_hide,
+			'go2curr_day':go2curr_day
+		};
 
 	$table_body = $table.children('.timetable-body');
 	$table_head = $table.children('.timetable-head');
 	$table_sticks = $table.children('.sticks');
 	$table_extender = $table.children('.timetable-extender');
 
+	//генерирование массива столбцов
 	let tmp = $table.find('.cell[class *= "col-"]'), len=0;
 	len = tmp.length;
 	for(let i=0; i<len; i++){
@@ -25,17 +31,19 @@ jQuery(document).ready(function($){
 		delete tmp[i];
 	}
 
+	//генерирование массива палок
 	tmp = $table_sticks.children('.stick');
 	len = tmp.length;
-
 	for(let i=0; i<len; i++){
 		tmp[i] = $(tmp[i]);
 		sticks[+tmp[i].data('col')] = tmp[i];
 		delete tmp[i];
 	}
 
+	//флаги работы с размерами таблицы
 	var curr_stick = false,
 		extender = false;
+	//установка размера столбца
 	$table_sticks.on('mousedown.table', '.stick', function(e){
 		if(!curr_stick){
 			e.preventDefault();
@@ -44,6 +52,7 @@ jQuery(document).ready(function($){
 			$table.css('cursor', 'col-resize');
 		}
 	});
+	//установка высоты таблицы
 	$table_extender.on('mousedown.table', function(e){
 		if(!extender){
 			e.preventDefault();
@@ -53,19 +62,21 @@ jQuery(document).ready(function($){
 		}
 	});
 
+	//прокручивание заголовка
 	$table_body.on('scroll.table', function(e){
 		$table_head.scrollLeft($table_body.scrollLeft());
 		set_sticks();
 		//$table_sticks.css('left', -$table_body.scrollLeft()+'px');
 	});
-	
+
+	//начало и продолжение изменения размеров таблицы
 	$body.on({
 		'mouseup.table': function(e){
 			if(curr_stick){
 				let diff_w = sticks[curr_stick].offset().left - sticks[curr_stick].data('old-pos'),
 					width = 0;
 				width = cols[curr_stick][0].outerWidth() + diff_w;
-				$.cookie('timetable[options][size]['+curr_stick+']', width);
+				$.cookie('timetable[options][size]['+curr_stick+']', width, {raw:1, expires:30});
 				width += 'px';
 				for(let i in cols[curr_stick]){
 					cols[curr_stick][i].css('width', width);
@@ -77,7 +88,7 @@ jQuery(document).ready(function($){
 			}
 			if(extender){
 				extender = false;
-				$.cookie('timetable[options][size][height]', $table_body.outerHeight());
+				$.cookie('timetable[options][size][height]', $table_body.outerHeight(), {raw:1, expires:30});
 				$table.css('cursor', '');
 			}
 		},
@@ -118,8 +129,16 @@ jQuery(document).ready(function($){
 		}
 	});
 
+	$settings.on('change.table', 'input[type=radio],input[type=checkbox]', function(e){
+		let $this= $(this);
+		settings_func[$this.data('settings')].apply($this);
+	});
+
+	//инициализация
+
 	set_sticks();
 
+	//устанавливает положения палок начиная с offset
 	function set_sticks(offset = 1){
 		let width, pos, start;
 		for(let i in sticks){
@@ -130,5 +149,24 @@ jQuery(document).ready(function($){
 			start = sticks[i].offset().left-sticks[i].position().left;
 			sticks[i].css('left', (pos-start+width-2)+'px');
 		}
+	}
+
+	function teacher_add_hide(){
+		let f = !this.prop('checked');
+		for(let i in cols){
+			for(let j in cols[i]){
+				if(!cols[i][j].hasClass('col-teacher')) break;
+				if(f){
+					cols[i][j].find('.teacher_add').show();
+				}else{
+					cols[i][j].find('.teacher_add').hide();
+				}
+			}
+		}
+		$.cookie('timetable[options][teacher_add_hide]', +this.prop('checked'), {raw:1, expires:30});
+	}
+
+	function go2curr_day(){
+
 	}
 });
