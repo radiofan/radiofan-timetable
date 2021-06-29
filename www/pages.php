@@ -142,6 +142,7 @@ function prepare_page_data(){
 					break;
 			}
 		}
+		$ret['timetable'] = gen_timetable_html();
 	}else{
 		$flag = true;
 		$len = sizeof($pages_options[$page_id]['need_roles']);

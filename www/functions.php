@@ -227,381 +227,316 @@ function round_memsize($size){
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * Обновляет расписание алтгту
- * @return bool
- */
-function reload_timetable(){
-	global $DB, $DATA;
-	//получение факультетов
-	$faculties = array();
-	$tmp = $DB->getOne('SELECT COUNT(`id`) FROM `stud_faculties`');
-	if(!$tmp){
-		//если нет факультетов то парсим их
-		$ret = rad_parser::get_page_content('https://www.altstu.ru/main/schedule/');
-		if(!empty($ret['status'])){
-			trigger_error('CURL error['.$ret['status'].'] (can\'t load faculties): '.$ret['status_text'].', info('.print_r($ret['info'], 1).')', E_USER_WARNING);
-			return false;
+
+
+
+function gen_timetable_html(){
+	global $DB;
+	/*
+	 * TODO список опций
+	 * Переход к текущей неделе/дню
+	 * Скрытие пустых дней/строк
+	 * Выделение текущих неделя/дня/пары
+	 * Добавлять плюшку препода
+	 * Скрытие столбцов
+	 * Сохранение размеров столбцов и таблицы +
+	 */
+	$elems = isset($_COOKIE['timetable']['elements']) ? array_values($_COOKIE['timetable']['elements']) : array();
+	$elems_len = sizeof($elems);
+	if($elems_len > MAX_ELEMENTS_TIMETABLE){
+		//TODO вывод сообщений
+		@setcookie('timetable[elements]', array(), time()+86400*30);
+		$elems = array();
+		$elems_len = 0;
+	}
+	$options = isset($_COOKIE['timetable']['options']) ? $_COOKIE['timetable']['options'] : array();
+	$size_style = isset($options['size']) && is_array($options['size']) ? $options['size'] : array();
+	if(sizeof($size_style) > MAX_ELEMENTS_TIMETABLE*5 + 3){
+		//TODO вывод сообщений
+		@setcookie('timetable[options][size]', array(), time()+86400*30);
+		$size_style = array();
+	}
+	$size_style = get_table_size_html($size_style);
+	
+	
+	$uniq = array();
+	
+	for($i=0; $i<$elems_len; $i++){
+		if(!isset($elems[$i]['type'], $elems[$i]['id'])){
+			unset($elems[$i]);
+			continue;
+		}
+		$elems[$i]['type'] = mb_strtolower(trim($elems[$i]['type']));
+		switch($elems[$i]['type']){
+			case 'cabinet':
+			case 'group':
+			case 'teacher':
+				$elems[$i]['col_id'] = $elems[$i]['type'].'_id';
+				$elems[$i]['table_name'] = 'stud_'.$elems[$i]['type'].'s';
+				$elems[$i]['gr_name'] = empty($elems[$i]['gr_name']) ? false : trim($elems[$i]['gr_name']);
+				break;
+			default:
+				$elems[$i]['type'] = false;
+		}
+		if(!$elems[$i]['type']){
+			unset($elems[$i]);
+			continue;
 		}
 		
-		$faculties = parse_faculties($ret['content']);
-		if(!$faculties)
-			return false;
-		
-		if(!$DB->query('INSERT INTO `stud_faculties` ?d', $faculties)){
-			return false;
+		$elems[$i]['id'] = preg_replace('#[^0-9]#u', '', $elems[$i]['id']);
+		if(isset($uniq[$elems[$i]['type'].$elems[$i]['id']])){
+			unset($elems[$i]);
+			continue;
 		}
 		
-		$faculties = array_column($faculties, 'name', 'id');
-	}else{
-		//иначе берем не обновленные факультеты
-		$faculties = $DB->getIndCol('id', 'SELECT * FROM `stud_faculties` WHERE `last_reload` + INTERVAL ?p <= NOW()', $DATA->get('update_interval_groups'));
+		$dat = '';
+		//TODO проверить id группы
+		if((int) $elems[$i]['id'] != 0 && !($dat = $DB->getRow('SELECT * FROM ?n WHERE `id` = ?s', $elems[$i]['table_name'], $elems[$i]['id']))){
+			unset($elems[$i]);
+		}
+		if($elems[$i]['gr_name'] === '' || $elems[$i]['gr_name'] === false){
+			switch($elems[$i]['type']){
+				case 'cabinet':
+					$elems[$i]['gr_name'] = $elems[$i]['id'] ? $dat['cabinet'].$dat['cabinet_additive'].' '.$dat['building'] : 'Без кабинета';
+					break;
+				case 'group':
+					$elems[$i]['gr_name'] = $dat['name'];
+					break;
+				case 'teacher':
+					$elems[$i]['gr_name'] = $elems[$i]['id'] ? mb_convert_case($dat['fio'], MB_CASE_TITLE) : 'Без учителя';
+					break;
+			}
+		}
+		$uniq[$elems[$i]['type'].$elems[$i]['id']] = false;
+	}
+	unset($uniq);
+	
+	$table_head_1 = '
+									<th rowspan="2"><div class="cell col-number" data-col="1">№ пары</div></th>
+									<th rowspan="2"><div class="cell col-time" data-col="2">Время</div></th>';
+	$table_head_2 = '';
+	$sticks = '
+					<div class="stick" data-col="1"></div>
+					<div class="stick" data-col="2"></div>';
+	
+	
+	$elems =array_values($elems);
+	$elems_len = sizeof($elems);
+	$table = array();
+	for($i=0; $i<$elems_len; $i++){
+		//генерация html
+		for($i1 = 3; $i1 <= 7; $i1++){
+			$sticks .= '
+					<div class="stick" data-col="'.($i1+$i*5).'"></div>';
+		}
+		$table_head_1 .= '
+									<th colspan="5"><div class="cell gr-'.($i+1).'">'.esc_html($elems[$i]['gr_name']).'</div></th>';
+		$table_head_2 .= '
+									<th><div class="cell gr-'.($i+1).' col-lesson" data-col="'.(3 + $i*5).'">Урок</div></th>
+									<th><div class="cell gr-'.($i+1).' col-lesson-add" data-col="'.(4 + $i*5).'">Тип</div></th>
+									<th><div class="cell gr-'.($i+1).' col-group" data-col="'.(5 + $i*5).'">Группа</div></th>
+									<th><div class="cell gr-'.($i+1).' col-cabinet" data-col="'.(6 + $i*5).'">Кабинет</div></th>
+									<th><div class="cell gr-'.($i+1).' col-teacher" data-col="'.(7 + $i*5).'">Препод</div></th>';
+		
+		//генерация данных
+		
+		/*
+SELECT
+	`tm_t`.*,
+	`gr_t`.`name` AS `group_name`, `gr_t`.`faculty_id`,
+	`cb_t`.`cabinet`, `cb_t`.`additive` AS `cabinet_additive`, `cb_t`.`building`,
+    `th_t`.`fio`, `th_t`.`additive` AS `teacher_additive`
+FROM
+	`stud_timetable` AS `tm_t`
+LEFT JOIN `stud_groups` AS `gr_t`
+	ON `tm_t`.`group_id` = `gr_t`.`id`
+LEFT JOIN `stud_cabinets` AS `cb_t`
+	ON `tm_t`.`cabinet_id` = `cb_t`.`id`
+LEFT JOIN `stud_teachers` AS `th_t`
+	ON `tm_t`.`teacher_id` = `th_t`.`id`
+
+WHERE `tm_t`.`group_id` = '0200013857'
+
+ORDER BY `tm_t`.`week`, `tm_t`.`day`, `tm_t`.`time`
+		 */
+		$query = array(
+			'`tm_t`.*',
+			'`gr_t`.`name` AS `group_name`, `gr_t`.`faculty_id`',
+			'`cb_t`.`cabinet`, `cb_t`.`additive` AS `cabinet_additive`, `cb_t`.`building`',
+			'`th_t`.`fio`, `th_t`.`additive` AS `teacher_additive`'
+		);
+		/*
+		switch($elems[$i]['type']){
+			case 'cabinet':
+				unset($query[2]);
+				break;
+			case 'group':
+				unset($query[1]);
+				break;
+			case 'teacher':
+				unset($query[3]);
+				break;
+		}
+		*/
+		$res = $DB->getAll(
+'SELECT ?p
+FROM
+	`stud_timetable` AS `tm_t`
+LEFT JOIN `stud_groups` AS `gr_t`
+	ON `tm_t`.`group_id` = `gr_t`.`id`
+LEFT JOIN `stud_cabinets` AS `cb_t`
+	ON `tm_t`.`cabinet_id` = `cb_t`.`id`
+LEFT JOIN `stud_teachers` AS `th_t`
+	ON `tm_t`.`teacher_id` = `th_t`.`id`
+WHERE
+    `tm_t`.?n = ?s
+ORDER BY
+	`tm_t`.`week`, `tm_t`.`day`, `tm_t`.`time`',
+			implode(', ', $query),
+			$elems[$i]['col_id'],
+			$elems[$i]['id']
+		);
+		prepare_timetable_for_html($res, $i+1, $table);
 	}
 	
-	if($faculties){
-		//парсим группы необновленных факультетов
-		$curl_data = array();
-		foreach($faculties as $fac_id => $name){
-			$curl_data[] = array(
-				'url' => 'https://www.altstu.ru/main/schedule/ws/group/?f='.urlencode($fac_id),
-				'options' => array(
-					'useragent' => rad_parser::get_rand_user_agent(MAIN_DIR.'files/user_agents.txt'),
-					'referer'   => 'https://www.altstu.ru/main/schedule/',
-					'headers'   => array(
-						'x-requested-with: XMLHttpRequest',
-						'accept: application/json, text/javascript, */*; q=0.01',
-						'accept-language:ru,en;q=0.8'
-					)
-				)
+	return '
+			<div class="timetable-block">
+				'.$size_style.'
+				<div class="sticks">'.$sticks.'
+				</div>
+				<div class="timetable-head">
+					<div class="timetable-head-wrap">
+						<table class="timetable-table">
+							<thead>
+								<tr>'.$table_head_1.'
+								</tr>
+								<tr>'.$table_head_2.'
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+				<div class="timetable-body">
+					<table class="timetable-table">'.gen_timetable_body_html($table, $elems_len).'
+					</table>
+				</div>
+				<div class="timetable-extender"><span class="timetable-extender-marker"></span></div>
+			</div>';
+}
+
+function prepare_timetable_for_html($tm_t, $gr_n, &$table){
+	$len = sizeof($tm_t);
+	for($i=0; $i<$len; $i++){
+		$week = $tm_t[$i]['week'];
+		$day = $tm_t[$i]['day'];
+		$time = $tm_t[$i]['time'];
+		unset($tm_t[$i]['week'], $tm_t[$i]['day'], $tm_t[$i]['time']);
+		
+		if(!isset($table[$week]))
+			$table[$week] = array();
+		if(!isset($table[$week][$day]))
+			$table[$week][$day] = array();
+		if(!isset($table[$week][$day][$time]))
+			$table[$week][$day][$time] = array();
+		
+		$line_c = sizeof($table[$week][$day][$time]);
+		$f = 0;
+		for($i1=0; $i1<$line_c; $i1++){
+			if(!isset($table[$week][$day][$time][$i1][$gr_n])){
+				$table[$week][$day][$time][$i1][$gr_n] = $tm_t[$i];
+				$f = 1;
+				break;
+			}
+		}
+		
+		if(!$f){
+			$table[$week][$day][$time][] = array(
+				$gr_n => $tm_t[$i]
 			);
 		}
-		
-		rad_parser::get_pages_content($curl_data, 'parse_groups');
-		unset($curl_data, $faculties);
 	}
-	//массив преподов и кабинетов
-	$GLOBALS['TEACHS'] = $DB->getAll('SELECT `id`, `fio`, `additive` FROM `stud_teachers`');
-	$GLOBALS['CABS'] = $DB->getAll('SELECT * FROM `stud_cabinets`');
+}
+
+function gen_timetable_body_html($table, $elems_len){
+	$html_table = '';
+	$week_days = array('понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье');
+	for($i=0; $i<7; $i++){
+		$week_days[$i] = mb_convert_case($week_days[$i], MB_CASE_TITLE);
+	}
+	//(8:15)|(9:55)|(11:35)|(13:35)|(15:15)|(16:55)|(18:35)|(20:15)
+	$time_list = array('', '08:15-09:45', '09:55-11:25', '11:35-13:05', '13:35-15:05', '15:15-16:45', '16:55-18:25', '18:35-20:05', '20:15-21:45');
 	
-	//получим список всех факультетов
-	$faculties = $DB->getCol('SELECT `id` FROM `stud_faculties`');
-	$fac_len = sizeof($faculties);
-	for($i=0; $i<$fac_len; $i++){
-		//и будим искать в нем необновленные группы
-		$groups = $DB->getCol('SELECT `id` FROM `stud_groups` WHERE `last_reload` + INTERVAL ?p <= NOW() AND `faculty_id` = ?s', $DATA->get('update_interval_timetable'), $faculties[$i]);
-		if($groups === false)
-			continue;
-		$len = sizeof($groups);
-		if($len){
-			//если такие группы есть то парсим их с небольшим промежутком по времени
-			for($i1=0; $i1<$len; $i1++){
-				$groups[$i1] = array(
-					'url'     => 'https://www.altstu.ru/main/schedule/?group_id='.$groups[$i1],
-					'options' => array(
-						'post_data' => array(
-							'faculty' => $faculties[$i],
-							'group'   => $groups[$i1]
-						),
-						'useragent' => rad_parser::get_rand_user_agent(MAIN_DIR.'files/user_agents.txt'),
-						'referer'   => 'https://www.altstu.ru/main/schedule/',
-						'headers'   => array(
-							'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-							'accept-language: ru,en;q=0.8',
-							'dnt: 1',
-							'origin: https://www.altstu.ru',
-							'upgrade-insecure-requests: 1'
-						)
-					)
-				);
+	for($week = 1; $week<=2; $week++){
+		$html_table .= '
+						<tr class="clean-row row">
+							<td colspan="'.(2+$elems_len*5).'"><div class="cell week">Неделя '.$week.'</div></td>
+						</tr>';
+		for($day=0; $day<6; $day++){
+			$html_table .= '
+						<tr class="clean-row row">
+							<td colspan="'.(2+$elems_len*5).'"><div class="cell day">'.$week_days[$day].'</div></td>
+						</tr>';
+			for($less=1; $less<=8; $less++){
+				$len = isset($table[$week][$day][$less]) ? sizeof($table[$week][$day][$less]) : 1;
+				for($line=0; $line<$len; $line++){
+					$html_table .= '
+						<tr class="default-row row">
+							<td><div class="cell col-number" data-col="1">'.$less.'</div></td>
+							<td><div class="cell col-time" data-col="2">'.$time_list[$less].'</div></td>';
+					for($i = 1; $i <= $elems_len; $i++){
+						$tmp = isset($table[$week][$day][$less][$line][$i]) ? $table[$week][$day][$less][$line][$i] : array();
+						$lesson = isset($tmp['lesson']) ? $tmp['lesson'] : '';
+						$lesson_add = isset($tmp['lesson_type']) ? $tmp['lesson_type'] : '';
+						$group_name = isset($tmp['group_name']) ? $tmp['group_name'] : '';
+						$cabinet = isset($tmp['cabinet_id']) ? $tmp['cabinet'].$tmp['cabinet_additive'].' '.$tmp['building'] : '';
+						$teacher = isset($tmp['teacher_id']) ? '<span class="teacher_fio">'.mb_convert_case($tmp['fio'], MB_CASE_TITLE).'</span> <span class="teacher_add">'.$tmp['teacher_additive'].'</span>' : '<span class="teacher_fio"></span><span class="teacher_add"></span>';
+						$html_table .= '
+							<td><div class="cell gr-'.$i.' col-lesson" data-col="'.(3+($i-1)*5).'">'.$lesson.'</div></td>
+							<td><div class="cell gr-'.$i.' col-lesson-add" data-col="'.(4+($i-1)*5).'">'.$lesson_add.'</div></td>
+							<td><div class="cell gr-'.$i.' col-group" data-col="'.(5+($i-1)*5).'">'.$group_name.'</div></td>
+							<td><div class="cell gr-'.$i.' col-cabinet" data-col="'.(6+($i-1)*5).'">'.$cabinet.'</div></td>
+							<td><div class="cell gr-'.$i.' col-teacher" data-col="'.(7+($i-1)*5).'">'.$teacher.'</div></td>';
+					}
+					$html_table .= '
+						</tr>';
+				}
 			}
-			rad_parser::get_pages_content($groups, 'parse_timetable');
-			usleep((rand()%375+125)*1000);
 		}
 	}
-	
-	return true;
+	return $html_table;
 }
 
-/**
- * Парсит факультеты со странички расписания
- * @param $html
- * @return array|bool - массив для загрузки в БД (stud_faculties)
- */
-function parse_faculties($html){
-	$matches = array();
-	$ret = array();
-	preg_match('#<select[^>]*?id=["\']?id_faculty[\'"]?[^>]*?>.*?</select>#isu', $html, $matches);
-	if(empty($matches[0])){
-		trigger_error('Can\'t find select#id_faculty', E_USER_WARNING);
-		return false;
-	}
-	$html = $matches[0];
-	preg_match_all('#<option[^>]*?value=["\']([^\'"]*?)[\'"][^>]*>(.*?)</option>#isu', $html, $matches);
-	if(empty($matches[1])){
-		trigger_error('Can\'t find option in select#id_faculty', E_USER_WARNING);
-		return false;
-	}
-	$len = sizeof($matches[1]);
-	for($i=0; $i<$len; $i++){
-		$ret[] = array('id' => $matches[1][$i], 'name' => !empty($matches[2][$i]) ? $matches[2][$i] : '%noname%');
-	}
-	return $ret;
-}
-
-/**
- * Коллбэк для парсинга, извлекает из JSON группы, добавляет их в БД (stud_groups) и прописывает обновление для факультета
- * @param $content - JSON
- * @param $info - CURL info
- * @param $status - CURL status
- * @param $status_text - CURL status text
- * @return bool
- */
-function parse_groups($content, $info, $status, $status_text){
-	global $DB;
-	if($status){
-		//error
-		trigger_error('CURL error['.$status.'](can\'t load groups): '.$status_text.', info('.print_r($info, 1).')', E_USER_WARNING);
-		return false;
-	}
-	$dat = json_decode($content, 1);
-	if(json_last_error() != JSON_ERROR_NONE){
-		trigger_error('JSON decode error['.json_last_error().']: '.json_last_error_msg().', request('.$info['url'].')', E_USER_WARNING);
-		return false;
-	}
-	
-	$len = is_array($dat) ? sizeof($dat) : 0;
-	if($len == 0)
-		return false;
-	$fac_id = '';
-	for($i=0; $i<$len; $i++){
-		$fac_id = $dat[$i]['faculty_id'];
-		$tmp = array('faculty_id' => $dat[$i]['faculty_id'], 'id' => $dat[$i]['id'], 'name' => $dat[$i]['name'], 'last_reload' => '1980-01-01 00:00:00');
-		unset($dat[$i]['faculty_id'], $dat[$i]['id'], $dat[$i]['name']);
-		if($dat[$i])
-			$tmp['data'] = serialize($dat[$i]);
-		$dat[$i] = $tmp;
-	}
-	
-	$DB->query('DELETE FROM `stud_groups` WHERE `faculty_id` = ?s', $fac_id);
-	
-	if(!$DB->query('INSERT INTO `stud_groups` ?d', $dat))
-		return false;
-	
-	$DB->query('UPDATE `stud_faculties` SET `last_reload` = NOW() WHERE `id` = ?s ', $fac_id);
-	
-	return true;
-}
-
-/**
- * Коллбэк для парсинга, парсит страницу с расписанием, добавляет его в БД (stud_timetable)
- * @param $content - html
- * @param $info - CURL info
- * @param $status - CURL status
- * @param $status_text - CURL status text
- * @return bool
- */
-function parse_timetable($content, $info, $status, $status_text){
-	if($status){
-		//error
-		trigger_error('CURL error['.$status.'](can\'t load timetable): '.$status_text.', info('.print_r($info, 1).')', E_USER_WARNING);
-		return false;
-	}
-	$matches = array();
-	
-	//получим текущую группу
-	preg_match('#<select[^>]*?id=["\']?id_group[\'"]?[^>]*?>.*?</select>#isu', $content, $matches);
-	if(empty($matches[0])){
-		trigger_error('Can\'t find select#id_group, info(http_code: '.$info['http_code'].', url: '.$info['url'].', redirect: '.$info['redirect_url'].')', E_USER_WARNING);
-		return false;
-	}
-	$html = $matches[0];
-	preg_match('#<option[^>]*?value=["\']([^\'"]*?)[\'"][^>]*?selected[^>]*>.*?</option>#isu', $html, $matches);
-	if(empty($matches[1])){
-		trigger_error('Can\'t find selected option in select#id_group, info(http_code: '.$info['http_code'].', url: '.$info['url'].', redirect: '.$info['redirect_url'].')', E_USER_WARNING);
-		return false;
-	}
-	global $DB;
-	$group_id = $matches[1];
-	
-	//получим блок с таблицами расписания
-	preg_match_all('#(<div[^>]*?class=["\']schedule[\'"][^>]*>)(.*)$#ismu', $content, $matches);
-	
-	if(!isset($matches[0][0])){
-		$DB->query('DELETE FROM `stud_timetable` WHERE `group_id` = ?s', $group_id);
-		$DB->query('UPDATE `stud_groups` SET `last_reload` = NOW() WHERE `id` = ?s', $group_id);
-		return false;
-	}
-	
-	$content = $matches[2][0];
-	$html = $matches[1][0];
-	$tmp = 1;
-	while($tmp && preg_match('#(.*?)(</div>|<div[^>]*>)(.*)$#ismu', $content, $matches)){
-		$html .=  $matches[1].$matches[2];
-		$content = $matches[3];
-		if($matches[2] === '</div>'){
-			$tmp--;
-		}else{
-			$tmp++;
-		}
-	}
-	unset($content);
-	
-	preg_match_all('#<h3[^>]*>(.*?)</h3>.*?<table[^>]*>(.*?)</table>#isu', $html, $matches);
-	unset($html);
-	
-	if(empty($matches[1]) || empty($matches[2])){
-		return false;
-	}
-	
-	$weeks = $matches[1];
-	$tables = $matches[2];
-	$insert = array();
-	$len = sizeof($tables);
-	
-	$week_days = array(
-		'понедельник' => 0,
-		'вторник' => 1,
-		'среда' => 2,
-		'четверг' => 3,
-		'пятница' => 4,
-		'суббота' => 5,
-		'воскресенье' => 6
+function get_table_size_html($width){
+	$max_width = array(
+		0,
+		25,
+		55,
+		100,
+		35,
+		50,
+		35,
+		50
 	);
-	$time_interval = '#(8:15)|(9:55)|(11:35)|(13:35)|(15:15)|(16:55)|(18:35)|(20:15)#isu';
-	
-	
-	for($i=0; $i<$len; $i++){
-		preg_match('#</thead>(.*)$#isum', $tables[$i], $matches);
-		if(empty($matches[1])){
-			trigger_error('Timetable hasn\'t thead, info(http_code: '.$info['http_code'].', url: '.$info['url'].', redirect: '.$info['redirect_url'].')', E_USER_WARNING);
-			return false;
-		}
-		$tables[$i] = $matches[1];
-		preg_match_all('#<tr[^>]*>(.*?)</tr>#isum', $tables[$i], $matches);
-		$tmp = $matches[1];
-		$len1 = sizeof($tmp);
-		$day = '';
-		preg_match('#[0-9]+#isu', $weeks[$i], $matches);
-		$week = $matches[0];
-		for($i1=0; $i1<$len1; $i1++){
-			if(preg_match('#class=[\'"][^\'"]*?day[^\'"]*[\'"]#isu', $tmp[$i1])){
-				preg_match('#<th[^>]*>(.*?)</th>#isu', $tmp[$i1], $matches);
-				$a = trim(mb_strtolower($matches[1]));
-				$day = isset($week_days[$a]) ? $week_days[$a] : '';
-			}else{
-				if($day === ''){
-					trigger_error('Day not found, info(http_code: '.$info['http_code'].', url: '.$info['url'].', redirect: '.$info['redirect_url'].')', E_USER_WARNING);
-					return false;
-				}
-				preg_match_all('#<td[^>]*>(.*?)</td>#isu', $tmp[$i1], $matches);
-				$td = $matches[1];
-				if(sizeof($td) != 4){
-					trigger_error('Timetable hasn\'t 4 td, info(http_code: '.$info['http_code'].', url: '.$info['url'].', redirect: '.$info['redirect_url'].')', E_USER_WARNING);
-					return false;
-				}
-				
-				//получаем номер пары
-				preg_match($time_interval, trim($td[0]), $matches);
-				$time = sizeof($matches)-1;
-				if($time < 1){
-					trigger_error('Can\'t find time, info(http_code: '.$info['http_code'].', url: '.$info['url'].', redirect: '.$info['redirect_url'].')', E_USER_WARNING);
-					return false;
-				}
-				
-				//получаем предмет и дополнение
-				preg_match('#<strong[^>]*>(.*?)</strong>(.*?)$#isu', $td[1], $matches);
-				if(sizeof($matches) < 2){
-					trigger_error('Can\'t find lesson, info(http_code: '.$info['http_code'].', url: '.$info['url'].', redirect: '.$info['redirect_url'].')', E_USER_WARNING);
-					return false;
-				}
-				$lesson = mb_strtolower(trim($matches[1]));
-				$lesson_type = isset($matches[2]) ? trim($matches[2]) : '';
-				
-				//Получим кабинет и корпус
-				$cab = '';
-				$cab_add = '';
-				$building = '';
-				if(preg_match('#([0-9]+)([\\-()a-zа-я 0-9]*?)\\s+([a-zа-я]+)$#isu', trim($td[2]), $matches)){
-					$cab = $matches[1];
-					$cab_add = mb_strtolower(trim($matches[2]));
-					$building = mb_strtoupper($matches[3]);
-				}
-				
-				//получаем преподавателя
-				$teacher_add = '';
-				preg_match('#<nobr[^>]*>(.*?)</nobr>#isu', trim($td[3]), $matches);
-				$teacher = mb_strtolower(trim($matches[1]));
-				if(preg_match('#<span[^>]*>(.*?)</span>#isu', trim($td[3]), $matches)){
-					$teacher_add = mb_strtolower(trim($matches[1]));
-				}
-				
-				if($cab !== ''){
-					$cabinet_id = find_cabinet($cab, $building, $cab_add);
-				}else{
-					$cabinet_id = 0;
-				}
-				
-				if($teacher !== ''){
-					$teacher_id = find_teacher($teacher, $teacher_add);
-				}else{
-					$teacher_id = 0;
-				}
-				
-				$insert[] = compact('week', 'day', 'time', 'group_id', 'lesson', 'lesson_type', 'cabinet_id', 'teacher_id');
-			}
+	$height = '';
+	foreach($width as $key => $value){
+		if($key == 'height'){
+			$value = absint($value);
+			$height = ' .timetable-body{height:'.$value.'px}';
+			unset($width[$key]);
+		}else{
+			$col = absint($key);
+			$value = absint($value);
+			unset($width[$key]);
+			if($col < 1 || $col > MAX_ELEMENTS_TIMETABLE * 5 + 2)
+				continue;
+			$key = $col <= 2 ? $col : ($col - 3) % 5 + 3;
+			if($value < $max_width[$key] || $value > 500)
+				continue;
+			$width[$col] = '.timetable-block .cell[data-col="'.$col.'"]{width:'.$value.'px}';
 		}
 	}
-	
-	$DB->query('DELETE FROM `stud_timetable` WHERE `group_id` = ?s', $group_id);
-	$DB->query('UPDATE `stud_groups` SET `last_reload` = NOW() WHERE `id` = ?s', $group_id);
-	$DB->query('INSERT INTO `stud_timetable` ?d', $insert);
-	
-	return true;
-}
-
-/**
- * Возвращает id кабинета или добавляет его в БД (stud_cabinets)
- * @param string $cabinet - кабинет
- * @param string $building - корпус
- * @param string $additive - дополнение
- * @return int
- */
-function find_cabinet($cabinet, $building, $additive=''){
-	global $CABS, $DB;
-	$len = sizeof($CABS);
-	for($i=0; $i<$len; $i++){
-		if((string)$CABS[$i]['cabinet'] === (string)$cabinet && $CABS[$i]['building'] == $building && (string)$CABS[$i]['additive'] === (string)$additive)
-			return (int)$CABS[$i]['id'];
-	}
-	
-	$DB->query('INSERT INTO `stud_cabinets` (`cabinet`, `building`, `additive`) VALUES (?s, ?s, ?s)', $cabinet, $building, $additive);
-	$id = $DB->insertId();
-	$CABS[] = array('id' => $id, 'cabinet' => $cabinet, 'building'=> $building, 'additive' => $additive);
-	return (int)$id;
-}
-
-/**
- * Возвращает id препода, обновляет его статус (если он не пуст) или добавляет в БД (stud_teachers)
- * @param string $fio - ФИО
- * @param string $additive - статус
- * @return int
- */
-function find_teacher($fio, $additive=''){
-	global $TEACHS, $DB;
-	$len = sizeof($TEACHS);
-	for($i=0; $i<$len; $i++){
-		if((string)$TEACHS[$i]['fio'] === (string)$fio){
-			if($additive !== '' && (string)$TEACHS[$i]['additive'] !== (string) $additive){
-				$DB->query('UPDATE `stud_teachers` SET `additive` = ?s WHERE `id` = ?i', $additive, $TEACHS[$i]['id']);
-			}
-			return (int)$TEACHS[$i]['id'];
-		}
-	}
-	
-	$DB->query('INSERT INTO `stud_teachers` (`fio`, `additive`) VALUES (?s, ?s)', $fio, $additive);
-	$id = $DB->insertId();
-	$TEACHS[] = array('id' => $id, 'fio' => $fio, 'additive' => $additive);
-	return (int)$id;
+	ksort($width, SORT_NUMERIC);
+	return sizeof($width) || $height ? '<style>'.implode(' ', $width).$height.'</style>' : '';
 }
 
 ///////////////////////////////////////////////////////////////////////////////

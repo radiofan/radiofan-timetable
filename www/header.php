@@ -10,8 +10,6 @@ global $URL, $USER, $PAGE_DATA;
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title><?php echo $PAGE_DATA['title']; ?></title>
-	<meta name="description" content="Рандомизатор текста позволяет с помощью синонимов и перестановки создавать уникальный текст">
-	<meta name="keywords" content="Рандомизатор текста, рандомизатор, текст, текста">
 	<link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
 	<link rel="stylesheet" href="/styles/bootstrap-3.3.2.css">
 	<?php echo $PAGE_DATA['addition_styles']; ?>
@@ -22,19 +20,23 @@ global $URL, $USER, $PAGE_DATA;
 	}
 	?>
 	<script src="/libs/jquery-3.4.1.min.js"></script>
+	<script src="/libs/jquery.cookie.js"></script>
 	<script src="/scripts/bootstrap-3.3.2.min.js"></script>
 	<script type="text/javascript">
 		/* <![CDATA[ */
 		var DATA = {
 			"ignoreForms":".login",
-			"cols_min_width": {
-				"1":25,
-				"2":55,
-				"3":100,
-				"4":50,
-				"5":35,
-				"6":50
-			}
+			"cols_min_width": [
+				0,
+				25,
+				55,
+				100,
+				35,
+				50,
+				35,
+				50
+			],
+			"table_min_height": 150
 		};
 		/* ]]> */
 	</script>

@@ -4,6 +4,8 @@ define('CLEAR_POST', 1);
 define('SALT', '');//ПРИ СМЕНЕ СОЛИ ВСЕ ПАРОЛИ СТАНУТ НЕ ДЕЙСТВИТЕЛЬНЫ!
 define('USE_LOG', 1);
 
+define('MAX_ELEMENTS_TIMETABLE', 50);
+
 define('MAIN_DBHOST', 'localhost');
 define('MAIN_DBUSER', 'root');
 define('MAIN_DBPASS', '');

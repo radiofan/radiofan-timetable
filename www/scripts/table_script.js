@@ -58,13 +58,15 @@ jQuery(document).ready(function($){
 		set_sticks();
 		//$table_sticks.css('left', -$table_body.scrollLeft()+'px');
 	});
-
+	
 	$body.on({
 		'mouseup.table': function(e){
 			if(curr_stick){
 				let diff_w = sticks[curr_stick].offset().left - sticks[curr_stick].data('old-pos'),
 					width = 0;
-					width = cols[curr_stick][0].outerWidth() + diff_w + 'px';
+				width = cols[curr_stick][0].outerWidth() + diff_w;
+				$.cookie('timetable[options][size]['+curr_stick+']', width);
+				width += 'px';
 				for(let i in cols[curr_stick]){
 					cols[curr_stick][i].css('width', width);
 				}
@@ -75,6 +77,7 @@ jQuery(document).ready(function($){
 			}
 			if(extender){
 				extender = false;
+				$.cookie('timetable[options][size][height]', $table_body.outerHeight());
 				$table.css('cursor', '');
 			}
 		},
@@ -83,7 +86,12 @@ jQuery(document).ready(function($){
 				let page_x = sticks[curr_stick].offset().left,
 					pos_x = sticks[curr_stick].position().left,
 					diff_w = 0,
-					limit = DATA.cols_min_width.hasOwnProperty(sticks[curr_stick].data('col')) ? DATA.cols_min_width[sticks[curr_stick].data('col')] : 50;
+					limit = 50;
+				if(curr_stick <= 2){
+					limit = DATA.cols_min_width[curr_stick];
+				}else{
+					limit = DATA.cols_min_width[(curr_stick-3)%5+3];
+				}
 				diff_w = Math.round(e.pageX - sticks[curr_stick].data('old-pos'));
 				if(cols[curr_stick][0].outerWidth() + diff_w < limit){
 					pos_x += cols[curr_stick][0].offset().left - page_x + limit - 2;
@@ -94,13 +102,13 @@ jQuery(document).ready(function($){
 			}else if(extender){
 				let diff = Math.round(e.pageY - $table_extender.data('old-pos')),
 					limit = DATA.hasOwnProperty('table_min_height') ? DATA.table_min_height : 150;
-				$table_extender.data('old-pos',  Math.round(e.pageY));
 				if($table_body.outerHeight() + diff < limit){
 					diff = limit;
 				}else{
 					diff = diff + $table_body.outerHeight();
 				}
 				$table_body.css('height', diff);
+				$table_extender.data('old-pos',  $table_extender.offset().top);
 
 				diff = $(window).height() - e.clientY;
 				if(diff < 20){
@@ -109,6 +117,8 @@ jQuery(document).ready(function($){
 			}
 		}
 	});
+
+	set_sticks();
 
 	function set_sticks(offset = 1){
 		let width, pos, start;
