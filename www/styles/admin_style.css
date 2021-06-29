@@ -1,0 +1,30 @@
+.admin-table>tbody>tr>td{
+	vertical-align: middle;
+}
+.admin-table .td-coupon-coupon{
+	width:40%;
+}
+.admin-table .td-coupon-roles{
+	width:30%;
+}
+.admin-table .td-coupon-time_value{
+	width:130px;
+}
+.admin-table .td-coupon-time_interval{
+	width:130px;
+}
+.admin-table .td-coupon-use{
+	width:4em;
+}
+.admin-table .td-user-roles{
+	width:20%;
+}
+.admin-table .td-user-login{
+	min-width:30%;
+}
+.admin-table .td-user-password{
+	min-width:30%;
+}
+.admin-table .td-user-level{
+	width:30%;
+}
