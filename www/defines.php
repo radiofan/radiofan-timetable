@@ -5,6 +5,7 @@ define('SALT', '');//ПРИ СМЕНЕ СОЛИ ВСЕ ПАРОЛИ СТАНУТ
 define('USE_LOG', 1);
 
 define('MAX_ELEMENTS_TIMETABLE', 50);
+define('MAX_SECTION_NAME_LEN', 30);
 
 define('MAIN_DBHOST', 'localhost');
 define('MAIN_DBUSER', 'root');

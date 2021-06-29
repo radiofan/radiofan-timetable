@@ -25,6 +25,9 @@ is_session_exists();
 require_once MAIN_DIR.'includes/user-class.php';
 $USER = new rad_user();
 
+require_once MAIN_DIR.'includes/cookie-validator-class.php';
+$COOKIE_V = new rad_cookie();
+
 require_once MAIN_DIR.'actions.php';
 
 $ret = do_actions();

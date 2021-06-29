@@ -1,6 +1,6 @@
 <?php
 function gen_timetable_html(){
-	global $DB;
+	global $DB, $COOKIE_V;
 	/*
 	 * TODO список опций
 	 * Переход к текущей неделе/дню +
@@ -14,106 +14,49 @@ function gen_timetable_html(){
 	 * Режим печати
 	 * Дата последенего обновления
 	 * Очистка БД
+	 * Рабочие столы
 	 */
-	$elems = isset($_COOKIE['timetable']['elements']) ? array_values($_COOKIE['timetable']['elements']) : array();
+	$elems_add = $COOKIE_V->timetable_validation(1);
+	$elems_add = $elems_add['elements'];
+	
+	$elems = $_COOKIE['timetable']['elements'];
 	$elems_len = sizeof($elems);
-	if($elems_len > MAX_ELEMENTS_TIMETABLE){
-		//TODO вывод сообщений
-		@setcookie('timetable[elements]', array(), time()+86400*30);
-		$elems = array();
-		$elems_len = 0;
-	}
-	$options = isset($_COOKIE['timetable']['options']) ? $_COOKIE['timetable']['options'] : array();
-	$size_style = isset($options['size']) && is_array($options['size']) ? $options['size'] : array();
-	if(sizeof($size_style) > MAX_ELEMENTS_TIMETABLE*5 + 3){
-		//TODO вывод сообщений
-		@setcookie('timetable[options][size]', array(), time()+86400*30);
-		$size_style = array();
-	}
-	$add_style = get_table_size_html($size_style);
+	
+	$options = $_COOKIE['timetable']['options'];
+	
+	$add_style = get_table_size_html($options['size']);
 	unset($size_style);
 	
 	//скрытие звания препода
-	if(isset($options['teacher_add_hide']) && $options['teacher_add_hide']){
+	if($options['teacher_add_hide']){
 		$add_style['teacher_add_hide'] = '.timetable-body .teacher_add{display:none;}';
 	}
 	
-	if(isset($options['cell_word_wrap']) && !$options['cell_word_wrap']){
+	if(!$options['cell_word_wrap']){
 		$add_style['cell_word_wrap'] = '.timetable-body .cell{white-space:nowrap;}';
 	}
-	
-	$uniq = array();
-	
-	for($i=0; $i<$elems_len; $i++){
-		if(!isset($elems[$i]['type'], $elems[$i]['id'])){
-			unset($elems[$i]);
-			continue;
-		}
-		$elems[$i]['type'] = mb_strtolower(trim($elems[$i]['type']));
-		switch($elems[$i]['type']){
-			case 'cabinet':
-			case 'group':
-			case 'teacher':
-				$elems[$i]['col_id'] = $elems[$i]['type'].'_id';
-				$elems[$i]['table_name'] = 'stud_'.$elems[$i]['type'].'s';
-				$elems[$i]['gr_name'] = empty($elems[$i]['gr_name']) ? false : trim($elems[$i]['gr_name']);
-				break;
-			default:
-				$elems[$i]['type'] = false;
-		}
-		if(!$elems[$i]['type']){
-			unset($elems[$i]);
-			continue;
-		}
-		
-		$elems[$i]['id'] = preg_replace('#[^0-9]#u', '', $elems[$i]['id']);
-		if(isset($uniq[$elems[$i]['type'].$elems[$i]['id']])){
-			unset($elems[$i]);
-			continue;
-		}
-		
-		$dat = '';
-		//TODO проверить id группы
-		if((int) $elems[$i]['id'] != 0 && !($dat = $DB->getRow('SELECT * FROM ?n WHERE `id` = ?s', $elems[$i]['table_name'], $elems[$i]['id']))){
-			unset($elems[$i]);
-		}
-		if($elems[$i]['gr_name'] === '' || $elems[$i]['gr_name'] === false){
-			switch($elems[$i]['type']){
-				case 'cabinet':
-					$elems[$i]['gr_name'] = $elems[$i]['id'] ? $dat['cabinet'].$dat['cabinet_additive'].' '.$dat['building'] : 'Без кабинета';
-					break;
-				case 'group':
-					$elems[$i]['gr_name'] = $dat['name'];
-					break;
-				case 'teacher':
-					$elems[$i]['gr_name'] = $elems[$i]['id'] ? mb_convert_case($dat['fio'], MB_CASE_TITLE) : 'Без учителя';
-					break;
-			}
-		}
-		$uniq[$elems[$i]['type'].$elems[$i]['id']] = false;
-	}
-	unset($uniq);
 	
 	$table_head_1 = '
 									<th rowspan="2"><div class="cell col-number" data-col="1">№ пары</div></th>
 									<th rowspan="2"><div class="cell col-time" data-col="2">Время</div></th>';
 	$table_head_2 = '';
-	$sticks = '
-					<div class="stick" data-col="1"></div>
-					<div class="stick" data-col="2"></div>';
+	$sticks = '<div class="stick" data-col="1"></div><div class="stick" data-col="2"></div>';
 	
 	
 	$elems =array_values($elems);
 	$elems_len = sizeof($elems);
 	$table = array();
 	for($i=0; $i<$elems_len; $i++){
+		
+		$elems[$i]['col_id'] = $elems[$i]['type'].'_id';
+		$elems[$i]['table_name'] = 'stud_'.$elems[$i]['type'].'s';
+		
 		//генерация html
 		for($i1 = 3; $i1 <= 7; $i1++){
-			$sticks .= '
-					<div class="stick" data-col="'.($i1+$i*5).'"></div>';
+			$sticks .= '<div class="stick" data-col="'.($i1+$i*5).'"></div>';
 		}
 		$table_head_1 .= '
-									<th colspan="5"><div class="cell gr-'.($i+1).'">'.esc_html($elems[$i]['gr_name']).'</div></th>';
+									<th colspan="5"><div class="cell gr-'.($i+1).'">'.esc_html($elems_add[$i]['gr_name']).'</div></th>';
 		$table_head_2 .= '
 									<th><div class="cell gr-'.($i+1).' col-lesson" data-col="'.(3 + $i*5).'">Урок</div></th>
 									<th><div class="cell gr-'.($i+1).' col-lesson-add" data-col="'.(4 + $i*5).'">Тип</div></th>
@@ -148,19 +91,6 @@ ORDER BY `tm_t`.`week`, `tm_t`.`day`, `tm_t`.`time`
 			'`cb_t`.`cabinet`, `cb_t`.`additive` AS `cabinet_additive`, `cb_t`.`building`',
 			'`th_t`.`fio`, `th_t`.`additive` AS `teacher_additive`'
 		);
-		/*
-		switch($elems[$i]['type']){
-			case 'cabinet':
-				unset($query[2]);
-				break;
-			case 'group':
-				unset($query[1]);
-				break;
-			case 'teacher':
-				unset($query[3]);
-				break;
-		}
-		*/
 		$res = $DB->getAll(
 			'SELECT ?p
 FROM
@@ -181,7 +111,8 @@ ORDER BY
 		);
 		add_data_to_timetable($res, $i+1, $table);
 	}
-	prepare_data_to_timetable_html($elems_len, $table);
+	if($options['cell_rowspan'])
+		prepare_data_to_timetable_html($elems_len, $table);
 	
 	
 	return gen_settings_block_html().'
@@ -202,7 +133,7 @@ ORDER BY
 					</div>
 				</div>
 				<div class="timetable-body">
-					<table class="timetable-table">'.gen_timetable_body_html($table, $elems_len).'
+					<table class="timetable-table">'.gen_timetable_body_html($table, $elems_len, $options['cell_rowspan']).'
 					</table>
 				</div>
 				<div class="timetable-extender"><span class="timetable-extender-marker"></span></div>
@@ -319,7 +250,7 @@ function add_data_to_timetable($tm_t, $gr_n, &$table){
 	}
 }
 
-function gen_timetable_body_html($table, $elems_len){
+function gen_timetable_body_html($table, $elems_len, $cell_rowspan = 1){
 	global $DATA;
 	$html_table = '';
 	$week_days = array('понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье');
@@ -416,11 +347,17 @@ function gen_timetable_body_html($table, $elems_len){
 				for($line=0; $line<$len; $line++){
 					$html_table .= '
 						<tr class="default-row row'.$less_class.'">';
-					if(!$line){
-						$rowspan = $len > 1 ? ' rowspan ="'.$len.'"' : '';
-						$html_table .= '
+					if($cell_rowspan){
+						if(!$line){
+							$rowspan = $len > 1 ? ' rowspan ="'.$len.'"' : '';
+							$html_table .= '
 							<td'.$rowspan.'><div class="cell col-number" data-col="1">'.$less.'</div></td>
 							<td'.$rowspan.'><div class="cell col-time" data-col="2">'.$time_list[$less].'</div></td>';
+						}
+					}else{
+						$html_table .= '
+							<td><div class="cell col-number" data-col="1">'.$less.'</div></td>
+							<td><div class="cell col-time" data-col="2">'.$time_list[$less].'</div></td>';
 					}
 					for($i=1; $i<=$elems_len; $i++){
 						$tmp = isset($table[$week][$day][$less][$line][$i]) ? $table[$week][$day][$less][$line][$i] : array();
@@ -475,9 +412,11 @@ function gen_timetable_body_html($table, $elems_len){
 							<td><div class="cell gr-'.$i.' col-teacher" data-col="'.(7+($i-1)*5).'">'.$teacher.'</div></td>' : '';
 						}
 						$html_table .= $lesson.$lesson_add.$group_name.$cabinet.$teacher;
-						foreach($all_rowspan[$i] as &$val){
-							if($val > 0)
-								$val--;
+						if($cell_rowspan){
+							foreach($all_rowspan[$i] as &$val){
+								if($val > 0)
+									$val--;
+							}
 						}
 					}
 					$html_table .= '
@@ -523,7 +462,10 @@ function get_table_size_html($width){
 	return $width;
 }
 
+//TODO searchSelect enter
+
 /**
+ *
  * see footer.php
  * @return string
  */
@@ -536,7 +478,7 @@ function gen_additor_modal_html(){
 	
 	//TODO добавить нулевки
 	
-	$elems = isset($_COOKIE['timetable']['elements']) ? array_values($_COOKIE['timetable']['elements']) : array();
+	$elems = $_COOKIE['timetable']['elements'];
 	$except = array('group' => array(), 'teacher' => array(), 'cabinet' => array());
 	$len = sizeof($elems);
 	for($i=0; $i<$len; $i++){
@@ -548,8 +490,7 @@ function gen_additor_modal_html(){
 	$res = $DB->getAll('SELECT `id`, `name`, `abbr` FROM `stud_faculties` ORDER BY `name`');
 	$len = sizeof($res);
 	for($i=0; $i<$len; $i++){
-		$opt_fac_html .= '
-										<option value="'.$res[$i]['id'].'">'.esc_html($res[$i]['name']).(empty($res[$i]['abbr']) ? '' : ' ('.$res[$i]['abbr'].')').'</option>';
+		$opt_fac_html .= '<option value="'.$res[$i]['id'].'">'.esc_html($res[$i]['name']).(empty($res[$i]['abbr']) ? '' : ' ('.$res[$i]['abbr'].')').'</option>';
 	}
 	$tmp = '';
 	
@@ -560,8 +501,7 @@ function gen_additor_modal_html(){
 			unset($except['group'][$tmp]);
 			continue;
 		}
-		$opt_gr_html .= '
-										<option value="'.$res[$i]['id'].'" data-faculty_id="'.$res[$i]['faculty_id'].'">'.esc_html($res[$i]['name']).'</option>';
+		$opt_gr_html .= '<option value="'.$res[$i]['id'].'" data-faculty_id="'.$res[$i]['faculty_id'].'">'.esc_html($res[$i]['name']).'</option>';
 	}
 	unset($except['group']);
 	
@@ -572,8 +512,7 @@ function gen_additor_modal_html(){
 			unset($except['cabinet'][$tmp]);
 			continue;
 		}
-		$opt_cab_html .= '
-										<option value="'.$res[$i]['id'].'">'.$res[$i]['cabinet'].$res[$i]['additive'].' ' .$res[$i]['building'].'</option>';
+		$opt_cab_html .= '<option value="'.$res[$i]['id'].'">'.$res[$i]['cabinet'].$res[$i]['additive'].' ' .$res[$i]['building'].'</option>';
 	}
 	unset($except['cabinet']);
 	
@@ -584,12 +523,9 @@ function gen_additor_modal_html(){
 			unset($except['teacher'][$tmp]);
 			continue;
 		}
-		$opt_tch_html .= '
-										<option value="'.$res[$i]['id'].'">'.$res[$i]['fio'].'</option>';
+		$opt_tch_html .= '<option value="'.$res[$i]['id'].'">'.$res[$i]['fio'].'</option>';
 	}
 	unset($except['teacher']);
-	
-	//TODO фпкультет влияет на список групп
 	
 	return '
 <!-- Additor modal -->
@@ -604,7 +540,6 @@ function gen_additor_modal_html(){
 			</div>
 			<div class="modal-body">
 				<div id="additor-carousel" class="carousel slide" data-ride="carousel" data-interval="false" data-keyboard="false">
-				<!--<div id="additor-carousel" class="carousel slide" data-ride="carousel">-->
 					<div class="carousel-inner">
 						<div class="item active">
 							<div class="additior-item additor-buttons">
@@ -648,7 +583,7 @@ function gen_additor_modal_html(){
 							<div class="additior-item">
 								<div class="child-center text-center">
 									<h3>Название раздела</h3>
-									<input type="text" class="form-control" id="additor-gr-name">
+									<input type="text" class="form-control" id="additor-gr-name" maxlength="'.MAX_SECTION_NAME_LEN.'">
 								</div>
 							</div>
 						</div>
@@ -665,30 +600,55 @@ function gen_additor_modal_html(){
 }
 
 function gen_settings_block_html(){
-	$options = isset($_COOKIE['timetable']['options']) ? $_COOKIE['timetable']['options'] : array();
+	global $COOKIE_V;
+	$options = $_COOKIE['timetable']['options'];
+	$elems = $_COOKIE['timetable']['elements'];
+	$elems_type = $COOKIE_V->timetable_validation();
+	$elems_type = $elems_type['elements'];
+	$elems_len = sizeof($elems);
+	$sections_html = '';
+	for($i=0; $i<$elems_len; $i++){
+		$sections_html .= '
+							<div class="section-wrap" data-gr="'.($i+1).'">
+								<div class="section-header">
+									<span class="section-draggable gr-drag" title="Сортировать">&#8645;</span>
+									<span class="section-data">
+										<span class="section-type" data-toggle="collapse" data-target="#section-gr-'.($i+1).'" aria-expanded="false" aria-controls="section-gr-'.($i+1).'">'.$elems_type[$i]['html_type'].'</span> - <input style="display:inline-block;width:auto;" type="text" maxlength="'.MAX_SECTION_NAME_LEN.'" value="'.(isset($elems[$i]['gr_name']) ? htmlspecialchars($elems[$i]['gr_name']) : '').'" class="form-control edit-section-name" data-gr="'.($i+1).'">
+									</span>
+									<span class="section-delete" title="Удалить">&#10007;</span>
+								</div>
+								<div class="section-cols-wrap collapse" id="section-gr-'.($i+1).'">
+									<div class="section-col col-lesson" data-pos="" data-col-type="lesson">
+										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
+										<span class="child-center">Урок</span>
+										<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+									</div>
+									<div class="section-col col-lesson-add" data-pos="" data-col-type="lesson-add">
+										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
+										<span class="child-center">Тип</span>
+										<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+									</div>
+									<div class="section-col col-group" data-pos="" data-col-type="group">
+										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
+										<span class="child-center">Группа</span>
+										<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+									</div>
+									<div class="section-col col-cabinet" data-pos="" data-col-type="cabinet">
+										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
+										<span class="child-center">Кабинет</span>
+										<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+									</div>
+									<div class="section-col col-teacher" data-pos="" data-col-type="teacher">
+										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
+										<span class="child-center">Препод</span>
+										<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+									</div>
+								</div>
+							</div>';
+	}
 	
 	$checked = array('', ' checked="checked"');
-	if(isset($options['teacher_add_hide']) && $options['teacher_add_hide']){
-		$options['teacher_add_hide'] = 1;
-	}else{
-		$options['teacher_add_hide'] = 0;
-	}
-	if(isset($options['cell_word_wrap']) && !$options['cell_word_wrap']){
-		$options['cell_word_wrap'] = 0;
-	}else{
-		$options['cell_word_wrap'] = 1;
-	}
-	if(isset($options['go2curr_day'])){
-		if($options['go2curr_day'] == 'week'){
-			$options['go2curr_day'] = 1;
-		}else if($options['go2curr_day'] == 'day'){
-			$options['go2curr_day'] = 2;
-		}else{
-			$options['go2curr_day'] = 0;
-		}
-	}else{
-		$options['go2curr_day'] = 0;
-	}
+	
 	return '
 			<div class="settings">
 				<div class="card">
@@ -700,9 +660,12 @@ function gen_settings_block_html(){
 							<button class="btn btn-link" type="button" data-toggle="modal" data-target="#additor-modal">
 								Добавить раздел
 							</button>
+							<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#sections_collapse" aria-expanded="false" aria-controls="sections_collapse">
+								Управлять разделами
+							</button>
 						</div>
 					</div>
-					<div id="settings_collapse" class="collapse">
+					<div id="settings_collapse" class="collapse settings-collapse">
 						<div class="card-body">
 							<div class="setting-row settings-teacher_add_hide">
 								<label>
@@ -733,6 +696,17 @@ function gen_settings_block_html(){
 									<input type="checkbox" name="settings[cell_word_wrap]" value="1" data-settings="cell_word_wrap"'.$checked[$options['cell_word_wrap']].'>
 								</label>
 							</div>
+							<hr>
+							<div class="setting-row settings-cell_rowspan">
+								<label>
+									<span>Объединять уроки</span>
+									<input type="checkbox" name="settings[cell_rowspan]" value="1" data-settings="cell_rowspan"'.$checked[$options['cell_rowspan']].'>
+								</label>
+							</div>
+						</div>
+					</div>
+					<div id="sections_collapse" class="collapse settings-collapse">
+						<div class="card-body">'.$sections_html.'
 						</div>
 					</div>
 				</div>

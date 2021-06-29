@@ -32,6 +32,26 @@
 		return encode(config.json ? JSON.stringify(value) : String(value));
 	}
 
+	function recursiveDeleteCookie(key, cookies){
+		for(let i in cookies){
+			if(typeof cookies[i] === 'object' || $.isArray(cookies[i])){
+				recursiveDeleteCookie(key + '[' + encode(i) + ']', cookies[i]);
+			}else{
+				$.cookie(key + '[' + encode(i) + ']', '', {expires: -1, raw:1});
+			}
+		}
+	}
+
+	function recursiveAddCookie(key, value, options){
+		if(typeof value === 'object' || $.isArray(value)){
+			for(let i in value){
+				recursiveAddCookie(key + '[' + encode(i) + ']', value[i], options);
+			}
+		}else{
+			$.cookie(key, value, options);
+		}
+	}
+
 	function parseCookieValue(s) {
 		if (s.indexOf('"') === 0) {
 			// This is a quoted cookie as according to RFC2068, unescape...
@@ -48,56 +68,97 @@
 	}
 
 	function read(s, converter) {
-		var value = config.raw ? s : parseCookieValue(s);
+		let value = config.raw ? s : parseCookieValue(s);
 		return $.isFunction(converter) ? converter(value) : value;
 	}
 
 	var config = $.cookie = function (key, value, options) {
 
 		// Write
+		options = $.extend({}, config.defaults, options);
+		options.array = options.hasOwnProperty('array') && options.array ? 1 : 0;
 
 		if (value !== undefined && !$.isFunction(value)) {
-			options = $.extend({}, config.defaults, options);
 
 			if (typeof options.expires === 'number') {
-				var days = options.expires, t = options.expires = new Date();
+				let days = options.expires, t = options.expires = new Date();
 				t.setTime(+t + days * 864e+5);
 			}
 
 			options.raw = options.raw ? 1 : 0;
-
-			return (document.cookie = [
-				encode(key, options.raw), '=', stringifyCookieValue(value),
-				options.expires ? '; expires=' + options.expires.toUTCString() : '', // use expires attribute, max-age is not supported by IE
-				options.path    ? '; path=' + options.path : '',
-				options.domain  ? '; domain=' + options.domain : '',
-				options.secure  ? '; secure' : ''
-			].join(''));
+			if(options.array){
+				options.array = 0;
+				recursiveAddCookie(key, value, options);
+			}else{
+				return (document.cookie = [
+					encode(key, options.raw), '=', stringifyCookieValue(value),
+					options.expires ? '; expires=' + options.expires.toUTCString() : '', // use expires attribute, max-age is not supported by IE
+					options.path    ? '; path=' + options.path : '',
+					options.domain  ? '; domain=' + options.domain : '',
+					options.secure  ? '; secure' : ''
+				].join(''));
+			}
 		}
 
 		// Read
 
-		var result = key ? undefined : {};
+		let result = key ? undefined : {};
 
 		// To prevent the for loop in the first place assign an empty array
 		// in case there are no cookies at all. Also prevents odd result when
 		// calling $.cookie().
-		var cookies = document.cookie ? document.cookie.split('; ') : [];
+		let cookies = document.cookie ? document.cookie.split('; ') : [];
 
-		for (var i = 0, l = cookies.length; i < l; i++) {
-			var parts = cookies[i].split('=');
-			var name = decode(parts.shift());
-			var cookie = parts.join('=');
-
-			if (key && key === name) {
-				// If second argument (value) is a function it's a converter...
-				result = read(cookie, value);
-				break;
+		if(options.array){
+			result = {};
+			let isRes = false;
+			for(let i = 0; i < cookies.length; i++){
+				let parts = cookies[i].split('=');
+				let name = decode(parts.shift());
+				if(name.substr(0, key.length) !== key)
+					continue;
+				let tmp_name = name.substr(key.length);
+				let f = 0;
+				let keys = tmp_name.split(']').slice(0, -1);
+				for(let i1=0; i1 < keys.length; i1++){
+					keys[i1] = keys[i1].substring(1);
+					if(keys[i1] === ''){
+						f = 1;
+						break;
+					}
+				}
+				if(f)
+					continue;
+				if('[' + keys.join('][') + ']' !== tmp_name)
+					continue;
+				let cookie = parts.join('=');
+					// If second argument (value) is a function it's a converter...
+				let tmp_result = result;
+				for(let i1=0; i1 < keys.length-1; i1++){
+					if(!tmp_result.hasOwnProperty(keys[i1]))
+						tmp_result[keys[i1]] = {};
+					tmp_result = tmp_result[keys[i1]];
+				}
+				tmp_result[keys[keys.length-1]] = read(cookie, value);
+				isRes = true;
 			}
+			return isRes ? result : false;
+		}else{
+			for(let i = 0, l = cookies.length; i < l; i++){
+				let parts = cookies[i].split('=');
+				let name = decode(parts.shift());
+				let cookie = parts.join('=');
 
-			// Prevent storing a cookie that we couldn't decode.
-			if (!key && (cookie = read(cookie)) !== undefined) {
-				result[name] = cookie;
+				if(key && key === name){
+					// If second argument (value) is a function it's a converter...
+					result = read(cookie, value);
+					break;
+				}
+
+				// Prevent storing a cookie that we couldn't decode.
+				if(!key && (cookie = read(cookie)) !== undefined){
+					result[name] = cookie;
+				}
 			}
 		}
 
@@ -106,14 +167,20 @@
 
 	config.defaults = {};
 
-	$.removeCookie = function (key, options) {
-		if ($.cookie(key) === undefined) {
-			return false;
+	$.removeCookie = function(key, options){
+		options = $.extend({}, options, {expires: -1});
+		if(!(options.hasOwnProperty('array') && options.array)){
+			if($.cookie(key) === undefined){
+				return false;
+			}
+
+			$.cookie(key, '', options);
+			return !$.cookie(key);
 		}
 
-		// Must not alter options, thus extending a fresh object...
-		$.cookie(key, '', $.extend({}, options, { expires: -1 }));
-		return !$.cookie(key);
+		let cookies = $.cookie(key, undefined, options);
+		recursiveDeleteCookie(key, cookies);
+
 	};
 
 }));

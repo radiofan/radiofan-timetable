@@ -21,6 +21,7 @@ global $URL, $USER, $PAGE_DATA;
 	?>
 	<script src="/libs/jquery-3.4.1.min.js"></script>
 	<script src="/libs/jquery.cookie.js"></script>
+	<script src="/libs/jquery.searchSelect.js"></script>
 	<script src="/scripts/bootstrap-3.3.2.min.js"></script>
 	<script type="text/javascript">
 		/* <![CDATA[ */
@@ -36,7 +37,8 @@ global $URL, $USER, $PAGE_DATA;
 				35,
 				50
 			],
-			"table_min_height": 150
+			"table_min_height": 150,
+			"max_elements_timetable": <?php echo MAX_ELEMENTS_TIMETABLE; ?>
 		};
 		/* ]]> */
 	</script>

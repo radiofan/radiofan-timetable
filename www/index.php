@@ -22,8 +22,14 @@ require_once MAIN_DIR.'includes/data-class.php';
 $DATA = new rad_data();
 is_session_exists();
 
+require_once MAIN_DIR.'includes/alerts-class.php';
+$ALERTS = new rad_alerts();
+
 require_once MAIN_DIR.'includes/user-class.php';
 $USER = new rad_user();
+
+require_once MAIN_DIR.'includes/cookie-validator-class.php';
+$COOKIE_V = new rad_cookie();
 
 require_once MAIN_DIR.'includes/url-class.php';
 $URL = new URL();
@@ -31,6 +37,8 @@ $URL = new URL();
 require_once MAIN_DIR.'pages.php';
 gen_pages_tree();
 
+//reload_timetable();
+//die();
 
 $URL->load_current_page();
 

@@ -26,7 +26,8 @@ function get_pages_options(){
 			'user_level' => rad_user::GUEST,
 			'need_roles' => array(),
 			'type' => 'system',
-			'scripts' => array('table_script.js')
+			'scripts' => array('table_script.js'),
+			'libs' => array('jquery-ui-1.12.1.sortable.min.js')
 		),
 		'admin_edit_users' => array(
 			'title' => 'Редактирование пользователей',
@@ -113,6 +114,7 @@ function prepare_page_data(){
 	}
 	
 	if($page_id == 'main_page'){
+		/*
 		$ret['admin_links'] = '';
 		$ret['users_links'] = '';
 		if($USER->get_user_level() >= rad_user::NEDOADMIN){
@@ -142,6 +144,7 @@ function prepare_page_data(){
 					break;
 			}
 		}
+		*/
 		$ret['timetable'] = gen_timetable_html();
 	}else{
 		$flag = true;

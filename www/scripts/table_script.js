@@ -6,35 +6,27 @@ jQuery(document).ready(function($){
 		$table_head,
 		$table_sticks,
 		$table_extender,
+		$sections = $('#sections_collapse').children(),
 		cookie_elements = [],
-		$body = $('body'),
-		$settings = $('#settings_collapse .setting-row'),
-		settings_func = {
-			'teacher_add_hide':teacher_add_hide,
-			'go2curr_day':go2curr_day,
-			'cell_word_wrap':cell_word_wrap
-		};
+		$body = $('body');
 
 	$table_body = $table.children('.timetable-body');
 	$table_head = $table.children('.timetable-head');
 	$table_sticks = $table.children('.sticks');
 	$table_extender = $table.children('.timetable-extender');
 
+	//генрирование массива разделов
 	let tmp;
 	for(let i=0; i<DATA.max_elements_timetable; i++){
-		tmp = $.cookie('timetable[elements]['+i+'][type]');
+		tmp = $.cookie('timetable[elements]['+i+']', undefined, {'array':1});
 		if(!tmp)
 			break;
-		cookie_elements.push({
-			'type': tmp,
-			'id': $.cookie('timetable[elements]['+i+'][id]'),
-			'gr_name': $.cookie('timetable[elements]['+i+'][gr_name]')
-		});
+		cookie_elements.push(tmp);
 	}
 
 	//генерирование массива столбцов
-	tmp = $table.find('.cell[class *= "col-"]'), len=0;
-	len = tmp.length;
+	tmp = $table.find('.cell[class *= "col-"]');
+	let len = tmp.length;
 	for(let i=0; i<len; i++){
 		tmp[i] = $(tmp[i]);
 		if(cols.hasOwnProperty(tmp[i].data('col'))){
@@ -145,7 +137,14 @@ jQuery(document).ready(function($){
 		}
 	});
 
-	$settings.on('change.table', 'input[type=radio],input[type=checkbox]', function(e){
+	var settings_func = {
+		'teacher_add_hide': teacher_add_hide,
+		'go2curr_day': go2curr_day,
+		'cell_word_wrap': cell_word_wrap,
+		'cell_rowspan': cell_rowspan
+	};
+
+	$('#settings_collapse .setting-row').on('change.table', 'input[type=radio],input[type=checkbox]', function(e){
 		let $this= $(this);
 		settings_func[$this.data('settings')].apply($this);
 	});
@@ -160,9 +159,9 @@ jQuery(document).ready(function($){
 	}else if(tmp == 'day'){
 		tmp = $table_body.find('tr.today-row').first();
 	}else{
-		tmp = false;
+		tmp = [];
 	}
-	if(tmp){
+	if(tmp.length){
 		$table_body.scrollTop(tmp.position().top);
 	}
 
@@ -173,21 +172,21 @@ jQuery(document).ready(function($){
 		$search_select,
 		$additor_butt = $('#additor-modal-submit');
 
+	//добавление раздела по нажатию кнопки
+	//шаг 3
 	$additor_butt.on('click.additor', function(e){
-		if($additor_butt.prop('disabled'))
+		if($additor_butt.prop('disabled') || carousel_step != 3)
 			return;
 		let tmp = $('#additor-gr-name').val(),
 			end = cookie_elements.length - 1;
 		cookie_elements[end].gr_name = tmp;
-		tmp = cookie_elements[end];
-		$.cookie('timetable[elements]['+end+'][type]', tmp.type, {raw:1, expires:30});
-		$.cookie('timetable[elements]['+end+'][id]', tmp.id, {raw:1, expires:30});
-		$.cookie('timetable[elements]['+end+'][gr_name]', tmp.gr_name, {raw:1, expires:30});
+		$.cookie('timetable[elements]['+end+']', cookie_elements[end], {expires:30, array:1});
 		carousel_step++;
 		location.reload();
-		$('#additor-modal').modal('hide');
+		//$('#additor-modal').modal('hide');
 	});
 
+	//Очистка окна добавки
 	$('#additor-modal').on('hidden.bs.modal', function(e){
 		if(carousel_step == 3){
 			cookie_elements.pop();
@@ -198,6 +197,7 @@ jQuery(document).ready(function($){
 		$search_select.searchSelect('resetOpt');
 		$additor_butt.addClass('disabled').prop('disabled', 1);
 	});
+	//шаг 1
 	$additor_carousel.find('.additor-buttons').find('button').on('click.additor', function(e){
 		if(carousel_step != 1)
 			return;
@@ -205,14 +205,29 @@ jQuery(document).ready(function($){
 		$additor_block.children('.'+$(this).data('additor')+'-additor-block').show();
 		$additor_carousel.carousel('next');
 	});
+	//шаг 2
 	$search_select = $additor_block.find('select').searchSelect().on('rad_select_complete.additor', function(e, $opt){
 		if(carousel_step != 2)
 			return;
 		let $this = $(this);
 		let name = $this.data('searchSelect').name;
 		if(name == 'faculty_id'){
-
+			let f_id = false,
+				$gr = $search_select.filter('div[data-name=group_id]');
+			if($opt){
+				f_id = $opt.data('value');
+			}
+			if(f_id){
+				//[data-faculty_id='+f_id+']
+				$gr.find('li').data('is_use', false).filter('li[data-faculty_id='+f_id+']').data('is_use', true);
+			}else{
+				$gr.find('li').data('is_use', true);
+			}
+			$gr.searchSelect('resetOpt');
 		}else{
+			if(!$opt){
+				return;
+			}
 			let type;
 			switch(name){
 				case 'group_id':
@@ -235,6 +250,23 @@ jQuery(document).ready(function($){
 			if(cookie_elements.length <= DATA.max_elements_timetable)
 				$additor_butt.removeClass('disabled').prop('disabled', 0);
 		}
+	});
+
+
+	//перетаскивание, настройка столбцов
+	$sections.sortable({'handle':'.gr-drag'});
+	$sections.find('.section-cols-wrap').sortable({'handle':'.col-drag'});
+
+	//удаление разделов
+	$sections.children('.section-wrap').on('click.section_del', '.section-delete', function(e){
+		let $sec_wrap = $(e.delegateTarget);
+		let ind = $sec_wrap.data('gr');
+		//удаляем из куки элментс
+		cookie_elements.splice(ind-1, 1);
+		$.removeCookie('timetable[elements]', {array:1});
+		$.cookie('timetable[elements]', cookie_elements, {array:1, expires:30});
+
+		//удаляем куки палок TODO
 	});
 
 
@@ -282,5 +314,10 @@ jQuery(document).ready(function($){
 
 	function go2curr_day(){
 		$.cookie('timetable[options][go2curr_day]', this.val(), {raw:1, expires:30});
+	}
+	
+	function cell_rowspan(){
+		$.cookie('timetable[options][cell_rowspan]', +this.prop('checked'), {raw:1, expires:30});
+		location.reload();
 	}
 });
