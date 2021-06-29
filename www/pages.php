@@ -25,7 +25,8 @@ function get_pages_options(){
 			'title' => 'Главная',
 			'user_level' => rad_user::GUEST,
 			'need_roles' => array(),
-			'type' => 'system'
+			'type' => 'system',
+			'scripts' => array('table_script.js')
 		),
 		'admin_edit_users' => array(
 			'title' => 'Редактирование пользователей',

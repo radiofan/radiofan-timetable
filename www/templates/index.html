@@ -1,6 +1,83 @@
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-md-8 col-md-offset-1">
+			<div class="timetable-block">
+				<div class="sticks">
+					<div class="stick" data-col="1" style="left:49px;"></div><!--50 - 1-->
+					<div class="stick" data-col="2" style="left:140px;"></div><!-- 49 + 90 + 1 -->
+					<div class="stick" data-col="3" style="left:391px;"></div><!-- 140 + 250 + 1 -->
+					<div class="stick" data-col="4" style="left:492px;"></div>
+					<div class="stick" data-col="5" style="left:573px;"></div>
+					<div class="stick" data-col="6" style="left:654px;"></div>
+					<div class="stick" data-col="7" style="left:755px;"></div>
+				</div>
+				<div class="timetable-head">
+					<div class="timetable-head-wrap">
+						<table class="timetable-table">
+							<thead>
+								<tr>
+									<th rowspan="2"><div class="cell col-number" data-col="1">№ пары</div></th>
+									<th rowspan="2"><div class="cell col-time" data-col="2">Время</div></th>
+									<th colspan="5"><div class="cell gr-1">Заголовок</div></th>
+								</tr>
+								<tr>
+									<th><div class="cell gr-1 col-lesson" data-col="3">Урок</div></th>
+									<th><div class="cell gr-1 col-lesson-add" data-col="4">Тип</div></th>
+									<th><div class="cell gr-1 col-group" data-col="5">Группа</div></th>
+									<th><div class="cell gr-1 col-cabinet" data-col="6">Кабинет</div></th>
+									<th><div class="cell gr-1 col-teacher" data-col="7">Препод</div></th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+				<div class="timetable-body">
+					<table class="timetable-table">
+						<tr class="clean-row row">
+							<td colspan="7"><div class="cell week">Неделя 1</div></td>
+						</tr>
+						<tr class="clean-row row">
+							<td colspan="7"><div class="cell day">Понедельник</div></td>
+						</tr>
+						<tr class="default-row row">
+							<td><div class="cell col-number" data-col="1">1</div></td>
+							<td><div class="cell col-time" data-col="2">08:15-09:45</div></td>
+							<td><div class="cell gr-1 col-lesson" data-col="3">водогрейные котлы и котлы-утилизаторы</div></td>
+							<td><div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div></td>
+							<td><div class="cell gr-1 col-group" data-col="5">ИВТ-91</div></td>
+							<td><div class="cell gr-1 col-cabinet" data-col="6">228 ГК</div></td>
+							<td><div class="cell gr-1 col-teacher" data-col="7">Вася пупкин<br>доцент</div></td>
+						</tr>
+						<tr class="default-row row">
+							<td><div class="cell col-number" data-col="1">1</div></td>
+							<td><div class="cell col-time" data-col="2">08:15-09:45</div></td>
+							<td><div class="cell gr-1 col-lesson" data-col="3">водогрейные котлы и котлы-утилизаторы</div></td>
+							<td><div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div></td>
+							<td><div class="cell gr-1 col-group" data-col="5">ИВТ-91</div></td>
+							<td><div class="cell gr-1 col-cabinet" data-col="6">228 ГК</div></td>
+							<td><div class="cell gr-1 col-teacher" data-col="7">Вася пупкин<br>доцент</div></td>
+						</tr>
+						<tr class="default-row row">
+							<td rowspan="2"><div class="cell col-number" data-col="1">1</div></td>
+							<td rowspan="2"><div class="cell col-time" data-col="2">08:15-09:45</div></td>
+							<td rowspan="2"><div class="cell gr-1 col-lesson" data-col="3">водогрейные котлы и котлы-утилизаторы</div></td>
+							<td><div class="cell gr-1 col-lesson-add" data-col="4">(пр. подгруппа -а)</div></td>
+							<td rowspan="2"><div class="cell gr-1 col-group" data-col="5">ИВТ-91</div></td>
+							<td rowspan="2"><div class="cell gr-1 col-cabinet" data-col="6">228 ГК</div></td>
+							<td><div class="cell gr-1 col-teacher" data-col="7">Вася пупкин<br>доцент</div></td>
+						</tr>
+						<tr class="default-row row">
+							<td><div class="cell gr-1 col-lesson-add" data-col="4">(пр. подгруппа -б)</div></td>
+							<td><div class="cell gr-1 col-teacher" data-col="7">Наташа пупкина<br>доцент</div></td>
+						</tr>
+					</table>
+				</div>
+				<div class="timetable-extender"><span class="timetable-extender-marker"></span></div>
+			</div>
+			
+			
+			
+			
 			<div class="links-list">
 			{users_links}
 			{admin_links}

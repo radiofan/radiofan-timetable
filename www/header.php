@@ -26,7 +26,15 @@ global $URL, $USER, $PAGE_DATA;
 	<script type="text/javascript">
 		/* <![CDATA[ */
 		var DATA = {
-			"ignoreForms":".login"
+			"ignoreForms":".login",
+			"cols_min_width": {
+				"1":25,
+				"2":55,
+				"3":100,
+				"4":50,
+				"5":35,
+				"6":50
+			}
 		};
 		/* ]]> */
 	</script>

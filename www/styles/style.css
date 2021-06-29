@@ -3,23 +3,6 @@ body{
 	padding-bottom: 30px;
 }
 
-.progress-bar-container{
-	margin: 0 0 0 auto;
-	width:150px;
-	border-radius:4px;
-	position:relative;
-	height:20px;
-	overflow: hidden;
-}
-
-.progress-bar{
-	width:0%;
-	position:absolute;
-	background-color:#5bc0de;
-	height:100%;
-	z-index:-1;
-}
-
 .a{
 	cursor:pointer;
 }
@@ -36,91 +19,126 @@ body{
 	transform: translate(-50%, -50%);
 }
 
-.download{
-	margin:10px 0;
-}
-
-.download-select{
-	width: 80px;
-	display: inline;
-}
-
-.download-link{
-	line-height:34px;
-}
-
-
-#coupon{
-	width:50%;
-	min-width:150px;
-	display:inline;
-	vertical-align:middle;
-}
-
-.cm-s-default.CodeMirror-wrap{
-	cursor:text;
-	height: 208px;
-	padding: 0 12px;
-	font-size: 14px;
-	color: #555;
-	background-color: #fff;
+.timetable-block{
+	position: relative;
 	border: 1px solid #ccc;
-	border-radius: 4px;
-	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-	box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-	-webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
-	-o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-	transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+	padding: 10px 10px 0 10px;
+	margin-bottom:50px;
 }
 
-.modal-title{
-	display:inline;
+.sticks{
+	position:absolute;
+	z-index:2;
+	height: calc(100% - 16px);
 }
 
-.close{
-	font-size:25px;
-	line-height:1.42857143;
+.timetable-head{
+	position: relative;
+	max-width: 100%;
+	overflow: hidden;
 }
 
-.has-synonyms{
-	cursor:pointer;
-	color:#ff0000;
+.timetable-head-wrap{
+	float:left;
+	padding-right:40px;
 }
 
-.selectable{
-	cursor:pointer;
-
-}
-.selectable:hover{
-	color:#6C757D;
+.timetable-head table{
+	border-collapse: collapse;
 }
 
-.cm-s-default.CodeMirror-wrap.CodeMirror-focused{
-	border-color:#66AFE9;
-	outline:0;
-	-webkit-box-shadow:inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
-	box-shadow:inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
+.timetable-head th{
+	text-align:center;
+	border:1px solid #ddd;
 }
 
-.CodeMirror-focused .CodeMirror-selected{
-	background-color:rgba(102, 175, 233, .6);
-}
-.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background-color:rgba(102, 175, 233, .6); }
-.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background-color:rgba(102, 175, 233, .6); }
-
-.CodeMirror:not(.not-style) .cm-stick{
-	font-weight: bold;
+.timetable-body{
+	overflow: auto;
+	position: relative;
+	display: inline-block;
+	height: 400px;
+	max-width: 100%;
 }
 
-.CodeMirror:not(.not-style) .cm-delimiter{
-	color:#0000cd;
-	font-weight: bold;
+.timetable-block .cell{
+	padding:5px;
+	overflow:hidden;
+	text-overflow:ellipsis;
 }
 
-.CodeMirror:not(.not-style) .cm-synonyms{
-	color:#009800;
+.timetable-body .default-row td{
+	border:1px solid #ddd;
 }
 
-.CodeMirror:not(.not-style) .cm-series{
-	color:#0088FF;
+.timetable-body .row .cell{
+	min-height:30px;
+}
+
+.timetable-table .col-number{
+	width:50px;
+	text-align:center;
+}
+
+.timetable-table .col-time{
+	width:90px;
+	text-align:center;
+}
+
+.timetable-table .col-lesson{
+	width:250px;
+}
+
+.timetable-table .col-lesson-add{
+	width:100px;
+}
+
+.timetable-table .col-group{
+	width:80px;
+	text-align:center;
+}
+
+.timetable-table .col-cabinet{
+	width:80px;
+	text-align:center;
+}
+
+.timetable-table .col-teacher{
+	width:100px;
+}
+
+.stick{
+	height:100%;
+	width:5px;
+	position:absolute;
+}
+
+.stick:hover, .stick.hover{
+	background-color:black;
+	background:linear-gradient(90deg, transparent 0px, transparent 2px, #000 2px, #000 3px, transparent 3px, transparent 100%);
+	cursor:col-resize;
+}
+
+.timetable-extender{
+	height: 6px;
+	overflow: hidden;
+	position: absolute;
+	background-color: #f1f1f1;
+	border-top: 1px solid #ccc;
+	text-align: center;
+	cursor: row-resize;
+	bottom: 0;
+	width: 100%;
+	left: 0;
+}
+
+.timetable-extender-marker{
+	display: block;
+	margin: 1px auto;
+	width: 20px;
+	height: 1px;
+	overflow: hidden;
+	border-top: 1px solid #aaa;
+	border-bottom: 1px solid #aaa;
+	background: none;
+	box-sizing: content-box;
 }
