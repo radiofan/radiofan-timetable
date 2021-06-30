@@ -3,11 +3,11 @@
 	top:50%;
 	left:50%;
 
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	-o-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+	-webkit-transform:translate(-50%, -50%);
+	-moz-transform:translate(-50%, -50%);
+	-ms-transform:translate(-50%, -50%);
+	-o-transform:translate(-50%, -50%);
+	transform:translate(-50%, -50%);
 }
 
 .ui-sortable-handle{
@@ -16,7 +16,7 @@
 }
 
 .section-wrap{
-	width:400px;
+	width:500px;
 	border:1px solid #eee;
 	border-radius:2px;
 	margin:5px;
@@ -24,16 +24,18 @@
 
 .section-header{
 	position:relative;
-	height: 34px;
+	height:34px;
 	margin-top:2px;
 }
+
 .section-col{
 	position:relative;
-	height: 34px;
+	height:34px;
 	background-color:#f8f8f8;
 	margin:2px 2px 2px 20px;
 	border-radius:2px;
 }
+
 .section-draggable{
 	position:absolute;
 	left:0;
@@ -47,15 +49,18 @@
 	user-select:none;
 	-webkit-user-select:none;
 }
+
 .section-type{
 	cursor:pointer;
 }
+
 .section-data{
-	max-width:330px;
-	white-space: nowrap;
+	max-width:430px;
+	white-space:nowrap;
 	position:absolute;
 	right:34px;
 }
+
 .section-delete{
 	position:absolute;
 	right:0;
@@ -69,12 +74,15 @@
 	user-select:none;
 	-webkit-user-select:none;
 }
+
 .section-delete:hover{
 	color:#d9534f;
 }
+
 .section-delete:active{
 	color:#9c2b29;
 }
+
 .section-showhide{
 	position:absolute;
 	right:0;
@@ -98,15 +106,15 @@
 	display:none;
 }
 
-.additor-block>div{
+.additor-block > div{
 	width:70%;
 }
 
 /*недостатки бутстрапа*/
 
 body{
-	padding-top: 70px;
-	padding-bottom: 30px;
+	padding-top:70px;
+	padding-bottom:30px;
 }
 
 .a{
@@ -123,56 +131,61 @@ body{
 }
 
 .card{
-	position: relative;
-	display: -ms-flexbox;
-	display: flex;
-	-ms-flex-direction: column;
-	flex-direction: column;
-	min-width: 0;
-	word-wrap: break-word;
-	background-color: #fff;
-	background-clip: border-box;
-	border: 1px solid rgba(0,0,0,.125);
-	border-radius: .25rem;
+	position:relative;
+	display:-ms-flexbox;
+	display:flex;
+	-ms-flex-direction:column;
+	flex-direction:column;
+	min-width:0;
+	word-wrap:break-word;
+	background-color:#fff;
+	background-clip:border-box;
+	border:1px solid rgba(0,0,0,.125);
+	border-radius:.25rem;
 }
+
 .card-header:first-child{
-	border-radius: calc(.25rem - 1px) calc(.25rem - 1px) 0 0;
+	border-radius:calc(.25rem - 1px) calc(.25rem - 1px) 0 0;
 }
+
 .card-header{
-	margin-bottom: 0;
-	background-color: rgba(0,0,0,.03);
-	border-bottom: 1px solid rgba(0,0,0,.125);
+	margin-bottom:0;
+	background-color:rgba(0,0,0,.03);
+	border-bottom:1px solid rgba(0,0,0,.125);
 }
+
 .card-body{
 	-ms-flex:1 1 auto;
 	flex:1 1 auto;
 	min-height:1px;
 	padding:1.25rem;
 }
+
 .mb-0{
 	margin:0;
 }
+
 /*конец*/
 
 /*стиди таблицы*/
 .timetable-block{
-	position: relative;
-	border: 1px solid #909090;
-	padding: 10px 10px 0 10px;
+	position:relative;
+	border:1px solid #909090;
+	padding:10px 10px 0 10px;
 	margin:0;
-	overflow-x: hidden;
+	overflow-x:hidden;
 }
 
 .sticks{
 	position:absolute;
 	z-index:2;
-	height: calc(100% - 16px);
+	height:calc(100% - 16px);
 }
 
 .timetable-head{
-	position: relative;
-	max-width: 100%;
-	overflow: hidden;
+	position:relative;
+	max-width:100%;
+	overflow:hidden;
 }
 
 .timetable-head-wrap{
@@ -181,7 +194,7 @@ body{
 }
 
 .timetable-head table{
-	border-collapse: collapse;
+	border-collapse:collapse;
 }
 
 .timetable-head th{
@@ -190,11 +203,11 @@ body{
 }
 
 .timetable-body{
-	overflow: auto;
-	position: relative;
-	display: inline-block;
-	height: 400px;
-	max-width: 100%;
+	overflow:auto;
+	position:relative;
+	display:inline-block;
+	height:400px;
+	max-width:100%;
 }
 
 .timetable-block .cell{
@@ -268,28 +281,28 @@ body{
 }
 
 .timetable-extender{
-	height: 6px;
-	overflow: hidden;
-	position: absolute;
-	background-color: #f1f1f1;
-	border-top: 1px solid #909090;
-	text-align: center;
-	cursor: row-resize;
-	bottom: 0;
-	width: 100%;
-	left: 0;
+	height:6px;
+	overflow:hidden;
+	position:absolute;
+	background-color:#f1f1f1;
+	border-top:1px solid #909090;
+	text-align:center;
+	cursor:row-resize;
+	bottom:0;
+	width:100%;
+	left:0;
 }
 
 .timetable-extender-marker{
-	display: block;
-	margin: 1px auto;
-	width: 20px;
-	height: 1px;
-	overflow: hidden;
-	border-top: 1px solid #aaa;
-	border-bottom: 1px solid #aaa;
-	background: none;
-	box-sizing: content-box;
+	display:block;
+	margin:1px auto;
+	width:20px;
+	height:1px;
+	overflow:hidden;
+	border-top:1px solid #aaa;
+	border-bottom:1px solid #aaa;
+	background:none;
+	box-sizing:content-box;
 }
 
 /*конец*/
@@ -338,7 +351,7 @@ input.radiofan-input{
 	z-index:8000;
 	display:none;
 	max-height:150px;
-	box-sizing: border-box;
+	box-sizing:border-box;
 }
 
 .radiofan-select > ul{
@@ -347,7 +360,7 @@ input.radiofan-input{
 	padding-left:0;
 }
 
-.radiofan-select  hr{
+.radiofan-select hr{
 	margin-top:10px;
 }
 
@@ -363,84 +376,86 @@ input.radiofan-input{
 }
 
 .select-region{
-	background-color:rgba(140, 140, 140, 0.3);
+	background-color:rgba(140,140,140,0.3);
 }
+
 /*конец*/
 
 /*checkbox, radio*/
 input[type=radio]:focus, input[type=checkbox]:focus{
 	outline:none;
-	border-color: #5b9dd9;
-	box-shadow: 0 0 2px rgba(30,140,190,.8);
+	border-color:#5b9dd9;
+	box-shadow:0 0 2px rgba(30,140,190,.8);
 }
 
 input[type=radio], input[type=checkbox]{
-	border: 1px solid #ddd;
-	box-shadow: inset 0 1px 2px rgba(0,0,0,.07);
-	background-color: #fff;
-	color: #32373c;
-	outline: 0;
-	transition: 50ms border-color ease-in-out;
+	border:1px solid #ddd;
+	box-shadow:inset 0 1px 2px rgba(0,0,0,.07);
+	background-color:#fff;
+	color:#32373c;
+	outline:0;
+	transition:50ms border-color ease-in-out;
 }
 
 input[type=radio], input[type=checkbox]{
-	border: 1px solid #b4b9be;
-	background: #fff;
-	color: #555;
-	clear: none;
-	cursor: pointer;
+	border:1px solid #b4b9be;
+	background:#fff;
+	color:#555;
+	clear:none;
+	cursor:pointer;
 	/*display: block;*/
-	line-height: 0;
-	height: 16px;
-	outline: 0;
-	padding: 0!important;
-	text-align: center;
-	vertical-align: middle;
-	width: 16px;
-	min-width: 16px;
-	-webkit-appearance: none;
-	box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
-	transition: .05s border-color ease-in-out;
+	line-height:0;
+	height:16px;
+	outline:0;
+	padding:0 !important;
+	text-align:center;
+	vertical-align:middle;
+	width:16px;
+	min-width:16px;
+	-webkit-appearance:none;
+	box-shadow:inset 0 1px 2px rgba(0,0,0,.1);
+	transition:.05s border-color ease-in-out;
 	margin:0 10px;
 }
 
 input[type=checkbox]:checked:before{
-	content: "\2714";
-	margin: 6px 0 0 0;
-	color: #1e8cbe;
-	font-size: 20px;
-	width: 16px;
+	content:"\2714";
+	margin:6px 0 0 0;
+	color:#1e8cbe;
+	font-size:20px;
+	width:16px;
 	outline:none;
 }
 
 input[type=radio]{
-	border-radius: 50%;
-	margin-right: 4px;
-	line-height: 10px;
+	border-radius:50%;
+	margin-right:4px;
+	line-height:10px;
 }
 
 input[type=radio]:checked:before{
-	content: "\2022";
-	text-indent: -9999px;
-	border-radius: 50px;
-	font-size: 24px;
-	width: 6px;
-	height: 6px;
-	margin: 4px;
-	line-height: 16px;
-	background-color: #1e8cbe;
+	content:"\2022";
+	text-indent:-9999px;
+	border-radius:50px;
+	font-size:24px;
+	width:6px;
+	height:6px;
+	margin:4px;
+	line-height:16px;
+	background-color:#1e8cbe;
 	outline:none;
 }
 
 input[type=radio]:checked:before, input[type=checkbox]:checked:before{
-	float: left;
-	display: inline-block;
-	vertical-align: middle;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+	float:left;
+	display:inline-block;
+	vertical-align:middle;
+	-webkit-font-smoothing:antialiased;
+	-moz-osx-font-smoothing:grayscale;
 }
 
-input[type=radio].disabled, input[type=radio].disabled:checked:before, input[type=radio]:disabled, input[type=radio]:disabled:checked:before, input[type=checkbox].disabled, input[type=checkbox].disabled:checked:before, input[type=checkbox]:disabled, input[type=checkbox]:disabled:checked:before {
-	opacity: .7;
+input[type=radio].disabled, input[type=radio].disabled:checked:before, input[type=radio]:disabled, input[type=radio]:disabled:checked:before, input[type=checkbox].disabled, input[type=checkbox].disabled:checked:before, input[type=checkbox]:disabled, input[type=checkbox]:disabled:checked:before{
+	opacity:.7;
 }
+
 /*конец*/

@@ -43,7 +43,7 @@ function gen_timetable_html(){
 	$sticks = '<div class="stick" data-col="1"></div><div class="stick" data-col="2"></div>';
 	
 	
-	$elems =array_values($elems);
+	$elems = array_values($elems);
 	$elems_len = sizeof($elems);
 	$table = array();
 	for($i=0; $i<$elems_len; $i++){
@@ -71,7 +71,7 @@ SELECT
 	`tm_t`.*,
 	`gr_t`.`name` AS `group_name`, `gr_t`.`faculty_id`,
 	`cb_t`.`cabinet`, `cb_t`.`additive` AS `cabinet_additive`, `cb_t`.`building`,
-    `th_t`.`fio`, `th_t`.`additive` AS `teacher_additive`
+	`th_t`.`fio`, `th_t`.`additive` AS `teacher_additive`
 FROM
 	`stud_timetable` AS `tm_t`
 LEFT JOIN `stud_groups` AS `gr_t`
@@ -462,8 +462,6 @@ function get_table_size_html($width){
 	return $width;
 }
 
-//TODO searchSelect enter
-
 /**
  *
  * see footer.php
@@ -681,11 +679,11 @@ function gen_settings_block_html(){
 									<span>Нет</span>
 								</label>
 								<label>
-									<input type="radio" name="settings[go2curr_day]" value="week" data-settings="go2curr_day"'.($options['go2curr_day'] == 1 ? $checked[1] : '').'>
+									<input type="radio" name="settings[go2curr_day]" value="1" data-settings="go2curr_day"'.($options['go2curr_day'] == 1 ? $checked[1] : '').'>
 									<span>Неделе</span>
 								</label>
 								<label>
-									<input type="radio" name="settings[go2curr_day]" value="day" data-settings="go2curr_day"'.($options['go2curr_day'] == 2 ? $checked[1] : '').'>
+									<input type="radio" name="settings[go2curr_day]" value="2" data-settings="go2curr_day"'.($options['go2curr_day'] == 2 ? $checked[1] : '').'>
 									<span>Дню</span>
 								</label>
 							</div>

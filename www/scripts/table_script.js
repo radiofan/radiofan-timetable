@@ -154,9 +154,9 @@ jQuery(document).ready(function($){
 	set_sticks();
 	//передвижение к текущему дню/неделе
 	tmp = $.cookie('timetable[options][go2curr_day]');
-	if(tmp == 'week'){
+	if(tmp == 1){//week
 		tmp = $table_body.find('tr.curr-week-row').first();
-	}else if(tmp == 'day'){
+	}else if(tmp == 2){//day
 		tmp = $table_body.find('tr.today-row').first();
 	}else{
 		tmp = [];
@@ -180,7 +180,7 @@ jQuery(document).ready(function($){
 		let tmp = $('#additor-gr-name').val(),
 			end = cookie_elements.length - 1;
 		cookie_elements[end].gr_name = tmp;
-		$.cookie('timetable[elements]['+end+']', cookie_elements[end], {expires:30, array:1});
+		$.cookie('timetable[elements]['+end+']', cookie_elements[end], {raw:1, expires:30, array:1});
 		carousel_step++;
 		location.reload();
 		//$('#additor-modal').modal('hide');
@@ -264,7 +264,7 @@ jQuery(document).ready(function($){
 		//удаляем из куки элментс
 		cookie_elements.splice(ind-1, 1);
 		$.removeCookie('timetable[elements]', {array:1});
-		$.cookie('timetable[elements]', cookie_elements, {array:1, expires:30});
+		$.cookie('timetable[elements]', cookie_elements, {raw:1, array:1, expires:30});
 
 		//удаляем куки палок TODO
 	});
