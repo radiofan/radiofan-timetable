@@ -23,33 +23,10 @@ $DATA = new rad_data();
 is_session_exists();
 
 require_once MAIN_DIR.'includes/alerts-class.php';
-$ALERTS = new rad_alerts();//TODO переделать логику, добавить запоминание в БД
+$ALERTS = new rad_alerts();
 
 require_once MAIN_DIR.'includes/user-class.php';
 $USER = new rad_user();
-
-require_once MAIN_DIR.'includes/cookie-validator-class.php';
-$COOKIE_V = new rad_cookie();
-
-require_once MAIN_DIR.'includes/url-class.php';
-$URL = new URL();
-
-require_once MAIN_DIR.'pages.php';
-gen_pages_tree();
-
-//reload_timetable();
-//die();
-
-$URL->load_current_page();
-
-require_once MAIN_DIR.'actions.php';
-if(do_actions() && CLEAR_POST)
-	redirect($URL->get_current_url());
-
-$PAGE_DATA = prepare_page_data();
-
-
-$URL->view_current_page($PAGE_DATA);
 
 
 ?>

@@ -31,25 +31,21 @@ CREATE TABLE `coupons` (
  * параметры, индивидуальные для каждого пользователя ($options)
  */
 class rad_user{
-	/**
-	 * @var int $id - ID пользователя в БД
-	 */
+	/**  @var int $id - ID пользователя в БД */
 	private $id;
-	/**
-	 * @var string $login - логин юзера в БД
-	 */
+	/** @var string $login - логин юзера в БД */
 	private $login = '';
-	/**
-	 * @var string $date - дата (timestamp) регистрации юзера в БД
-	 */
+	/** @var string $date - дата (timestamp) регистрации юзера в БД */
 	private $date = 0;
-	/**
-	 * @var array $roles - массив прав пользователя
-	 */
+	/**  @var string $email - почта пользоватля */
+	private $email;
+	/** @var array $roles - массив id прав пользователя */
 	private $roles;
-	/**
-	 * @var array $options - массив параметров пользователя
-	 */
+
+	/**  @var array $all_roles - массив всех возможных прав пользователя*/
+	static private $all_roles = null;
+	
+	/** @var array $options - массив параметров пользователя */
 	private $options = null;
 	/**
 	 * @var int $user_level - уровень прав пользователя
@@ -72,6 +68,7 @@ class rad_user{
 	 * @param int $id - ID юзера, null для создания объекта текущекого юзера
 	 */
 	function __construct($id = null){
+		self::load_all_roles();
 		if(isset($id)){
 			try{
 				$this->load_user($id);
@@ -99,13 +96,24 @@ class rad_user{
 	function load_user($id){
 		global $DB;
 		$this->id = $id;
-		$tmp = $DB->getRow('SELECT `login`, `level`, `roles`, `date` FROM `our_users` WHERE `id` = ?i', $this->id);
+		$tmp = $DB->getRow('SELECT `login`, `email`, `level`, `date` FROM `our_u_users` WHERE `id` = ?i', $this->id);
 		if(empty($tmp))
 			throw new Exception('undefined user');
 		$this->login = $tmp['login'];
+		$this->email = $tmp['email'];
 		$this->date = $tmp['date'];
-		$this->roles = unserialize($tmp['roles']);
 		$this->user_level = absint($tmp['level']);
+		$this->load_roles();
+		$this->options = array();
+	}
+
+	/**
+	 * загружает массив id, дополнительных прав пользователя
+	 */
+	private function load_roles(){
+		global $DB;
+		//загружаем перманентные права, work_time == 'inf'
+		$this->roles = $DB->getCol('SELECT `role_id` FROM `our_u_users_roles` WHERE `user_id` = ?i AND `work_time` != ?s', $this->id, 'INF');
 	}
 	
 	/**
@@ -114,6 +122,7 @@ class rad_user{
 	function set_guest(){
 		$this->id = 0;
 		$this->user_level = $this::GUEST;
+		$this->email = '';
 		$this->roles = array();
 		$this->options = array();
 	}
@@ -121,78 +130,94 @@ class rad_user{
 	/**
 	 * Загружает параметры пользователя из БД
 	 * @return bool - false если пользователь гость
-	 * @throws Exception - пользователь не найден в БД
 	 */
-	function load_options(){
+	function load_all_options(){
 		if(!$this->id)
 			return false;
 		global $DB;
-		$tmp = $DB->getOne('SELECT `options` FROM `our_users` WHERE `id` = ?i', $this->id);
-		if($tmp === false)
-			throw new Exception('undefined user');
-		$this->options = unserialize($tmp);
+		$tmp = $DB->getAll('SELECT `key`, `value` FROM `our_u_options` WHERE `user_id` = ?i', $this->id);
+		$len = sizeof($tmp);
+		for($i=0; $i<$len; $i++){
+			$this->options[$tmp[$i]['key']] = array('isset' => true, 'val' => unserialize($tmp[$i]['value']));
+		}
 		return true;
 	}
 	
 	/**
 	 * Возвращает параметр юзера
-	 * @param $key - ключ параметра
+	 * @param string $key - ключ параметра
 	 * @return mixed|null - null в случае если параметр не существует
 	 */
 	function get_option($key){
-		if(is_null($this->options)){
-			try{
-				$this->load_options();
-			}catch(Exception $e){
-				$this->user_logout();
-			}
+		if(isset($this->options[$key]))
+			return $this->options[$key]['val'];
+		global $DB;
+		$key = option_name_clear($key);
+		if((string)$key === '')
+			return null;
+		$tmp = $DB->getOne('SELECT `value` FROM `our_u_options` WHERE `user_id` = ?i AND `key` = ?s', $this->id, $key);
+		if($tmp === false){
+			$this->options[$key] = array('isset' => false, 'val' => null);
+		}else{
+			$this->options[$key] = array('isset' => true, 'val' => unserialize($tmp));
 		}
-		return isset($this->options[$key]) ? $this->options[$key] : null;
+		return $this->options[$key]['val'];
 	}
 	
 	/**
 	 * Устанавливает параметр для пользователя
-	 * @param $key - ключ параметра
-	 * @param $value - значение параметра
+	 * @param string $key - ключ параметра
+	 * @param mixed $value - значение параметра, если null параметр удаляется
 	 */
 	function set_option($key, $value){
-		if(is_null($this->options))
-			$this->options = array();
-		if(is_null($value) && isset($this->options[$key])){
-			unset($this->options[$key]);
-		}else{
-			$this->options[$key] = $value;
+		$key = option_name_clear($key);
+		if((string)$key === '')
+			return false;
+		if(!isset($this->options[$key])){
+			$this->get_option($key);
 		}
+		$this->options[$key]['val'] = $value;
+		return true;
 	}
 	
 	/**
-	 * Обновляет указанные парамтеры пользователя в БД
+	 * Обновляет указанные параметры пользователя в БД
 	 * @param array|string $param1 - массив ключей
 	 * @param string $param2 или ключи
 	 * @param string $param3
-	 * @throws Exception - пользователь не найден в БД
 	 */
 	function update_options(){
+		//собираем массив ключей параметров
 		if(func_num_args() == 0)
 			return;
+		/** @var  string[] $args - массив ключей параметров */
 		$args = func_get_args();
 		if(is_array($args[0])){
 			$args = $args[0];
 		}
+		//обновляем параметры
+		global $DB;
 		$len = sizeof($args);
-		$old_options = $this->options;
-		$this->load_options();
 		for($i=0; $i<$len; $i++){
-			//если существует параметр с ключом из массива
-			if(isset($old_options[$args[$i]])){
-				//задаем значение параметра
-				$this->options[$args[$i]] = $old_options[$args[$i]];
-			}else{
-				//иначе попытаемся удалить параметр
-				unset($this->options[$args[$i]]);
+			$key = $args[$i];
+			if(isset($this->options[$key])){
+				//если параметр установлен, но равен null
+				if($this->options[$key]['isset'] && is_null($this->options[$key]['val'])){
+					//то его нужно удалить
+					$DB->query('DELETE FROM `our_u_options` WHERE `user_id` = ?i AND `key` = ?s', $this->id, $key);
+					$this->options[$key]['isset'] = false;
+				//если параметр установлен и имеет значение
+				}else if($this->options[$key]['isset'] && !is_null($this->options[$key]['val'])){
+					//то его нужно обновить
+					$DB->query('UPDATE `our_u_options` SET `value` = ?s WHERE `user_id` = ?i AND `key` = ?s', serialize($this->options[$key]['val']), $this->id, $key);
+				//если параметр не установлен, но имеет значение
+				}else if(!$this->options[$key]['isset'] && !is_null($this->options[$key]['val'])){
+					//то его нужно добавить
+					$DB->query('INSERT INTO `our_u_options` (`user_id`, `key`, `value`) VALUES (?i, ?s, ?s)', $this->id, $key, serialize($this->options[$key]['val']));
+					$this->options[$key]['isset'] = true;
+				}
 			}
 		}
-		$this->update_all_options();
 	}
 	
 	/**
@@ -200,106 +225,288 @@ class rad_user{
 	 */
 	function update_all_options(){
 		global $DB;
-		$DB->query('UPDATE `our_users` SET `options` = ?s WHERE `id` = ?i', serialize($this->options), $this->id);
-	}
-	
-	/**
-	 * Добавление пользователю прав, если уровень пользователя больше, чем уровень права, то оно не установится, но будет работать
-	 * @param $role - id права из get_roles_range()
-	 * @see get_roles_range
-	 * @return bool
-	 */
-	function add_role($role){
-		$tmp = $this->get_roles_range($role);
-		if($this->user_level >= $tmp)
-			return true;
-		if(is_null($tmp) || in_array($role, $this->roles)){
-			return false;
-		}else{
-			$this->roles[] = $role;
-			global $DB;
-			$DB->query('UPDATE `our_users` SET `roles` = ?s WHERE `id` = ?i', serialize($this->roles), $this->id);
-			return true;
+		$query = 'INSERT INTO `our_u_options` (`user_id`, `key`, `value`) VALUES ';
+		foreach($this->options as $key => $val){
+			if(!$this->options[$key]['isset'] && !is_null($this->options[$key]['val'])){
+				$this->options[$key]['isset'] = true;
+			}
+			$query .= $DB->parse('(?i, ?s, ?s),',  $this->id, $key, serialize($val));
 		}
-	}
-	
-	/**
-	 * Удаление дополнительных прав пользователя
-	 * @param $role - id права из get_roles_range()
-	 * @see get_roles_range
-	 * @return bool
-	 */
-	function remove_role($role){
-		$tmp = array_search($role, $this->roles);
-		if($tmp === false){
-			return false;
-		}else{
-			unset($this->roles[$tmp]);
-			global $DB;
-			$DB->query('UPDATE `our_users` SET `roles` = ?s WHERE `id` = ?i', serialize($this->roles), $this->id);
-			return true;
+		$DB->query('LOCK TABLES `our_u_options` WRITE');
+		$DB->query('DELETE FROM `our_u_options` WHERE `user_id` = ?i', $this->id);
+		if(sizeof($this->options)){
+			$DB->query(mb_substr($query, 0, mb_strlen($query)-1));
 		}
+		$DB->query('UNLOCK TABLES');
 	}
-	
+
 	/**
-	 * Удаление всех дополнительных прав пользователя
+	 * загружает данные о возможных правах
 	 */
-	function remove_all_roles(){
-			$this->roles = array();
-			global $DB;
-			$DB->query('UPDATE `our_users` SET `roles` = ?s WHERE `id` = ?i', serialize($this->roles), $this->id);
+	static public function load_all_roles(){
+		global $DB;
+		if(is_null(self::$all_roles))
+			self::$all_roles = $DB->getAll('SELECT * FROM `our_u_roles`');
 	}
-	
+
 	/**
-	 * возвращает границу права пользователя, если передана одна строка с ключом права, массив границ прав, если передано несколько ключей, или все границы, если не переданы параметры
-	 * @param array|string $param1 - массив ключей
-	 * @param string $param2 или ключи
-	 * @param string $param3
+	 * возвращает границу права пользователя, если передана одна строка с ключом права; массив границ прав, если передано несколько ключей; или все границы, если не переданы параметры
+	 * @param string $type - тип ключа 'id' или 'role'
+	 * @param string[] $add_columns - дополнительные колонки ('id', 'role', 'description', 'level')
+	 * @param array|string $keys - массив ключей
+	 * @param string $_ или ключи
 	 * @return array|int|null
 	 * права
 	 * view_debug_info
 	 * edit_users
 	 * edit_settings
+	 * ignore_max_token_remember
 	 */
-	function get_roles_range(){
+	static public function get_roles_range(){
 		//используйте только лат. буквы и нижние подчеркивания
-		$roles_range = array(
-			'view_debug_info'=> $this::ADMIN,
-			'edit_users'     => $this::ADMIN,
-			'edit_settings'  => $this::ADMIN
-		);
+		self::load_all_roles();
 		$args = func_get_args();
-		if(func_num_args() == 0){
+		$type = array_shift($args);
+		$add_columns = array_shift($args);
+		$roles_range = array();
+		switch($type){
+			case 'role':
+			case 'id':
+				$roles_range = my_array_column(self::$all_roles, $add_columns, $type);
+				break;
+			default:
+				return null;
+		}
+		if(func_num_args() == 2){
 			return $roles_range;
-		}else if(func_num_args() == 1){
+		}else if(func_num_args() == 3){
 			if(!is_array($args[0])){
 				return isset($roles_range[$args[0]]) ? $roles_range[$args[0]] : null;
 			}else{
 				$args = $args[0];
 			}
 		}
-		return array_intersect_assoc($roles_range, array_flip($args));
+		return array_intersect_key($roles_range, array_flip($args));
+	}
+
+	/**
+	 * Добавление пользователю постоянных прав, если уровень пользователя больше, чем уровень права, то оно не установится, но будет работать
+	 * @param string|string[] $role - role права из get_roles_range()
+	 * @see get_roles_range
+	 * @return bool
+	 */
+	function add_role($role){
+		$tmp = self::get_roles_range('role', array('id', 'level'), $role);
+		if(is_null($tmp))
+			return false;
+		$add = array();
+		if(is_array($role)){
+			foreach($tmp as $r => &$val){
+				if($this->user_level >= $val['level'])
+					continue;
+				if(in_array($val['id'], $this->roles))
+					continue;
+				$add[] = $val['id'];
+			}
+		}else{
+			if($this->user_level >= $tmp['level'])
+				return true;
+			if(in_array($tmp['id'], $this->roles)){
+				return false;
+			}
+			$add[] = $tmp['id'];
+		}
+		$len = sizeof($add);
+		if(!$len)
+			return false;
+		global $DB;
+		$query = 'INSERT INTO `our_u_users_roles` (`user_id`, `role_id`) VALUES';
+		for($i=0; $i<$len; $i++){
+			$query .= $DB->parse(' (?i, ?i)', $this->id, $add[$i]);
+			if($i != $len-1)
+				$query .= ',';
+		}
+		$DB->query($query);
+
+		$this->roles = array_merge($this->roles, $add);
+		return true;
+	}
+	
+	
+	/**
+	 * Добавление пользователю временных прав
+	 * @param string|string[] $role - role права из get_roles_range()
+	 * @param string $work_time - время работы права - sql time INTERVAL
+	 * @param string|DateTime $work_start - время начала работы права
+	 * @param int|null $act_id - id транзакции, вследствии которой добавляется это право
+	 * @see get_roles_range
+	 * @return bool
+	 */
+	function add_temp_role($role, $work_time, $work_start='now', $act_id=null){
+		$tmp = self::get_roles_range('role', 'id', $role);
+		if(is_null($tmp))
+			return false;
+		$add = array();
+		if(is_array($role)){
+			$add = array_values($tmp);
+		}else{
+			$add[] = $tmp;
+		}
+		$work_time = sql_time_interval_clear($work_time);
+		if($work_start === 'now'){
+			$work_start = 'NOW()';
+		}else{
+			$work_start = '\''.$work_start->format('Y-m-d H:i:s').'\'';
+		}
+		$len = sizeof($add);
+		global $DB;
+		$query = 'INSERT INTO `our_u_users_roles` (`user_id`, `role_id`, `start_time`, `end_time`, `work_time`, `action_id`) VALUES';
+		for($i=0; $i<$len; $i++){
+			$query .= $DB->parse(
+				' (?i, ?i, ?p, NOW() + INTERVAL ?p, ?s, ?i)',
+				$this->id,
+				$add[$i],
+				$work_start,
+				$work_time,
+				$work_time,
+				$act_id
+			);
+			if($i != $len-1)
+				$query .= ',';
+		}
+		$DB->query($query);
+		return true;
+	}
+	
+	
+	/**
+	 * Удаление дополнительных прав пользователя
+	 * @param string|string[] $role - role права из get_roles_range()
+	 * @param string $type - 'inf' - постоянные права, 'temp' - временные, 'all' - все
+	 * @see get_roles_range
+	 * @return bool
+	 */
+	function remove_role($role, $type='inf'){
+		$tmp = self::get_roles_range('role', 'id', $role);
+		if(is_null($tmp)){
+			return false;
+		}else{
+			if(!is_array($tmp)){
+				$tmp = array($tmp);
+			}else{
+				$tmp = array_values($tmp);
+			}
+			$len = sizeof($tmp);
+			for($i=0; $i<$len; $i++){
+				$key = array_search($tmp[$i], $this->roles);
+				if($key !== false){
+					unset($this->roles[$key]);
+				}else{
+					unset($tmp[$i]);
+				}
+			}
+			if(!$len)
+				return false;
+			
+			$query = '';
+			switch($type){
+				case 'inf':
+					$query = ' AND `work_time` = \'INF\'';
+					break;
+				case 'temp':
+					$query = ' AND `work_time` != \'INF\'';
+					break;
+				case 'all':
+					break;
+				default:
+					throw new Exception('undefined type');
+			}
+			
+			global $DB;
+			$DB->query('DELETE FROM `our_u_users_roles` WHERE `user_id` = ?i AND `role_id` IN(?a)?p', $this->id, $tmp, $query);
+			return true;
+		}
+	}
+
+	/**
+	 * Удаление всех постоянных дополнительных прав пользователя
+	 * @param string $type - 'inf' - постоянные права, 'temp' - временные, 'all' - все
+	 */
+	function remove_all_roles($type='inf'){
+		$this->roles = array();
+
+		$query = '';
+		switch($type){
+			case 'inf':
+				$query = ' AND `work_time` = \'INF\'';
+				break;
+			case 'temp':
+				$query = ' AND `work_time` != \'INF\'';
+				break;
+			case 'all':
+				break;
+			default:
+				throw new Exception('undefined type');
+		}
+		
+		global $DB;
+		$DB->query('DELETE FROM `our_u_users_roles` WHERE `user_id` = ?i?p', $this->id, $query);
+	}
+
+	static function get_levels_range(){
+		return array(
+				self::GUEST => 'GUEST (гость)',
+				self::USER => 'USER (пользователь без прав)',
+				self::NEDOADMIN => 'NEDOADMIN (администратор без прав)',
+				self::ADMIN => 'ADMIN (администратор со всеми правами)'
+		);
 	}
 	
 	/**
 	 * Проверяет имеет ли юзер право $role, также проверяет имеет ли юзер купон для данного действия (юзеры неадмины не могут использовать админские купоны)
-	 * @param $role - id права из get_roles_range()
+	 * если передано несуществующее право - false
+	 * @param string|string[] $role - id права из get_roles_range()
 	 * @see get_roles_range
 	 * @return bool
 	 */
 	function can_user($role){
-		$role_range = $this->get_roles_range($role);
+		$role_range = $this->get_roles_range('role', array('id', 'level'), $role);
 		//если передано несуществующее право - false
 		if(is_null($role_range))
-			return false;
-		//если уровень юзера больше уровня права - true
-		if($this->user_level >= $role_range)
 			return true;
-		//если юзер имеет доп право - true
-		if(in_array($role, $this->roles))
-			return true;
-		
-		return false;
+		if(is_array($role)){
+			$role_range = array_values($role_range);
+		}else{
+			$role_range = array($role_range);
+		}
+		$len = sizeof($role_range);
+		global $DB;
+		//получим массив, где ключи это id временных прав, которые доступны пользователю
+		$temp_roles = array();
+		if($len){
+			$temp_roles = $DB->getIndCol(
+				'role_id',
+				'SELECT `end_time` FROM `our_u_users_roles`
+					WHERE `user_id` = ?i
+					AND `work_end` >= NOW()
+					AND `work_start` <= NOW()
+					AND `work_time` != \'INF\'
+					AND `role_id` IN(?a)',
+				$this->id,
+				my_array_column($role_range, 'id')
+			);
+		}
+		for($i=0; $i<$len; $i++){
+			/*
+			//если юзер не админ, а право админское - false
+			if($this->user_level <= $this::SUPERUSER && $role_range[$i]['level'] >= $this::NEDOADMIN)
+				return false;
+			*/
+			//если уровень юзера меньше уровня права и у него нет этого права - false
+			if($this->user_level < $role_range[$i]['level'] && !in_array($role_range[$i]['id'], $this->roles) && !isset($temp_roles[$role_range[$i]['id']]))
+				return false;
+		}
+		return true;
 	}
 	
 	/**
@@ -317,6 +524,26 @@ class rad_user{
 	public function get_login(){
 		return $this->login;
 	}
+
+	/**
+	 * вернет почту юзера
+	 * @return string
+	 */
+	public function get_email(){
+		return $this->email;
+	}
+
+	public function set_email($email){
+		if($this->user_level == $this::GUEST)
+			return false;
+		$email = trim($email);
+		if((string)$email === '')
+			return false;
+		$this->email = $email;
+		global $DB;
+		$DB->query('UPDATE `our_u_users` SET `email` = ?s WHERE `id` = ?i', $this->email, $this->id);
+		return true;
+	}
 	
 	/**
 	 * вернет массив ключей доп. прав юзера
@@ -332,6 +559,18 @@ class rad_user{
 	 */
 	public function get_user_level(){
 		return $this->user_level;
+	}
+
+	public function set_user_level($level){
+		$level = absint($level);
+		if($this->user_level == $this::GUEST)
+			return false;
+		if($level < $this::USER)
+			$level = $this::USER;
+		$this->user_level = $level;
+		global $DB;
+		$DB->query('UPDATE `our_u_users` SET `level` = ?i WHERE `id` = ?i', $this->user_level, $this->id);
+		return true;
 	}
 	
 	/**
@@ -352,9 +591,14 @@ class rad_user{
 			setcookie(session_name(), '', time() - 3600 * 24);
 		}
 		setcookie('token', '', time()- 3600*24);
-		setcookie('user_id', '', time()- 3600*24);
-		$this->set_option('token', null);
-		$this->update_options('token');
+		//TODO: переделать логику токенов
+		$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
+		$tokens_arr = $this->get_option('login_tokens');
+		$tokens_arr = is_null($tokens_arr) || !is_array($tokens_arr) ? array() : $tokens_arr;
+		if(isset($tokens_arr[$sha_user_agent]))
+			unset($tokens_arr[$sha_user_agent]);
+		$this->set_option('login_tokens', $tokens_arr);
+		$this->update_options('login_tokens');
 		$this->set_guest();
 	}
 }

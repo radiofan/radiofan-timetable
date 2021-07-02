@@ -55,7 +55,18 @@ class rad_db{
 		mysqli_set_charset($this->conn, $opt['charset']) or $this->error(mysqli_error($this->conn));
 		unset($opt);
 	}
-	
+
+
+	/**
+	 * ?n - название столбца
+	 * ?s - строка
+	 * ?i - int
+	 * ?a - creatIN (массив в строку '','',''....)
+	 * ?u - createSet(массив в key='val',...)
+	 * ?p - без экранирования
+	 * ?d - вставка массива, где ключи это название столбцов
+	 * @return mixed
+	 */
 	public function query(){
 		return $this->rawQuery($this->prepareQuery(func_get_args()));
 	}
@@ -260,7 +271,7 @@ class rad_db{
 	}
 
 	protected function escapeInt($value){
-		if($value === NULL){
+		if(is_null($value)){
 			return 'NULL';
 		}
 		if(!is_numeric($value)){
@@ -274,7 +285,7 @@ class rad_db{
 	}
 
 	protected function escapeString($value){
-		if($value === NULL){
+		if(is_null($value)){
 			return 'NULL';
 		}
 		return	'\''.mysqli_real_escape_string($this->conn,$value).'\'';

@@ -63,7 +63,6 @@ function is_login(){
 			session_destroy();
 			setcookie(session_name(), '', time() - 3600*24);
 			setcookie('token', '', time()- 3600*24);
-			setcookie('user_id', '', time()- 3600*24);
 			return false;
 		}
 		return !empty($_SESSION['user_id']);
@@ -79,26 +78,53 @@ function is_login(){
  * @return bool
  */
 function check_token_login(){
-	if(!isset($_COOKIE['token'], $_COOKIE['user_id']))
+	if(!isset($_COOKIE['token']))
 		return false;
-	$user_id = absint($_COOKIE['user_id']);
+	/**
+	 * парсим токен
+	 * имеет вид base64.base64
+	 * 1-ая часть - JSON массив, ['user_id':int]
+	 * 2-ая часть - строка, токен @see action_login
+	 */
+	$token_data = explode('.', $_COOKIE['token']);
+	if(sizeof($token_data) < 2)
+		return false;
+	$token_data[0] = base64_decode($token_data[0], 1);
+	$token_data[1] = base64_decode($token_data[1], 1);
+	if($token_data[0] === false || $token_data[1] === false)
+		return false;
+	$token_data[0] = json_decode($token_data[0], true, 10);
+	if(is_null($token_data[0]) || !isset($token_data[0]['user_id']))
+		return false;
+	
+	$user_id = absint($token_data[0]['user_id']);
+	//TODO: переделать логику токенов
 	global $DB;
-	$options = $DB->getOne('SELECT `options` FROM `our_users` WHERE `id` = ?i', $user_id);
-	if($options === false)
+	$login_tokens = $DB->getOne('SELECT `value` FROM `our_u_options` WHERE `user_id` = ?i AND `key` = \'login_tokens\'', $user_id);
+	if($login_tokens === false)
 		return false;
-	$options = unserialize($options);
-	if(isset($options['token']) && (string)$options['token'] === (string)$_COOKIE['token']){
-		if(!is_session_exists())
-			my_start_session();
-		setcookie('token', $options['token'], time()+86400*7, '/', null, null, 1);
-		setcookie('user_id', $user_id, time()+86400*7, '/', null, null, 1);
-		$_SESSION['user_id'] = $user_id;
-		$_SESSION['secret_key'] = sha1($_SERVER['HTTP_USER_AGENT']);
-		return true;
-	}else{
-		setcookie('token', '', time()-3600*24);
-		setcookie('user_id', '', time()-3600*24);
+	$login_tokens = unserialize($login_tokens);
+	$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
+	if(isset($login_tokens[$sha_user_agent])){
+		if($login_tokens[$sha_user_agent]['time_end'] > time()){
+			//время работы токена, не кончилось
+			if(strcmp($login_tokens[$sha_user_agent]['token'], $token_data[1]) == 0){
+				//токен подошел
+				if(!is_session_exists())
+					my_start_session();
+				//TODO update token, if
+				$_SESSION['user_id'] = $user_id;
+				$_SESSION['secret_key'] = $sha_user_agent;
+				return true;
+			}
+		}else{
+			//время работы токена, кончилось
+			//обнуляем его
+			unset($login_tokens[$sha_user_agent]);
+			$DB->query('UPDATE `our_u_options` SET `value` = ?s WHERE `user_id` = ?i AND `key` = \'login_tokens\'', serialize($login_tokens), $user_id);
+		}
 	}
+	setcookie('token', '', time()-3600*24);
 	return false;
 }
 
@@ -111,6 +137,36 @@ function check_token_login(){
 function can_user($role){
 	global $USER;
 	return $USER->can_user($role);
+}
+
+/**
+ * @param $array
+ * @param $columns
+ * @param string $index
+ * @return array|bool
+ */
+function my_array_column($array, $columns, $index = null){
+	$ret = array();
+	if(is_array($columns))
+		$columns = array_flip($columns);
+	foreach($array as $key => &$val){
+		if(!is_array($val))
+			return false;
+		$new_key = $key;
+		if($index){
+			if(!isset($val[$index]))
+				return false;
+			$new_key = $val[$index];
+		}
+		if(is_array($columns)){
+			$ret[$new_key] = array_intersect_key($val, $columns);
+		}else{
+			if(!isset($val[$columns]))
+				return false;
+			$ret[$new_key] = $val[$columns];
+		}
+	}
+	return $ret;
 }
 
 /**
@@ -225,6 +281,111 @@ function round_memsize($size){
 	return $size.' '.$unit;
 }
 
+/**
+ * Склонение слова после числа.
+ *
+ * Примеры вызова:
+ * num_decline($num, ['книга','книги','книг'])
+ * num_decline($num, 'книга', 'книги', 'книг')
+ * num_decline($num, 'книга', 'книг')
+ *
+ * @param  int    $number  Число после которого будет слово. Можно указать число в HTML тегах.
+ * @param  string|array  $titles  Варианты склонения или первое слово для кратного 1.
+ * @param  string        $param2  Второе слово, если не указано в параметре $titles.
+ * @param  string        $param3  Третье слово, если не указано в параметре $titles.
+ *
+ * @return string 1 книга, 2 книги, 10 книг.
+ */
+function num_decline($number, $titles, $param2 = '', $param3 = ''){
+	if($param2)
+		$titles = array($titles, $param2, $param3);
+
+	if(empty($titles[2]))
+		$titles[2] = $titles[1]; // когда указано 2 элемента
+
+	$cases = array(2, 0, 1, 1, 1, 2);
+
+	$number = absint($number);
+
+	return $number.' '. $titles[($number % 100 > 4 && $number % 100 < 20) ? 2 : $cases[min($number % 10, 5)]];
+}
+
+/**
+ * Десериализует переданное значение, если оно сериализовано или просто возвращает переданное значение.
+ * @param $data
+ * @return mixed
+ */
+function maybe_unserialize($data){
+	if(is_serialized($data)){
+		return @unserialize(trim($data));
+	}
+	return $data;
+}
+
+/**
+ * Проверяет переданное значение, является ли оно сериализованной строкой.
+ * @param string $data - начение, которое нужно проверить, является ли оно сериализованными данными
+ * @param bool $strict - Точная проверка для конца строки. При true строка всегда должна заканчиваться на символ ; или }
+ * @return bool
+ */
+function is_serialized($data, $strict = true){
+	// If it isn't a string, it isn't serialized.
+	if(!is_string($data)){
+		return false;
+	}
+	$data = trim($data);
+	if('N;' === $data){
+		return true;
+	}
+	if(strlen($data) < 4){
+		return false;
+	}
+	if(':' !== $data[1]){
+		return false;
+	}
+	if($strict){
+		$lastc = substr($data, -1);
+		if(';' !== $lastc && '}' !== $lastc){
+			return false;
+		}
+	}else{
+		$semicolon = strpos($data, ';');
+		$brace = strpos($data, '}');
+		// Either ; or } must exist.
+		if(false === $semicolon && false === $brace){
+			return false;
+		}
+		// But neither must be in the first X characters.
+		if(false !== $semicolon && $semicolon < 3){
+			return false;
+		}
+		if(false !== $brace && $brace < 4){
+			return false;
+		}
+	}
+	$token = $data[0];
+	switch($token){
+		case 's':
+			if($strict){
+				if('"' !== substr($data, -2, 1)){
+					return false;
+				}
+			}else if(false === strpos($data, '"')){
+				return false;
+			}
+		// Or else fall through.
+		case 'a':
+		case 'O':
+			return (bool)preg_match("/^{$token}:[0-9]+:/s", $data);
+		case 'b':
+		case 'i':
+		case 'd':
+			$end = $strict ? '$' : '';
+			return (bool)preg_match("/^{$token}:[0-9.E+-]+;$end/", $data);
+	}
+	return false;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -232,14 +393,106 @@ function round_memsize($size){
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * удаляем все символы кроме [a-zа-я0-9_@#&-$]
+ * @param string $text
+ * @return string
+ */
 function coupon_clear($text){
 	return preg_replace('/[^a-zа-я0-9_@#&\\-\\$]/iu', '', $text);
 }
+/**
+ * удаляем все символы кроме [a-z0-9_-]
+ * @param string $text
+ * @return string
+ */
 function login_clear($text){
 	return preg_replace('/[^a-z0-9_\\-]/iu', '', $text);
 }
+/**
+ * удаляем все символы кроме [a-z0-9!@%&$?*]
+ * @param string $text
+ * @return string
+ */
 function password_clear($text){
 	return preg_replace('/[^a-z0-9!@%&\\$\\?\\*]/iu', '', $text);
+}
+
+/**
+ * @param string $text
+ * @return string
+ * @see login_clear() 
+ */
+function option_name_clear($text){
+	return login_clear($text);
+}
+/**
+ * сепаратор - любое кол-во, символы [ :/_,.+-];
+ * кавычки " или '
+ * @param string $text
+ * 'секунды SECOND'
+ * 'минуты MINUTE'
+ * 'часы HOUR'
+ * 'дни DAY'
+ * 'месяцы MONTH'
+ * 'года YEAR'
+ * '"минуты:секунды" MINUTE_SECOND'
+ * '"часы:минуты" HOUR_MINUTE'
+ * '"дни:часы" DAY_HOUR'
+ * '"года:месяцы" YEAR_MONTH'
+ * '"часы:минуты:секунды" HOUR_SECOND'
+ * '"дни:часы:минуты" DAY_MINUTE'
+ * '"дни:часы:минуты:секунды" DAY_SECOND'
+ * @return string
+ */
+function sql_time_interval_clear($text){
+	$text = trim($text);
+	$matches = array();
+	preg_match('#( SECOND$)|( MINUTE$)|( HOUR$)|( DAY$)|( MONTH$)|( YEAR$)|( MINUTE_SECOND$)|( HOUR_MINUTE$)|( DAY_HOUR$)|( YEAR_MONTH$)|( HOUR_SECOND$)|( DAY_MINUTE$)|( DAY_SECOND$)#iu', $text, $matches);
+	if(!isset($matches[0]))
+		return '';
+	$type = mb_strtoupper(mb_substr($matches[0], 1));
+	$numb = array();
+	switch($type){
+		case 'SECOND':
+		case 'MINUTE':
+		case 'HOUR':
+		case 'SECDAYOND':
+		case 'MONTH':
+		case 'YEAR':
+			preg_match('#([0-9]+) '.$type.'$#iu', $text, $matches);
+			if(!isset($matches[1]))
+				return '';
+			$numb = (int) $matches[1];
+			if($numb <= 0)
+				return '';
+			return $numb.' '.$type;
+		case 'MINUTE_SECOND':
+		case 'HOUR_MINUTE':
+		case 'DAY_HOUR':
+		case 'YEAR_MONTH':
+			preg_match('#[\'"]([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[\'"] '.$type.'$#iu', $text, $matches);
+			if(!isset($matches[1], $matches[2]))
+				return '';
+			$numb = array((int) $matches[1], (int) $matches[2]);
+			break;
+		case 'HOUR_SECOND':
+		case 'DAY_MINUTE':
+			preg_match('#[\'"]([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[\'"] '.$type.'$#iu', $text, $matches);
+			if(!isset($matches[1], $matches[2], $matches[3]))
+				return '';
+			$numb = array((int) $matches[1], (int) $matches[2], (int) $matches[3]);
+			break;
+		case 'DAY_SECOND':
+			preg_match('#[\'"]([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[\'"] '.$type.'$#iu', $text, $matches);
+			if(!isset($matches[1], $matches[2], $matches[3], $matches[4]))
+				return '';
+			$numb = array((int) $matches[1], (int) $matches[2], (int) $matches[3], (int) $matches[4]);
+			break;
+	}
+	if(array_sum($numb) <= 0)
+		return '';
+	return '"'.implode(':', $numb).'" '.$type;
 }
 
 
