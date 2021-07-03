@@ -1,57 +1,35 @@
 <?php
 
-/*
-структуры используемых таблиц
-CREATE TABLE `our_users` (
-	`id` bigint(20) UNSIGNED NOT NULL auto_increment,
-	`login` varchar(30) NOT NULL,
-	`password` varbinary(20) NOT NULL,
-	`date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`level` smallint(6) NOT NULL DEFAULT '1',
-	`roles` text NOT NULL,
-	`options` mediumtext NOT NULL
-	PRIMARY KEY  (`id`)
-)
-
-CREATE TABLE `coupons` (
-	`id` bigint(20) UNSIGNED NOT NULL auto_increment,
-	`coupon` text NOT NULL,
-	`roles` text NOT NULL,
-	`work_time` tinytext NOT NULL,
-	`work_end` timestamp NULL DEFAULT NULL,
-	`user_id` bigint(20) UNSIGNED DEFAULT NULL
-	PRIMARY KEY  (`id`)
-)
-*/
-
 /**
  * Класс предоставляет методы работы с данными пользователей
- * у пользователя есть уникальные ID и никнейм ($login), дата регистрации ($date),
- * права ($roles) и методы работы с ними (can_user()),
+ * у пользователя есть уникальные ID и никнейм ($login), дата регистрации ($date), почта ($email), хэш пароля($password)
+ * временные и постоянные права ($roles) и методы работы с ними (can_user()),
  * параметры, индивидуальные для каждого пользователя ($options)
  */
 class rad_user{
 	/**  @var int $id - ID пользователя в БД */
 	private $id;
 	/** @var string $login - логин юзера в БД */
-	private $login = '';
+	private $login;
+	/** @var string $password - хэш пароля юзера в БД */
+	private $password;
 	/** @var string $date - дата (timestamp) регистрации юзера в БД */
-	private $date = 0;
+	private $date;
 	/**  @var string $email - почта пользоватля */
 	private $email;
 	/** @var array $roles - массив id прав пользователя */
 	private $roles;
-
-	/**  @var array $all_roles - массив всех возможных прав пользователя*/
-	static private $all_roles = null;
-	
 	/** @var array $options - массив параметров пользователя */
-	private $options = null;
+	private $options;
 	/**
 	 * @var int $user_level - уровень прав пользователя
 	 * @see get_roles_range
 	 */
 	private $user_level;
+
+	/**  @var array $all_roles - массив всех возможных прав пользователя*/
+	static private $all_roles = null;
+
 	/** @var int Гость, не залогинен */
 	const GUEST = 0;
 	/** @var int юзер, мин права*/
@@ -87,6 +65,20 @@ class rad_user{
 			}
 		}
 	}
+
+	/**
+	 * Устанавливает пользователя гостем
+	 */
+	function set_guest(){
+		$this->id = 0;
+		$this->login = '';
+		$this->password = '';
+		$this->email = '';
+		$this->date = 0;
+		$this->user_level = $this::GUEST;
+		$this->roles = array();
+		$this->options = array();
+	}
 	
 	/**
 	 * Загружает данные пользователя из БД
@@ -95,37 +87,165 @@ class rad_user{
 	 */
 	function load_user($id){
 		global $DB;
-		$this->id = $id;
-		$tmp = $DB->getRow('SELECT `login`, `email`, `level`, `date` FROM `our_u_users` WHERE `id` = ?i', $this->id);
+		$this->id = absint($id);
+		$tmp = $DB->getRow('SELECT `login`, `password`, `email`, `level`, `date` FROM `our_u_users` WHERE `id` = ?i', $this->id);
 		if(empty($tmp))
 			throw new Exception('undefined user');
 		$this->login = $tmp['login'];
+		$this->password = $tmp['password'];
 		$this->email = $tmp['email'];
 		$this->date = $tmp['date'];
 		$this->user_level = absint($tmp['level']);
 		$this->load_roles();
 		$this->options = array();
+		$this->clear_old_tokens();
 	}
 
 	/**
-	 * загружает массив id, дополнительных прав пользователя
+	 * Возвращает хеш пароля пользователя
+	 * @param string $password
+	 * @return string
 	 */
-	private function load_roles(){
+	static public function password_hash($password){
+		return sha1(SALT . trim($password), 1);//TODO генерация хеша пароля переделать
+	}
+
+	/**
+	 * Загружает пользователя с помощью логина и пароля
+	 * если не удачно, текущий экземпляр станет гостем
+	 * @param string $login - логин пользователя, лечится login_clear
+	 * @param string $password - пароль пользователя (НЕ хэш)
+	 * @see login_clear
+	 * @return bool - загружен ли пользователь
+	 */
+	function load_by_loginpass($login, $password){
 		global $DB;
-		//загружаем перманентные права, work_time == 'inf'
-		$this->roles = $DB->getCol('SELECT `role_id` FROM `our_u_users_roles` WHERE `user_id` = ?i AND `work_time` != ?s', $this->id, 'INF');
+		$pass_hash = self::password_hash($password);
+
+		$data = $DB->getRow('SELECT `password`, `id` FROM `our_u_users` WHERE `login` = ?s', login_clear($login));
+		if($data === false){
+			$this->set_guest();
+			return false;
+		}
+		if(!hash_equals($data['password'], $pass_hash)){
+			$this->set_guest();
+			return false;
+		}
+		$this->load_user($data['id']);
+		return true;
+	}
+
+	/**
+	 * Создает токен аутентификации для текущего пользователя
+	 * @return array - содержит ключ 'error' если произошла ошибка, ['token' => string, 'date_end_token' => DateTime]
+	 */
+	public function create_token(){
+		if(!$this->id)
+			return array('error' => 'Пользователь - гость');
+		global $DB;
+		$this->clear_old_tokens();
+		$DB->query('LOCK TABLES `our_u_tokens` WRITE');
+		$tokens_count = $DB->getOne('SELECT COUNT(*) FROM `our_u_tokens` WHERE `user_id` = ?i', $this->id);
+		//проверка ограничения на колличество токенов
+		if($tokens_count + 1 > MAX_TOKEN_REMEMBER && !$this->can_user('ignore_max_token_remember')){
+			$DB->query('UNLOCK TABLES');
+			return array('error' => 'Достигнут предел запоминания');
+		}else{
+			$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
+			$time_start = new DateTime();
+			$token = hash('sha256', mt_rand().$this->password.$sha_user_agent.$time_start->getTimestamp().$this->id);
+			$DB->query(
+				'INSERT INTO `our_u_tokens` (`user_id`, `token`, `user_agent`, `time_start`, `time_end`) VALUES (?i, ?p, ?p, ?s, ?s + INTERVAL ?p)',
+				$this->id,
+				'0x'.$token,
+				'0x'.$sha_user_agent,
+				$time_start->format('Y-m-d H:i:s'),
+				$time_start->format('Y-m-d H:i:s'),
+				TOKEN_LIVE_DAYS.' DAY'
+			);
+			$DB->query('UNLOCK TABLES');
+			$token = self::encode_cookie_token(array('user_id' => $this->id), $token);
+			return array('token' => $token, 'date_end_token' => $time_start->add(new DateInterval('P'.TOKEN_LIVE_DAYS.'D')));
+		}
+	}
+
+	/**
+	 * удаляет устаревшие токены текущего пользователя
+	 */
+	public function clear_old_tokens(){
+		self::delete_old_tokens($this->id);
+	}
+
+	/**
+	 * удаляет устаревшие токены пользователя
+	 * @param int $user_id - ID пользователя
+	 */
+	static public function delete_old_tokens($user_id){
+		global $DB;
+		$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `time_end` < NOW()', $user_id);
+	}
+
+	/**
+	 * создает токен для записи в cookie
+	 * собираем токен
+	 * имеет вид base64.base64
+	 * 1-ая часть - JSON $data
+	 * 2-ая часть - $hash
+	 * @param array|mixed $data - вложенность(глубина) не больше 10
+	 * @param string $hash
+	 * @return string
+	 */
+	static public function encode_cookie_token($data, $hash){
+		return base64_encode(json_encode($data)).'.'.base64_encode($hash);
+	}
+
+	/**
+	 * @see encode_cookie_token
+	 * @param string $token - строка сгенерированная encode_cookie_token
+	 * @return array|false ['data' => array|mixed, 'hash' => string]
+	 */
+	static public function decode_cookie_token($token){
+		$token_data = explode('.', $token, 2);
+		if(sizeof($token_data) < 2)
+			return false;
+		$ret = array(
+			'data' => base64_decode($token_data[0], 1),
+			'hash' => base64_decode($token_data[1], 1)
+		);
+		if($ret['data'] === false ||$ret['hash'] === false)
+			return false;
+		$ret['data'] = json_decode($ret['data'], true, 10);
+		return $ret;
+	}
+
+	/**
+	 * Делает юзера гостем и удаляет сессию текущего юзера
+	 */
+	function user_logout(){
+		if(is_session_exists()){
+			session_unset();
+			session_destroy();
+			setcookie(session_name(), '', time() - SECONDS_PER_DAY);
+		}
+		$token_data = self::decode_cookie_token((string)$_COOKIE['token']);
+		if($token_data){
+			//токен распарсился, грохнем его
+			global $DB;
+			if(!is_null($token_data['data']) && isset($token_data['data']['user_id'])){
+				$user_id = absint($token_data['data']['user_id']);
+				$token = hex_clear($token_data['hash']);
+				if($user_id === $this->id && mb_strlen($token) === 64){//длина sha256
+					$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$token);
+				}
+			}
+		}
+		setcookie('token', '', time()- SECONDS_PER_DAY);
+		$this->set_guest();
 	}
 	
-	/**
-	 * Устанавливает пользователя гостем
-	 */
-	function set_guest(){
-		$this->id = 0;
-		$this->user_level = $this::GUEST;
-		$this->email = '';
-		$this->roles = array();
-		$this->options = array();
-	}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Все что связано с параметрами
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
 	 * Загружает параметры пользователя из БД
@@ -144,15 +264,16 @@ class rad_user{
 	}
 	
 	/**
-	 * Возвращает параметр юзера
+	 * Возвращает параметр юзера, ключ пропускается через option_name_clear()
+	 * @see option_name_clear
 	 * @param string $key - ключ параметра
 	 * @return mixed|null - null в случае если параметр не существует
 	 */
 	function get_option($key){
+		$key = option_name_clear($key);
 		if(isset($this->options[$key]))
 			return $this->options[$key]['val'];
 		global $DB;
-		$key = option_name_clear($key);
 		if((string)$key === '')
 			return null;
 		$tmp = $DB->getOne('SELECT `value` FROM `our_u_options` WHERE `user_id` = ?i AND `key` = ?s', $this->id, $key);
@@ -165,11 +286,15 @@ class rad_user{
 	}
 	
 	/**
-	 * Устанавливает параметр для пользователя
+	 * Устанавливает параметр для пользователя, ключ пропускается через option_name_clear()
+	 * @see option_name_clear
 	 * @param string $key - ключ параметра
 	 * @param mixed $value - значение параметра, если null параметр удаляется
+	 * @return bool - false если пользователь гость
 	 */
 	function set_option($key, $value){
+		if(!$this->id)
+			return false;
 		$key = option_name_clear($key);
 		if((string)$key === '')
 			return false;
@@ -181,12 +306,16 @@ class rad_user{
 	}
 	
 	/**
-	 * Обновляет указанные параметры пользователя в БД
+	 * Обновляет указанные параметры пользователя в БД, ключи пропускаются через option_name_clear()
+	 * @see option_name_clear
 	 * @param array|string $param1 - массив ключей
 	 * @param string $param2 или ключи
 	 * @param string $param3
 	 */
 	function update_options(){
+		//проверка на гостя
+		if(!$this->id)
+			return;
 		//собираем массив ключей параметров
 		if(func_num_args() == 0)
 			return;
@@ -199,7 +328,7 @@ class rad_user{
 		global $DB;
 		$len = sizeof($args);
 		for($i=0; $i<$len; $i++){
-			$key = $args[$i];
+			$key = option_name_clear($args[$i]);
 			if(isset($this->options[$key])){
 				//если параметр установлен, но равен null
 				if($this->options[$key]['isset'] && is_null($this->options[$key]['val'])){
@@ -224,6 +353,9 @@ class rad_user{
 	 * Обновляет значение всех параметров юзера в БД
 	 */
 	function update_all_options(){
+		//проверка на гостя
+		if(!$this->id)
+			return;
 		global $DB;
 		$query = 'INSERT INTO `our_u_options` (`user_id`, `key`, `value`) VALUES ';
 		foreach($this->options as $key => $val){
@@ -238,6 +370,24 @@ class rad_user{
 			$DB->query(mb_substr($query, 0, mb_strlen($query)-1));
 		}
 		$DB->query('UNLOCK TABLES');
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//Все что связано с правами
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * загружает массив id, дополнительных прав пользователя
+	 */
+	private function load_roles(){
+		//проверка на гостя
+		if(!$this->id){
+			$this->roles = array();
+			return;
+		}
+		global $DB;
+		//загружаем перманентные права, work_time == 'inf'
+		$this->roles = $DB->getCol('SELECT `role_id` FROM `our_u_users_roles` WHERE `user_id` = ?i AND `work_time` != ?s', $this->id, 'INF');
 	}
 
 	/**
@@ -296,6 +446,9 @@ class rad_user{
 	 * @return bool
 	 */
 	function add_role($role){
+		//проверка на гостя
+		if(!$this->id)
+			return false;
 		$tmp = self::get_roles_range('role', array('id', 'level'), $role);
 		if(is_null($tmp))
 			return false;
@@ -343,6 +496,9 @@ class rad_user{
 	 * @return bool
 	 */
 	function add_temp_role($role, $work_time, $work_start='now', $act_id=null){
+		//проверка на гостя
+		if(!$this->id)
+			return false;
 		$tmp = self::get_roles_range('role', 'id', $role);
 		if(is_null($tmp))
 			return false;
@@ -363,9 +519,10 @@ class rad_user{
 		$query = 'INSERT INTO `our_u_users_roles` (`user_id`, `role_id`, `start_time`, `end_time`, `work_time`, `action_id`) VALUES';
 		for($i=0; $i<$len; $i++){
 			$query .= $DB->parse(
-				' (?i, ?i, ?p, NOW() + INTERVAL ?p, ?s, ?i)',
+				' (?i, ?i, ?p, ?p + INTERVAL ?p, ?s, ?i)',
 				$this->id,
 				$add[$i],
+				$work_start,
 				$work_start,
 				$work_time,
 				$work_time,
@@ -387,6 +544,9 @@ class rad_user{
 	 * @return bool
 	 */
 	function remove_role($role, $type='inf'){
+		//проверка на гостя
+		if(!$this->id)
+			return false;
 		$tmp = self::get_roles_range('role', 'id', $role);
 		if(is_null($tmp)){
 			return false;
@@ -433,8 +593,9 @@ class rad_user{
 	 * @param string $type - 'inf' - постоянные права, 'temp' - временные, 'all' - все
 	 */
 	function remove_all_roles($type='inf'){
-		$this->roles = array();
-
+		//проверка на гостя
+		if(!$this->id)
+			return false;
 		$query = '';
 		switch($type){
 			case 'inf':
@@ -450,6 +611,7 @@ class rad_user{
 		}
 		
 		global $DB;
+		$this->roles = array();
 		$DB->query('DELETE FROM `our_u_users_roles` WHERE `user_id` = ?i?p', $this->id, $query);
 	}
 
@@ -509,6 +671,10 @@ class rad_user{
 		return true;
 	}
 	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Геттеры/сеттеры
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	/**
 	 * вернет ID юзера
 	 * @return int
@@ -546,7 +712,7 @@ class rad_user{
 	}
 	
 	/**
-	 * вернет массив ключей доп. прав юзера
+	 * вернет массив ID доп. прав юзера
 	 * @return array
 	 */
 	public function get_roles(){
@@ -579,27 +745,6 @@ class rad_user{
 	 */
 	public function get_date(){
 		return $this->date;
-	}
-	
-	/**
-	 * Делает юзера гостем и удаляет сессию текущего юзера
-	 */
-	function user_logout(){
-		if(is_session_exists()){
-			session_unset();
-			session_destroy();
-			setcookie(session_name(), '', time() - 3600 * 24);
-		}
-		setcookie('token', '', time()- 3600*24);
-		//TODO: переделать логику токенов
-		$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
-		$tokens_arr = $this->get_option('login_tokens');
-		$tokens_arr = is_null($tokens_arr) || !is_array($tokens_arr) ? array() : $tokens_arr;
-		if(isset($tokens_arr[$sha_user_agent]))
-			unset($tokens_arr[$sha_user_agent]);
-		$this->set_option('login_tokens', $tokens_arr);
-		$this->update_options('login_tokens');
-		$this->set_guest();
 	}
 }
 ?>

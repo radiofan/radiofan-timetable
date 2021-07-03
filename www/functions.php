@@ -58,7 +58,9 @@ function rad_template_old($file, $data){
  */
 function is_login(){
 	if(is_session_exists()){
+		//если сессия создана, но секретный ключ не пробивается
 		if(!isset($_SESSION['secret_key']) || sha1($_SERVER['HTTP_USER_AGENT']) !== $_SESSION['secret_key']){
+			//грохаем все аутентификационные данные
 			session_unset();
 			session_destroy();
 			setcookie(session_name(), '', time() - 3600*24);
@@ -80,48 +82,28 @@ function is_login(){
 function check_token_login(){
 	if(!isset($_COOKIE['token']))
 		return false;
-	/**
-	 * парсим токен
-	 * имеет вид base64.base64
-	 * 1-ая часть - JSON массив, ['user_id':int]
-	 * 2-ая часть - строка, токен @see action_login
-	 */
-	$token_data = explode('.', $_COOKIE['token']);
-	if(sizeof($token_data) < 2)
-		return false;
-	$token_data[0] = base64_decode($token_data[0], 1);
-	$token_data[1] = base64_decode($token_data[1], 1);
-	if($token_data[0] === false || $token_data[1] === false)
-		return false;
-	$token_data[0] = json_decode($token_data[0], true, 10);
-	if(is_null($token_data[0]) || !isset($token_data[0]['user_id']))
-		return false;
-	
-	$user_id = absint($token_data[0]['user_id']);
-	//TODO: переделать логику токенов
-	global $DB;
-	$login_tokens = $DB->getOne('SELECT `value` FROM `our_u_options` WHERE `user_id` = ?i AND `key` = \'login_tokens\'', $user_id);
-	if($login_tokens === false)
-		return false;
-	$login_tokens = unserialize($login_tokens);
-	$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
-	if(isset($login_tokens[$sha_user_agent])){
-		if($login_tokens[$sha_user_agent]['time_end'] > time()){
-			//время работы токена, не кончилось
-			if(strcmp($login_tokens[$sha_user_agent]['token'], $token_data[1]) == 0){
+	$token_data = rad_user::decode_cookie_token((string)$_COOKIE['token']);
+	$hash = hex_clear($token_data['hash']);
+	//тест данных
+	if(isset($token_data['data']['user_id']) && mb_strlen($hash) === 64){//длина sha256
+		$user_id = absint($token_data['data']['user_id']);
+		global $DB;
+		$check_token_data = $DB->getOne('SELECT `time_end`, `user_agent` FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
+		//получение данных токена из БД
+		if($check_token_data !== false){
+			$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
+			if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) == 0 &&  $check_token_data['time_end'] > time()){
 				//токен подошел
+				//обновим время жизни
+				$time_end = (new DateTime())->add(new DateInterval('P'.TOKEN_LIVE_DAYS.'D'));
+				$DB->query('UPDATE `our_u_tokens` SET `time_end` = ?s WHERE `user_id` = ?i AND `token` = ?p', $time_end->format('Y-m-d H:i:s'), $user_id, '0x'.$hash);
+				
 				if(!is_session_exists())
 					my_start_session();
-				//TODO update token, if
 				$_SESSION['user_id'] = $user_id;
 				$_SESSION['secret_key'] = $sha_user_agent;
 				return true;
 			}
-		}else{
-			//время работы токена, кончилось
-			//обнуляем его
-			unset($login_tokens[$sha_user_agent]);
-			$DB->query('UPDATE `our_u_options` SET `value` = ?s WHERE `user_id` = ?i AND `key` = \'login_tokens\'', serialize($login_tokens), $user_id);
 		}
 	}
 	setcookie('token', '', time()-3600*24);
@@ -410,6 +392,14 @@ function login_clear($text){
 	return preg_replace('/[^a-z0-9_\\-]/iu', '', $text);
 }
 /**
+ * удаляем все символы кроме [a-f0-9], переводит в верхний регистр
+ * @param string $text
+ * @return string
+ */
+function hex_clear($text){
+	return mb_strtoupper(preg_replace('/[^a-f0-9]/iu', '', $text));
+}
+/**
  * удаляем все символы кроме [a-z0-9!@%&$?*]
  * @param string $text
  * @return string
@@ -419,12 +409,13 @@ function password_clear($text){
 }
 
 /**
+ * то же самое что и login_clear но переводит в нижний регистр
  * @param string $text
  * @return string
  * @see login_clear() 
  */
 function option_name_clear($text){
-	return login_clear($text);
+	return mb_strtolower(login_clear($text));
 }
 /**
  * сепаратор - любое кол-во, символы [ :/_,.+-];

@@ -5,10 +5,14 @@ define('SALT', '');//ПРИ СМЕНЕ СОЛИ ВСЕ ПАРОЛИ СТАНУТ
 define('USE_LOG', 1);
 define('USE_SSL', 0);
 
+define('SECONDS_PER_DAY', 86400);
+define('SECONDS_PER_HOUR', 3600);
+define('SECONDS_PER_MINUTE', 60);
+
 /** TOKEN_LIVE_DAYS - время жизни запоминающего токена в сутках @see action_login */
 define('TOKEN_LIVE_DAYS', 30);
 /** MAX_TOKEN_REMEMBER - максималное колличество используемых токенов @see action_login */
-define('MAX_TOKEN_REMEMBER', 10);
+define('MAX_TOKEN_REMEMBER', 20);
 
 define('MAX_ELEMENTS_TIMETABLE', 50);
 define('MAX_SECTION_NAME_LEN', 30);
