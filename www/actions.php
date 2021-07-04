@@ -22,6 +22,7 @@ function do_actions(){
 }
 
 //событие входа пользователя
+//TODO tested
 function action_login(){
 	global $DB, $USER;
 	if(is_login())
@@ -56,7 +57,7 @@ function action_login(){
 function action_exit(){
 	global $USER;
 	$USER->user_logout();
-	redirect('/login');
+	//redirect('/login');//TODO test
 }
 
 

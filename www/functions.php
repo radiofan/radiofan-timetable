@@ -54,6 +54,7 @@ function rad_template_old($file, $data){
 
 /**
  * проверка на вход на сайт
+ * //TODO замутить статик, при первой проверке
  * @return bool
  */
 function is_login(){
@@ -63,8 +64,8 @@ function is_login(){
 			//грохаем все аутентификационные данные
 			session_unset();
 			session_destroy();
-			setcookie(session_name(), '', time() - 3600*24);
-			setcookie('token', '', time()- 3600*24);
+			setcookie(session_name(), '', time() - SECONDS_PER_DAY);
+			setcookie('token', '', time()- SECONDS_PER_DAY);
 			return false;
 		}
 		return !empty($_SESSION['user_id']);
@@ -77,6 +78,7 @@ function is_login(){
  * Тоже проверка входа на сайт, только по токену в куки
  * Если куки верны, то запускается сессия
  * Если куки не верны, то они удаляются
+ * //TODO tested
  * @return bool
  */
 function check_token_login(){
@@ -88,25 +90,29 @@ function check_token_login(){
 	if(isset($token_data['data']['user_id']) && mb_strlen($hash) === 64){//длина sha256
 		$user_id = absint($token_data['data']['user_id']);
 		global $DB;
-		$check_token_data = $DB->getOne('SELECT `time_end`, `user_agent` FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
+		$check_token_data = $DB->getRow('SELECT `time_end`, `user_agent` FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
 		//получение данных токена из БД
-		if($check_token_data !== false){
+		if($check_token_data){
 			$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
-			if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) == 0 &&  $check_token_data['time_end'] > time()){
+			$check_token_data['time_end'] = DateTime::createFromFormat(DB_DATE_FORMAT, $check_token_data['time_end']);
+			if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) == 0 && $check_token_data['time_end']->getTimestamp() > time()){
 				//токен подошел
 				//обновим время жизни
 				$time_end = (new DateTime())->add(new DateInterval('P'.TOKEN_LIVE_DAYS.'D'));
-				$DB->query('UPDATE `our_u_tokens` SET `time_end` = ?s WHERE `user_id` = ?i AND `token` = ?p', $time_end->format('Y-m-d H:i:s'), $user_id, '0x'.$hash);
-				
+				$DB->query('UPDATE `our_u_tokens` SET `time_end` = ?s WHERE `user_id` = ?i AND `token` = ?p', $time_end->format(DB_DATE_FORMAT), $user_id, '0x'.$hash);
+				setcookie('token', (string)$_COOKIE['token'], $time_end->getTimestamp(), '/', null, USE_SSL, 1);
 				if(!is_session_exists())
 					my_start_session();
 				$_SESSION['user_id'] = $user_id;
 				$_SESSION['secret_key'] = $sha_user_agent;
 				return true;
+			}else{
+				//токен существует, но либо старый, либо не совпадают user_agent
+				$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
 			}
 		}
 	}
-	setcookie('token', '', time()-3600*24);
+	setcookie('token', '', time()-SECONDS_PER_DAY);
 	return false;
 }
 

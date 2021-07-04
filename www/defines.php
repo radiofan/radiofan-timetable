@@ -5,9 +5,12 @@ define('SALT', '');//ПРИ СМЕНЕ СОЛИ ВСЕ ПАРОЛИ СТАНУТ
 define('USE_LOG', 1);
 define('USE_SSL', 0);
 
+/** 3600\*24 -- 60\*60*24 */
 define('SECONDS_PER_DAY', 86400);
+/** 60*60 */
 define('SECONDS_PER_HOUR', 3600);
 define('SECONDS_PER_MINUTE', 60);
+define('DB_DATE_FORMAT', 'Y-m-d H:i:s');
 
 /** TOKEN_LIVE_DAYS - время жизни запоминающего токена в сутках @see action_login */
 define('TOKEN_LIVE_DAYS', 30);
