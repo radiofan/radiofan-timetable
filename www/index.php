@@ -1,5 +1,5 @@
 <?php
-mb_internal_encoding("UTF-8");
+mb_internal_encoding('UTF-8');
 header("Content-Type: text/html; charset=UTF-8");
 //setlocale(LC_COLLATE | LC_CTYPE | LC_TIME, 'ru_RU.UTF-8', 'ru_RU', 'ru', 'russian');
 define('MAIN_DIR', __DIR__.'/');
@@ -20,6 +20,15 @@ $DB = new rad_db(array('host' => MAIN_DBHOST, 'user' => MAIN_DBUSER, 'pass' => M
 
 require_once MAIN_DIR.'includes/data-class.php';
 $DATA = new rad_data();
+
+$OPTIONS = array();
+//$OPTIONS['browser_data'] = $_SERVER['HTTP_USER_AGENT'];//get_browser
+$OPTIONS['protocol'] = get_protocol();
+$OPTIONS['user_agent'] = empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'];
+$OPTIONS['time_start'] = $_SERVER['REQUEST_TIME_FLOAT'];
+$OPTIONS['user_ip'] = get_ip();
+$OPTIONS['referer_data'] = parse_url(empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER']);
+
 is_session_exists();
 
 require_once MAIN_DIR.'includes/alerts-class.php';
@@ -32,24 +41,17 @@ require_once MAIN_DIR.'includes/cookie-validator-class.php';
 $COOKIE_V = new rad_cookie();
 
 require_once MAIN_DIR.'includes/url-class.php';
-$URL = new URL();
+$URL = new rad_url();
 
-require_once MAIN_DIR.'pages.php';
-gen_pages_tree();
-
-//reload_timetable();
-//die();
-
-$URL->load_current_page();
+require_once MAIN_DIR.'includes/pages-class.php';
+$PAGES = new rad_pages_viewer();
+$PAGES->load_current_page();
 
 require_once MAIN_DIR.'actions.php';
 if(do_actions() && CLEAR_POST)
 	redirect($URL->get_current_url());
 
-$PAGE_DATA = prepare_page_data();
-
-
-$URL->view_current_page($PAGE_DATA);
+$PAGES->view_current_page();
 
 
 ?>

@@ -58,9 +58,10 @@ function rad_template_old($file, $data){
  * @return bool
  */
 function is_login(){
+	global $OPTIONS;
 	if(is_session_exists()){
 		//если сессия создана, но секретный ключ не пробивается
-		if(!isset($_SESSION['secret_key']) || sha1($_SERVER['HTTP_USER_AGENT']) !== $_SESSION['secret_key']){
+		if(!isset($_SESSION['secret_key']) || sha1($OPTIONS['user_agent']) !== $_SESSION['secret_key']){
 			//грохаем все аутентификационные данные
 			session_unset();
 			session_destroy();
@@ -78,7 +79,6 @@ function is_login(){
  * Тоже проверка входа на сайт, только по токену в куки
  * Если куки верны, то запускается сессия
  * Если куки не верны, то они удаляются
- * //TODO tested
  * @return bool
  */
 function check_token_login(){
@@ -89,11 +89,11 @@ function check_token_login(){
 	//тест данных
 	if(isset($token_data['data']['user_id']) && mb_strlen($hash) === 64){//длина sha256
 		$user_id = absint($token_data['data']['user_id']);
-		global $DB;
+		global $DB, $OPTIONS;
 		$check_token_data = $DB->getRow('SELECT `time_end`, `user_agent` FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
 		//получение данных токена из БД
 		if($check_token_data){
-			$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
+			$sha_user_agent = sha1($OPTIONS['user_agent']);
 			$check_token_data['time_end'] = DateTime::createFromFormat(DB_DATE_FORMAT, $check_token_data['time_end']);
 			if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) == 0 && $check_token_data['time_end']->getTimestamp() > time()){
 				//токен подошел
@@ -119,7 +119,7 @@ function check_token_login(){
 /**
  * обертка can_user() для текущего пользователя
  * @see rad_user::can_user()
- * @param string $role
+ * @param string|string[] $role
  * @return bool
  */
 function can_user($role){
@@ -184,6 +184,7 @@ function is_session_exists(){
 function my_start_session(){
 	$params = session_get_cookie_params();
 	$params['httponly'] = true;
+	$params['secure'] = USE_SSL;
 	session_set_cookie_params($params['lifetime'], $params['path'], $params['domain'], $params['secure'], $params['httponly']);
 	
 	session_start();
@@ -199,6 +200,21 @@ function get_protocol(){
 	}else{
 		return 'http';
 	}
+}
+
+/**
+ * возвращает ip пользователя
+ * @return string
+ */
+function get_ip() {
+	if(!empty($_SERVER['HTTP_CLIENT_IP'])){
+		$ip = $_SERVER['HTTP_CLIENT_IP'];
+	}else if(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
+		$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	}else{
+		$ip = $_SERVER['REMOTE_ADDR'];
+	}
+	return $ip;
 }
 
 /**
@@ -267,6 +283,15 @@ function round_memsize($size){
 	}
 	
 	return $size.' '.$unit;
+}
+
+/**
+ * Проверяет существование ФАЙЛА
+ * @param $path - путь до файла
+ * @return bool
+ */
+function check_file($path){
+	return file_exists($path) && is_file($path);
 }
 
 /**

@@ -68,7 +68,6 @@ class rad_user{
 
 	/**
 	 * Устанавливает пользователя гостем
-	 * //TODO tested
 	 */
 	function set_guest(){
 		$this->id = 0;
@@ -85,7 +84,6 @@ class rad_user{
 	 * Загружает данные пользователя из БД
 	 * @param int $id - ID пользователя
 	 * @throws Exception - пользователь не найден в БД
-	 * //TODO tested
 	 */
 	function load_user($id){
 		global $DB;
@@ -105,7 +103,6 @@ class rad_user{
 
 	/**
 	 * Возвращает хеш пароля пользователя
-	 * //TODO tested
 	 * @param string $password
 	 * @return string
 	 */
@@ -120,14 +117,18 @@ class rad_user{
 	 * @param string $password - пароль пользователя (НЕ хэш)
 	 * @see login_clear
 	 * @return bool - загружен ли пользователь
-	 * //TODO tested
 	 */
 	function load_by_loginpass($login, $password){
 		global $DB;
+		$password = (string) $password;
+		$login = login_clear($login);
+		if($password == '' || $login == ''){
+			$this->set_guest();
+			return false;
+		}
 		$pass_hash = self::password_hash($password);
-
-		$data = $DB->getRow('SELECT `password`, `id` FROM `our_u_users` WHERE `login` = ?s', login_clear($login));
-		if($data === false){
+		$data = $DB->getRow('SELECT `password`, `id` FROM `our_u_users` WHERE `login` = ?s', $login);
+		if(!$data){
 			$this->set_guest();
 			return false;
 		}
@@ -147,12 +148,11 @@ class rad_user{
 	 * Создает токен аутентификации для текущего пользователя
 	 * блокирует и разблокирует таблицы `our_u_tokens`, `our_u_users_roles`
 	 * @return array - содержит ключ 'error' если произошла ошибка, ['token' => string, 'date_end_token' => DateTime]
-	 * //TODO tested
 	 */
 	public function create_token(){
 		if(!$this->id)
 			return array('error' => 'Пользователь - гость');
-		global $DB;
+		global $DB, $OPTIONS;
 		$this->clear_old_tokens();
 		$DB->query('LOCK TABLES `our_u_tokens` WRITE, `our_u_users_roles` WRITE');
 		$tokens_count = $DB->getOne('SELECT COUNT(*) FROM `our_u_tokens` WHERE `user_id` = ?i', $this->id);
@@ -161,7 +161,7 @@ class rad_user{
 			$DB->query('UNLOCK TABLES');
 			return array('error' => 'Достигнут предел запоминания');
 		}else{
-			$sha_user_agent = sha1($_SERVER['HTTP_USER_AGENT']);
+			$sha_user_agent = sha1($OPTIONS['user_agent']);
 			$time_start = new DateTime();
 			$token = hash('sha256', mt_rand().$this->pass_hash.$sha_user_agent.$time_start->getTimestamp().$this->id);
 			$DB->query(
@@ -181,7 +181,6 @@ class rad_user{
 
 	/**
 	 * удаляет устаревшие токены текущего пользователя
-	 * //TODO tested
 	 */
 	public function clear_old_tokens(){
 		self::delete_old_tokens($this->id);
@@ -190,7 +189,6 @@ class rad_user{
 	/**
 	 * удаляет устаревшие токены пользователя
 	 * @param int $user_id - ID пользователя
-	 * //TODO tested
 	 */
 	static public function delete_old_tokens($user_id){
 		global $DB;
@@ -201,7 +199,6 @@ class rad_user{
 	 * создает токен для записи в cookie
 	 * собираем токен
 	 * имеет вид base64.base64, == обрезаются
-	 * //TODO tested
 	 * 1-ая часть - JSON $data
 	 * 2-ая часть - $hash
 	 * @param array|mixed $data - вложенность(глубина) не больше 10
@@ -215,7 +212,6 @@ class rad_user{
 	/**
 	 * @see encode_cookie_token
 	 * @param string $token - строка сгенерированная encode_cookie_token
-	 * //TODO tested
 	 * @return array|false ['data' => array|mixed, 'hash' => string]
 	 */
 	static public function decode_cookie_token($token){
@@ -234,7 +230,6 @@ class rad_user{
 
 	/**
 	 * Делает юзера гостем и удаляет сессию текущего юзера
-	 * //TODO tested
 	 */
 	function user_logout(){
 		if(is_session_exists()){
@@ -263,7 +258,7 @@ class rad_user{
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Все что связано с параметрами
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+	//TODO опции не протестированы
 	/**
 	 * Загружает параметры пользователя из БД
 	 * @return bool - false если пользователь гость
@@ -272,6 +267,7 @@ class rad_user{
 		if(!$this->id)
 			return false;
 		global $DB;
+		$this->options = array();
 		$tmp = $DB->getAll('SELECT `key`, `value` FROM `our_u_options` WHERE `user_id` = ?i', $this->id);
 		$len = sizeof($tmp);
 		for($i=0; $i<$len; $i++){
@@ -325,9 +321,8 @@ class rad_user{
 	/**
 	 * Обновляет указанные параметры пользователя в БД, ключи пропускаются через option_name_clear()
 	 * @see option_name_clear
-	 * @param array|string $param1 - массив ключей
-	 * @param string $param2 или ключи
-	 * @param string $param3
+	 * @param string[]|string $keys - массив ключей
+	 * @param string ...$params или ключи
 	 */
 	function update_options(){
 		//проверка на гостя
@@ -339,7 +334,7 @@ class rad_user{
 		/** @var  string[] $args - массив ключей параметров */
 		$args = func_get_args();
 		if(is_array($args[0])){
-			$args = $args[0];
+			$args = array_values($args[0]);
 		}
 		//обновляем параметры
 		global $DB;
@@ -377,6 +372,10 @@ class rad_user{
 		global $DB;
 		$query = 'INSERT INTO `our_u_options` (`user_id`, `key`, `value`) VALUES ';
 		foreach($this->options as $key => $val){
+			if(is_null($this->options[$key]['val'])){
+				unset($this->options[$key]);
+				continue;
+			}
 			if(!$this->options[$key]['isset'] && !is_null($this->options[$key]['val'])){
 				$this->options[$key]['isset'] = true;
 			}
@@ -393,7 +392,7 @@ class rad_user{
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//Все что связано с правами
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	//TODO права не протестированы
 	/**
 	 * загружает массив id, дополнительных прав пользователя
 	 */
@@ -405,7 +404,7 @@ class rad_user{
 		}
 		global $DB;
 		//загружаем перманентные права, work_time == 'inf'
-		$this->roles = $DB->getCol('SELECT `role_id` FROM `our_u_users_roles` WHERE `user_id` = ?i AND `work_time` != ?s', $this->id, 'INF');
+		$this->roles = $DB->getCol('SELECT `role_id` FROM `our_u_users_roles` WHERE `user_id` = ?i AND `work_time` = \'INF\'', $this->id);
 	}
 
 	/**
@@ -421,8 +420,8 @@ class rad_user{
 	 * возвращает границу права пользователя, если передана одна строка с ключом права; массив границ прав, если передано несколько ключей; или все границы, если не переданы параметры
 	 * @param string $type - тип ключа 'id' или 'role'
 	 * @param string[] $add_columns - дополнительные колонки ('id', 'role', 'description', 'level')
-	 * @param array|string $keys - массив ключей
-	 * @param string $_ или ключи
+	 * @param string[]|string $keys - массив ключей
+	 * @param string ...$_ или ключи
 	 * @return array|int|null
 	 * права
 	 * view_debug_info

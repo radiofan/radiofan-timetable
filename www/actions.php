@@ -22,9 +22,8 @@ function do_actions(){
 }
 
 //событие входа пользователя
-//TODO tested
 function action_login(){
-	global $DB, $USER;
+	global $OPTIONS, $USER, $ALERTS;
 	if(is_login())
 		return true;
 	if(!isset($_POST['login'], $_POST['password']))
@@ -35,17 +34,13 @@ function action_login(){
 		my_start_session();
 	$_SESSION['user_id'] = $USER->get_id();
 	//небольшая защита от кражи сессии
-	$_SESSION['secret_key'] = sha1($_SERVER['HTTP_USER_AGENT']);
+	$_SESSION['secret_key'] = sha1($OPTIONS['user_agent']);
 	if(isset($_POST['remember']) && $_POST['remember']){
 		//создадим токен для пользователя
 		$ret = $USER->create_token();
 		if(isset($ret['error'])){
 			$a = 0;
-			/*
-			global $ALERTS;
 			$ALERTS->add_alert('Достигнут предел запоминания, данный вход не запомнен.', 'warning');
-			TODO alerts
-			*/
 		}else{
 			setcookie('token', $ret['token'], $ret['date_end_token']->getTimestamp(), '/', null, USE_SSL, 1);
 		}
@@ -57,7 +52,7 @@ function action_login(){
 function action_exit(){
 	global $USER;
 	$USER->user_logout();
-	//redirect('/login');//TODO test
+	redirect('/login');
 }
 
 

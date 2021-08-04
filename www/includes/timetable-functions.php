@@ -36,9 +36,8 @@ function gen_timetable_html(){
 		$add_style['cell_word_wrap'] = '.timetable-body .cell{white-space:nowrap;}';
 	}
 	
-	$table_head_1 = '
-									<th rowspan="2"><div class="cell col-number" data-col="1">№ пары</div></th>
-									<th rowspan="2"><div class="cell col-time" data-col="2">Время</div></th>';
+	$table_head_1 = '<th rowspan="2"><div class="cell col-number" data-col="1">№ пары</div></th>
+		<th rowspan="2"><div class="cell col-time" data-col="2">Время</div></th>';
 	$table_head_2 = '';
 	$sticks = '<div class="stick" data-col="1"></div><div class="stick" data-col="2"></div>';
 	
@@ -55,14 +54,12 @@ function gen_timetable_html(){
 		for($i1 = 3; $i1 <= 7; $i1++){
 			$sticks .= '<div class="stick" data-col="'.($i1+$i*5).'"></div>';
 		}
-		$table_head_1 .= '
-									<th colspan="5"><div class="cell gr-'.($i+1).'">'.esc_html($elems_add[$i]['gr_name']).'</div></th>';
-		$table_head_2 .= '
-									<th><div class="cell gr-'.($i+1).' col-lesson" data-col="'.(3 + $i*5).'">Урок</div></th>
-									<th><div class="cell gr-'.($i+1).' col-lesson-add" data-col="'.(4 + $i*5).'">Тип</div></th>
-									<th><div class="cell gr-'.($i+1).' col-group" data-col="'.(5 + $i*5).'">Группа</div></th>
-									<th><div class="cell gr-'.($i+1).' col-cabinet" data-col="'.(6 + $i*5).'">Кабинет</div></th>
-									<th><div class="cell gr-'.($i+1).' col-teacher" data-col="'.(7 + $i*5).'">Препод</div></th>';
+		$table_head_1 .= '<th colspan="5"><div class="cell gr-'.($i+1).'">'.esc_html($elems_add[$i]['gr_name']).'</div></th>';
+		$table_head_2 .= '<th><div class="cell gr-'.($i+1).' col-lesson" data-col="'.(3 + $i*5).'">Урок</div></th>
+			<th><div class="cell gr-'.($i+1).' col-lesson-add" data-col="'.(4 + $i*5).'">Тип</div></th>
+			<th><div class="cell gr-'.($i+1).' col-group" data-col="'.(5 + $i*5).'">Группа</div></th>
+			<th><div class="cell gr-'.($i+1).' col-cabinet" data-col="'.(6 + $i*5).'">Кабинет</div></th>
+			<th><div class="cell gr-'.($i+1).' col-teacher" data-col="'.(7 + $i*5).'">Препод</div></th>';
 		
 		//генерация данных
 		

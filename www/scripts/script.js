@@ -1,4 +1,11 @@
 jQuery(document).ready(function($){
+	function rad_alert(message){
+		//TODO
+		alert(message);
+	}
+	
+	
+	
 	$('form').not(DATA.ignoreForms).on('submit', function(e){
 		e.preventDefault();
 		let $this = $(this);
@@ -20,21 +27,21 @@ jQuery(document).ready(function($){
 						if(result[act].hasOwnProperty('message')){
 							out += result[act].message;
 						}
-						alert(out);
+						rad_alert(out);
 					}else{
 						let out = 'Ошибка: ';
 						if(result[act].hasOwnProperty('message')){
 							out += result[act].message;
 						}
-						alert(out);
+						rad_alert(out);
 					}
 				}else{
-					alert('Ошибка: ');
+					rad_alert('Ошибка: ');
 				}
 				$this.data('exec', false);
 			},
 			error: function(){
-				alert('Ошибка. Попробуйте позже.');
+				rad_alert('Ошибка. Попробуйте позже.');
 				$this.data('exec', false);
 			}
 		});

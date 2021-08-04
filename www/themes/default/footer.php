@@ -1,8 +1,6 @@
 <?php
-//защита от прямого обращения к скрипту
-if(!defined('MAIN_DIR'))
-	die();
-global $URL, $USER, $DB, $PAGE_DATA;
+function view_footer($PAGE_DATA){
+	global $URL, $USER;
 /*
 TODO: панель отдладки для админа
 <div class="navbar-fixed-bottom row-fluid">
@@ -20,7 +18,7 @@ TODO: панель отдладки для админа
 		<div class="modal-content">
 			<div class="modal-header">
 				<h4 class="modal-title" id="main-modal-title"></h4>
-				<button type="button" class="close" data-dismiss="modal" >
+				<button type="button" class="close" data-dismiss="modal">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -34,9 +32,9 @@ TODO: панель отдладки для админа
 </div>
 
 <?php
-if($URL->get_current_id() === 'main_page'){
-	echo gen_additor_modal_html();
-}
+	if($URL->get_current_page() === 'main_page'){
+		echo gen_additor_modal_html();
+	}
 
 /*
 if(can_user('view_debug_info')){
@@ -47,10 +45,14 @@ if(can_user('view_debug_info')){
 
 <script src="/scripts/script.js?ver=<?php echo filemtime(MAIN_DIR. 'scripts/script.js'); ?>"></script>
 <?php
-if($USER->get_user_level() >= rad_user::NEDOADMIN){
-	echo '<script src="/scripts/admin_script.js?ver='.filemtime(MAIN_DIR. 'scripts/admin_script.js').'"></script>';
-}
-echo $PAGE_DATA['addition_scripts'];
+	if($USER->get_user_level() >= rad_user::NEDOADMIN){
+		echo '<script src="/scripts/admin_script.js?ver='.filemtime(MAIN_DIR. 'scripts/admin_script.js').'"></script>';
+	}
+	echo implode(PHP_EOL, $PAGE_DATA['addition_scripts']);
 ?>
 </body>
 </html>
+
+<?php
+}
+?>

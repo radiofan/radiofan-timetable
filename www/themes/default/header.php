@@ -1,8 +1,6 @@
 <?php
-//защита от прямого обращения к скрипту
-if(!defined('MAIN_DIR'))
-	die();
-global $URL, $USER, $PAGE_DATA;
+function view_header($PAGE_DATA){
+	global $URL, $USER;
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -12,8 +10,8 @@ global $URL, $USER, $PAGE_DATA;
 	<title><?php echo $PAGE_DATA['title']; ?></title>
 	<link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
 	<link rel="stylesheet" href="/styles/bootstrap-3.3.2.css">
-	<?php echo $PAGE_DATA['addition_styles']; ?>
-	<link rel="stylesheet" href="/styles/style.css?ver=<?php echo filemtime(MAIN_DIR. 'styles/style.css'); ?>">
+	<?= implode(PHP_EOL, $PAGE_DATA['addition_styles']); ?>
+	<link rel="stylesheet" href="/styles/style.css?ver=<?= filemtime(MAIN_DIR. 'styles/style.css'); ?>">
 	<?php
 	if($USER->get_user_level() >= rad_user::NEDOADMIN){
 		echo '<link rel="stylesheet" href="/styles/admin_style.css?ver='.filemtime(MAIN_DIR. 'styles/admin_style.css').'">';
@@ -42,33 +40,38 @@ global $URL, $USER, $PAGE_DATA;
 		};
 		/* ]]> */
 	</script>
-	<?php echo $PAGE_DATA['addition_libs']; ?>
+	<?= implode(PHP_EOL, $PAGE_DATA['addition_libs']); ?>
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-fixed-top">
 	<div class="container">
 		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar">
 				<span class="sr-only">Toggle navigation</span>
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
+			<a class="navbar-brand" style="font-family:Verdana,sans-serif" href="/">RADIOFAN &brvbar; timetable</a>
 		</div>
-		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			<div class="navbar-right navbar-text">
-			
-			</div>
-			<?php
-			if(is_login()){
-				echo '<div class="navbar-right navbar-text"><a href="/?action=exit" class="navbar-link">Выход</a></div>';
-			}
-			?>
+		<div class="collapse navbar-collapse" id="main-navbar">
+			<ul class="navbar-nav">
+				<?php
+				if(is_login()):
+				?>
+				<li class="nav-item">
+					<a class="nav-link" href="/?action=exit">Выход</a>
+				</li>
+				<?php
+				endif;
+				?>
+			</ul>
 		</div>
 	</div>
 </nav>
 <?php
-if(can_user('view_debug_info')){
-	echo '<!-- template: '.$URL->get_current_page().', page_id: '.$URL->get_current_id().' -->';
+	if(can_user('view_debug_info')){
+		echo '<!-- page_id: '.$URL->get_current_page().' -->';
+	}
 }
 ?>

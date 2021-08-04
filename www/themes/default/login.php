@@ -1,0 +1,102 @@
+<?php
+function view_login_page(){
+	global $URL;
+	$type = $URL->get_parameter('type');
+	switch($type){
+		case 'password-recovery':
+		case 'sign-in':
+			break;
+		default:
+			$type = 'login';
+			break;
+	}
+?>
+	<div class="container-fluid">
+		<div class="child-center">
+			<div class="login-form">
+				<div class="btn-group btn-group-toggle form-toggle" data-toggle="buttons">
+					<label class="btn btn-primary btn-lg <?= ($type != 'sign-in') ? 'active' : '';?>">
+						<input type="radio" autocomplete="off" name="in-form-type" value="login" <?= ($type != 'sign-in') ? 'checked="checked"' : '';?>> Вход
+					</label>
+					<label class="btn btn-primary btn-lg <?= ($type == 'sign-in') ? 'active' : '';?>">
+						<input type="radio" autocomplete="off" name="in-form-type" value="signin" <?= ($type == 'sign-in') ? 'checked="checked"' : '';?>> Регистрация
+					</label>
+				</div>
+				<form class="in-form in-form-login <?= ($type == 'sign-in') ? 'display-none' : '';?>" method="post" action="/" data-not-ajax="true">
+					<input type="hidden" name="action" value="login">
+					<input class="form-control" type="text" placeholder="Логин" name="login" id="login"><br>
+					<input class="form-control" type="password" placeholder="Пароль" name="password" id="password">
+					<a href="/login/password-recovery">Восстановить пароль</a><br>
+					<span style="line-height:30px"><input class="" type="checkbox" value="1" name="remember" id="remember"> Запомнить меня</span><br>
+					<input class="btn btn-primary" style="margin-top:12px;width:100%" type="submit" value="Войти">
+				</form>
+				<form class="in-form in-form-signin <?= ($type != 'sign-in') ? 'display-none' : '';?>" method="post" action="/" data-not-ajax="true">
+					<input type="hidden" name="action" value="signin">
+					<input class="form-control registr" type="text" placeholder="Логин" name="login">
+					<div class="invalid-feedback">Логин занят</div><br>
+					<input class="form-control" type="email" placeholder="Почта" name="email"><br>
+					<input class="form-control" id="main_password" style="width:calc(100% - 50px);float: left;" type="password" placeholder="Пароль" name="password">
+					<div class="password-view not-select" title="Показать пароль" data-view-pattern="(ಠ_ಠ)" data-target="#main_password">
+						(–_–)
+					</div>
+					<div class="invalid-feedback">мин. 6 символов (a-z A-Z 0-9 ! @ $ % & ? *)</div><br>
+					<input class="btn btn-primary" style="margin-top:12px;width:100%" type="submit" value="Зарегистрироваться">
+				</form>
+				<div class="in-form-pass-rec <?= ($type != 'password-recovery') ? 'display-none' : '';?>">
+					<div class="form-toggle" style="height:56px">
+						<a href="/login">&lt;- вернуться</a><br>
+					</div>
+					<form class="in-form" method="post" action="/" data-not-ajax="true">
+						<input type="hidden" name="action" value="send_pass_recovery">
+						<input class="form-control" type="text" placeholder="Логин" name="login">
+						<div class="invalid-feedback">невалидный логин</div><br>
+						<input class="form-control" type="email" placeholder="Почта" name="email"><br>
+						<input class="btn btn-primary" style="margin-top:12px;width:100%" type="submit" value="Отправить">
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+<?php
+}
+
+function test_view_login(){
+	global $USER, $URL;
+	//если пользователь зарегистрирован, но пытается зайти на сттраницу регистрации (не имея возможности дебага)
+	//отправим его на главную
+	if($USER->get_user_level() > 0 && !$USER->can_user('view_debug_info')){
+		redirect('/');
+		return false;
+	}
+
+	//проверка параметра
+	$type = $URL->get_parameter('type');
+	switch($type){
+		case 'password-recovery':
+		case 'sign-in':
+		case '':
+		case null:
+			break;
+		default:
+			return false;
+			break;
+	}
+	return true;
+}
+
+function footer_header_data_login($data){
+	global $URL;
+	$type = $URL->get_parameter('type');
+	switch($type){
+		case 'password-recovery':
+			$data['title'] .= ' | Восстановление пароля';
+			break;
+		case 'sign-in':
+			$data['title'] .= ' | Регистрация';
+			break;
+		default:
+			break;
+	}
+	return $data;
+}
+?>
