@@ -135,7 +135,6 @@ class rad_url{
 
 	/**
 	 * устанавливает текущей страницей 404-ую
-	 * //TODO переделать и добавить main_page
 	 */
 	function set_current_404(){
 		$this->current_page = '404';

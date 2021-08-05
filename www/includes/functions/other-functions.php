@@ -33,28 +33,7 @@ function include_file($path){
 }
 
 /**
- * создает страницу из хэдера, шаблона и футера,
- * быстрее,
- * отсутсвует экранировка
- * @param $file - путь к шаблону
- * @param $data - ассоциативный массив ключа и значения параметра для вставки в шаблон
- * @return string|false
- */
-function rad_template_old($file, $data){
-	if(!is_file($file)){
-		return false;
-	}
-	$tpl = file_get_contents($file);
-	//trigger_error(print_r($data, 1), E_USER_NOTICE);
-	foreach($data as $key => $value){
-		$tpl = str_replace('{'.$key.'}', $value, $tpl);
-	}
-	return include_file(MAIN_DIR.'header.php').$tpl.include_file(MAIN_DIR.'footer.php');
-}
-
-/**
  * проверка на вход на сайт
- * //TODO замутить статик, при первой проверке
  * @return bool
  */
 function is_login(){
@@ -62,6 +41,7 @@ function is_login(){
 	if(is_session_exists()){
 		//если сессия создана, но секретный ключ не пробивается
 		if(!isset($_SESSION['secret_key']) || sha1($OPTIONS['user_agent']) !== $_SESSION['secret_key']){
+			//TODO log steal session 
 			//грохаем все аутентификационные данные
 			session_unset();
 			session_destroy();
@@ -294,6 +274,22 @@ function check_file($path){
 	return file_exists($path) && is_file($path);
 }
 
+//получает список файлов
+//path - путь до директории
+//ext - расширение файлов (c точкой)
+//name_pattern - шаблон имени (регулярное выражение)
+function file_list($path, $ext='', $name_pattern='^.*?'){
+	$files = scandir($path);
+	$pattern = '#'.$name_pattern.preg_quote($ext).'$#';
+	$len = sizeof($files);
+	for($i=0; $i<$len; $i++){
+		if(!preg_match($pattern, $files[$i])){
+			unset($files[$i]);
+		}
+	}
+	return array_values($files);
+}
+
 /**
  * Склонение слова после числа.
  *
@@ -403,121 +399,6 @@ function is_serialized($data, $strict = true){
 
 
 
-
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * удаляем все символы кроме [a-zа-я0-9_@#&-$]
- * @param string $text
- * @return string
- */
-function coupon_clear($text){
-	return preg_replace('/[^a-zа-я0-9_@#&\\-\\$]/iu', '', $text);
-}
-/**
- * удаляем все символы кроме [a-z0-9_-]
- * @param string $text
- * @return string
- */
-function login_clear($text){
-	return preg_replace('/[^a-z0-9_\\-]/iu', '', $text);
-}
-/**
- * удаляем все символы кроме [a-f0-9], переводит в верхний регистр
- * @param string $text
- * @return string
- */
-function hex_clear($text){
-	return mb_strtoupper(preg_replace('/[^a-f0-9]/iu', '', $text));
-}
-/**
- * удаляем все символы кроме [a-z0-9!@%&$?*]
- * @param string $text
- * @return string
- */
-function password_clear($text){
-	return preg_replace('/[^a-z0-9!@%&\\$\\?\\*]/iu', '', $text);
-}
-
-/**
- * то же самое что и login_clear но переводит в нижний регистр
- * @param string $text
- * @return string
- * @see login_clear() 
- */
-function option_name_clear($text){
-	return mb_strtolower(login_clear($text));
-}
-/**
- * сепаратор - любое кол-во, символы [ :/_,.+-];
- * кавычки " или '
- * @param string $text
- * 'секунды SECOND'
- * 'минуты MINUTE'
- * 'часы HOUR'
- * 'дни DAY'
- * 'месяцы MONTH'
- * 'года YEAR'
- * '"минуты:секунды" MINUTE_SECOND'
- * '"часы:минуты" HOUR_MINUTE'
- * '"дни:часы" DAY_HOUR'
- * '"года:месяцы" YEAR_MONTH'
- * '"часы:минуты:секунды" HOUR_SECOND'
- * '"дни:часы:минуты" DAY_MINUTE'
- * '"дни:часы:минуты:секунды" DAY_SECOND'
- * @return string
- */
-function sql_time_interval_clear($text){
-	$text = trim($text);
-	$matches = array();
-	preg_match('#( SECOND$)|( MINUTE$)|( HOUR$)|( DAY$)|( MONTH$)|( YEAR$)|( MINUTE_SECOND$)|( HOUR_MINUTE$)|( DAY_HOUR$)|( YEAR_MONTH$)|( HOUR_SECOND$)|( DAY_MINUTE$)|( DAY_SECOND$)#iu', $text, $matches);
-	if(!isset($matches[0]))
-		return '';
-	$type = mb_strtoupper(mb_substr($matches[0], 1));
-	$numb = array();
-	switch($type){
-		case 'SECOND':
-		case 'MINUTE':
-		case 'HOUR':
-		case 'SECDAYOND':
-		case 'MONTH':
-		case 'YEAR':
-			preg_match('#([0-9]+) '.$type.'$#iu', $text, $matches);
-			if(!isset($matches[1]))
-				return '';
-			$numb = (int) $matches[1];
-			if($numb <= 0)
-				return '';
-			return $numb.' '.$type;
-		case 'MINUTE_SECOND':
-		case 'HOUR_MINUTE':
-		case 'DAY_HOUR':
-		case 'YEAR_MONTH':
-			preg_match('#[\'"]([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[\'"] '.$type.'$#iu', $text, $matches);
-			if(!isset($matches[1], $matches[2]))
-				return '';
-			$numb = array((int) $matches[1], (int) $matches[2]);
-			break;
-		case 'HOUR_SECOND':
-		case 'DAY_MINUTE':
-			preg_match('#[\'"]([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[\'"] '.$type.'$#iu', $text, $matches);
-			if(!isset($matches[1], $matches[2], $matches[3]))
-				return '';
-			$numb = array((int) $matches[1], (int) $matches[2], (int) $matches[3]);
-			break;
-		case 'DAY_SECOND':
-			preg_match('#[\'"]([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[ :/_,\\.\\+\\-]+([0-9]+)[\'"] '.$type.'$#iu', $text, $matches);
-			if(!isset($matches[1], $matches[2], $matches[3], $matches[4]))
-				return '';
-			$numb = array((int) $matches[1], (int) $matches[2], (int) $matches[3], (int) $matches[4]);
-			break;
-	}
-	if(array_sum($numb) <= 0)
-		return '';
-	return '"'.implode(':', $numb).'" '.$type;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // не используются
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,53 +450,6 @@ function validation_prefix($prefix){
 	$prefix = preg_replace('#[^a-zA-Z0-9\\.\\-_]#u', '', $prefix);
 	$prefix = ltrim($prefix, '.-_');
 	return $prefix;
-}
-
-
-
-//имеется экранировка
-//медленее
-function rad_template($file, $data){
-	$tpl = file_get_contents($file);
-	$values = array_values($data);
-	$vars = array_keys($data);
-	$len = sizeof($data);
-	for($i=0; $i<$len; $i++){
-		$vars[$i] = '#{'.preg_quote($vars[$i], '}').'[^\\\\]?}#u';
-	}
-	$tpl = preg_replace($vars, $values, $tpl);
-	$tpl = str_replace('\\}', '}', $tpl);
-	return include_file(MAIN_DIR."header.php").$tpl.include_file(MAIN_DIR."footer.php");
-}
-
-//очистка
-function id_clear($id){
-	$id = prefix_clear($id);
-	$id = preg_replace('#_+$#', '', $id);
-	return strlen($id)? $id : false;
-}
-
-//очистка
-function prefix_clear($prefix){
-	$prefix = preg_replace('#[^a-zA-Z0-9_]#', '', $prefix);
-	$prefix = preg_replace('#^[0-9]+#', '', $prefix);
-	return strlen($prefix)? $prefix : false;
-}
-
-//получает список файлов
-//path - путь до директории
-//ext - расширение файлов
-//name_pattern - шаблон имени (регулярное выражение)
-function file_list($path, $ext='', $name_pattern='^.*?'){
-	$files = scandir($path);
-	$pattern = '#'.$name_pattern.preg_quote($ext).'$#';
-	$len = sizeof($files);
-	for($i=0; $i<$len; $i++){
-		if(!preg_match($pattern, $files[$i])){
-			unset($files[$i]);
-		}
-	}
-	return array_values($files);
 }
 
 ?>

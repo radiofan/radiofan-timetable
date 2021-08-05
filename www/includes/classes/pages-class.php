@@ -215,7 +215,12 @@ class rad_pages_viewer{
 		$this->pages['user_settings']->user_level = rad_user::USER;
 		$URL->add_page('user_settings', 'settings');
 	}
-	
+
+	/**
+	 * обертка для rad_url::get_current_page
+	 * получает id страницы которую юзер хочет получить
+	 * @see rad_url::get_current_page
+	 */
 	function load_current_page(){
 		global $URL;
 		$this->current_page_id = $URL->get_current_page();

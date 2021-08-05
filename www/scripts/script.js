@@ -7,8 +7,10 @@ jQuery(document).ready(function($){
 	
 	
 	$('form').not(DATA.ignoreForms).on('submit', function(e){
-		e.preventDefault();
 		let $this = $(this);
+		if($this.data('notAjax'))
+			return;
+		e.preventDefault();
 		if($this.data('exec'))
 			return;
 		let act = $this.find('input[name = action]').val();

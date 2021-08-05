@@ -22,21 +22,25 @@ function view_login_page(){
 						<input type="radio" autocomplete="off" name="in-form-type" value="signin" <?= ($type == 'sign-in') ? 'checked="checked"' : '';?>> Регистрация
 					</label>
 				</div>
-				<form class="in-form in-form-login <?= ($type == 'sign-in') ? 'display-none' : '';?>" method="post" action="/" data-not-ajax="true">
+				<form class="in-form in-form-login <?= ($type == 'sign-in') ? 'display-none' : '';?>" method="post" action="/login" data-not-ajax="true">
 					<input type="hidden" name="action" value="login">
-					<input class="form-control" type="text" placeholder="Логин" name="login" id="login"><br>
-					<input class="form-control" type="password" placeholder="Пароль" name="password" id="password">
-					<a href="/login/password-recovery">Восстановить пароль</a><br>
-					<span style="line-height:30px"><input class="" type="checkbox" value="1" name="remember" id="remember"> Запомнить меня</span><br>
+					<input class="form-control" type="text" placeholder="Логин" name="login"><br>
+					<input class="form-control" id="login_pass" style="width:calc(100% - 50px);float: left;" type="password" placeholder="Пароль" name="password">
+					<div class="password-view not-select" title="Показать пароль" data-view-pattern="(ಠ_ಠ)" data-target="#login_pass">
+						(–_–)
+					</div><br>
+					<a href="/login/password-recovery" id="show-pass-recovery">Восстановить пароль</a><br>
+					<span style="line-height:30px"><input class="" type="checkbox" value="1" name="remember"> Запомнить меня</span><br>
 					<input class="btn btn-primary" style="margin-top:12px;width:100%" type="submit" value="Войти">
 				</form>
-				<form class="in-form in-form-signin <?= ($type != 'sign-in') ? 'display-none' : '';?>" method="post" action="/" data-not-ajax="true">
+				<form class="in-form in-form-signin <?= ($type != 'sign-in') ? 'display-none' : '';?>" method="post" action="/login/sign-in" data-not-ajax="true">
 					<input type="hidden" name="action" value="signin">
-					<input class="form-control registr" type="text" placeholder="Логин" name="login">
+					<input class="form-control" type="text" placeholder="Логин" name="login">
 					<div class="invalid-feedback">Логин занят</div><br>
-					<input class="form-control" type="email" placeholder="Почта" name="email"><br>
-					<input class="form-control" id="main_password" style="width:calc(100% - 50px);float: left;" type="password" placeholder="Пароль" name="password">
-					<div class="password-view not-select" title="Показать пароль" data-view-pattern="(ಠ_ಠ)" data-target="#main_password">
+					<input class="form-control" type="email" placeholder="Почта" name="email">
+					<div class="invalid-feedback">Заполните поле</div><br>
+					<input class="form-control" id="signin_pass" style="width:calc(100% - 50px);float: left;" type="password" placeholder="Пароль" name="password">
+					<div class="password-view not-select" title="Показать пароль" data-view-pattern="(ಠ_ಠ)" data-target="#signin_pass">
 						(–_–)
 					</div>
 					<div class="invalid-feedback">мин. 6 символов (a-z A-Z 0-9 ! @ $ % & ? *)</div><br>
@@ -44,12 +48,12 @@ function view_login_page(){
 				</form>
 				<div class="in-form-pass-rec <?= ($type != 'password-recovery') ? 'display-none' : '';?>">
 					<div class="form-toggle" style="height:56px">
-						<a href="/login">&lt;- вернуться</a><br>
+						<a href="/login" id="hide-pass-recovery">&lt;- вернуться</a><br>
+						<h5 class="text-center">Восстановление пароля</h5>
 					</div>
-					<form class="in-form" method="post" action="/" data-not-ajax="true">
+					<form class="in-form" method="post" action="/">
 						<input type="hidden" name="action" value="send_pass_recovery">
-						<input class="form-control" type="text" placeholder="Логин" name="login">
-						<div class="invalid-feedback">невалидный логин</div><br>
+						<input class="form-control" type="text" placeholder="Логин" name="login"><br>
 						<input class="form-control" type="email" placeholder="Почта" name="email"><br>
 						<input class="btn btn-primary" style="margin-top:12px;width:100%" type="submit" value="Отправить">
 					</form>

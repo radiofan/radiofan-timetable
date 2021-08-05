@@ -3,6 +3,7 @@ define('DATA_IN_DB', 1);
 define('CLEAR_POST', 1);
 define('SALT', '');//ПРИ СМЕНЕ СОЛИ ВСЕ ПАРОЛИ СТАНУТ НЕ ДЕЙСТВИТЕЛЬНЫ!
 define('USE_LOG', 1);
+define('DEBUG_SMTP', 1);
 define('USE_SSL', 0);
 
 /** 3600\*24 -- 60\*60*24 */
@@ -24,4 +25,9 @@ define('MAIN_DBHOST', 'localhost');
 define('MAIN_DBUSER', 'root');
 define('MAIN_DBPASS', '');
 define('MAIN_DBNAME', 'parcer.rad');
+
+define('SMTP_SERVER', 'localhost');
+define('SMTP_USER', 'me');
+define('SMTP_PASS', '');
+define('SMTP_PORT', 25);
 ?>

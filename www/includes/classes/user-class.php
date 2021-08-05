@@ -34,6 +34,8 @@ class rad_user{
 	const GUEST = 0;
 	/** @var int юзер, мин права*/
 	const USER = 1;
+	/** @var int юзер, проверена почта*/
+	const VERIFIED = 5;
 	/** @var int юзер, макс права*/
 	const SUPERUSER = 45;
 	/** @var int админ, мин права*/
@@ -104,10 +106,11 @@ class rad_user{
 	/**
 	 * Возвращает хеш пароля пользователя
 	 * @param string $password
+	 * @param bool $binary
 	 * @return string
 	 */
-	static public function password_hash($password){
-		return sha1(SALT . trim($password), 1);//TODO генерация хеша пароля переделать
+	static public function password_hash($password, $binary=true){
+		return sha1(SALT . trim($password), $binary);//TODO генерация хеша пароля переделать
 	}
 
 	/**
@@ -116,6 +119,7 @@ class rad_user{
 	 * @param string $login - логин пользователя, лечится login_clear
 	 * @param string $password - пароль пользователя (НЕ хэш)
 	 * @see login_clear
+	 * @see rad_user::password_hash
 	 * @return bool - загружен ли пользователь
 	 */
 	function load_by_loginpass($login, $password){
@@ -142,6 +146,71 @@ class rad_user{
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * @param string $login - логин пользователя
+	 * @param string $password - пароль пользователя (НЕ хэш)
+	 * @param string $email - почта пользователя
+	 * @param string $level - уровень пользователя
+	 * @return int
+	 * >0: id вставленного пользователя
+	 * -1: пароль короткий;
+	 * -2: пароль содержит недопустимые символы;
+	 * -3: логин короткий;
+	 * -4: логин содержит недопустимые символы;
+	 * -5: логин неуникален;
+	 * -6: почтовый ящик пуст;
+	 * -7: почтовый ящик не валиден;
+	 * -8: уровень пользователя не лежит в интервале;
+	 * -9: ползователь не добавлен;
+	 */
+	static public function create_new_user($login, $password, $email, $level){
+		global $DB;
+		$password_clear = password_clear($password);
+		if(mb_strlen($password_clear) < 6){
+			return -1;
+		}
+		if(strcmp($password_clear, $password) != 0){
+			return -2;
+		}
+		$pass_hash = '0x'.self::password_hash($password_clear, 0);
+		
+		$login_clear = login_clear($login);
+		if(mb_strlen($password_clear) < 1){
+			return -3;
+		}
+		if(strcmp($login_clear, $login) != 0){
+			return -4;
+		}
+		if($DB->getOne('SELECT `id` FROM `our_u_users` WHERE `login` = ?s', $login)){
+			return -5;
+		}
+
+		$email = trim($email);
+		if($email === ''){
+			return -6;
+		}
+		if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			return -7;
+		}
+		
+		if($level < self::USER || $level > self::ADMIN){
+			return -8;
+		}
+
+		if($DB->query(
+			'INSERT INTO `our_u_users` (`login`, `password`, `email`, `date`, `level`) VALUES(?s, ?p, ?s, ?p, ?i)',
+			$login_clear,
+			$pass_hash,
+			$email,
+			'NOW()',
+			$level
+		)){
+			return -9;
+		}
+		
+		return $DB->insertId();
 	}
 
 	/**
@@ -428,6 +497,7 @@ class rad_user{
 	 * edit_users
 	 * edit_settings
 	 * ignore_max_token_remember
+	 * view_db_stat
 	 */
 	static public function get_roles_range(){
 		//используйте только лат. буквы и нижние подчеркивания

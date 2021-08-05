@@ -44,34 +44,32 @@ function view_header($PAGE_DATA){
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-fixed-top">
-	<div class="container">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand" style="font-family:Verdana,sans-serif" href="/">RADIOFAN &brvbar; timetable</a>
-		</div>
-		<div class="collapse navbar-collapse" id="main-navbar">
-			<ul class="navbar-nav">
-				<?php
-				if(is_login()):
+	<div class="navbar-header">
+		<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" style="font-family:Verdana,sans-serif" href="/">RADIOFAN | timetable</a>
+	</div>
+	<div class="collapse navbar-collapse" id="main-navbar">
+		<ul class="navbar-nav">
+			<?php
+			if($USER->get_id()):
 				?>
 				<li class="nav-item">
-					<a class="nav-link" href="/?action=exit">Выход</a>
+					<a class="nav-link" href="<?= $URL->get_current_url(); ?>?action=exit">Выход</a>
 				</li>
-				<?php
-				endif;
-				?>
-			</ul>
-		</div>
+			<?php
+			endif;
+			?>
+		</ul>
 	</div>
 </nav>
 <?php
 	if(can_user('view_debug_info')){
-		echo '<!-- page_id: '.$URL->get_current_page().' -->';
+		echo '<!-- page_id: '.$URL->get_current_page().'; breadcrumbs: '.implode(' | ',$URL->get_breadcrumbs()).'; -->';
 	}
 }
 ?>
