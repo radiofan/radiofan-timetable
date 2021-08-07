@@ -35,7 +35,7 @@ function view_login_page(){
 				</form>
 				<form class="in-form in-form-signin <?= ($type != 'sign-in') ? 'display-none' : '';?>" method="post" action="/login/sign-in" data-not-ajax="true">
 					<input type="hidden" name="action" value="signin">
-					<input class="form-control" type="text" placeholder="Логин" name="login">
+					<input class="form-control" type="text" placeholder="Логин" name="login" autocomplete="off">
 					<div class="invalid-feedback">Логин занят</div><br>
 					<input class="form-control" type="email" placeholder="Почта" name="email">
 					<div class="invalid-feedback">Заполните поле</div><br>

@@ -103,16 +103,73 @@ function action_signin(){
 		return array('status' => $status, 'message' => $ret);
 	}
 	
-	send_verified_mail($new_user_id);//TODO
+	send_verified_mail($new_user_id);
 	if(!is_session_exists())
 		my_start_session();
 	$_SESSION['user_id'] = $new_user_id;
-	setcookie('token', '', time()-SECONDS_PER_DAY, '/', null, USE_SSL, 1);
+	setcookie('token', '', time()-SECONDS_PER_DAY);
 	//небольшая защита от кражи сессии
 	$_SESSION['secret_key'] = sha1($OPTIONS['user_agent']);
 	
 	//TODO привествие
 	return array('status' => 0, 'message' => STR_ACTION_SIGNIN_10);
+}
+
+/**
+ * Проверяет незанятость логина
+ * true - логин свободен
+ */
+function action_check_login(){
+	if(!isset($_POST['login']))
+		return false;
+	return rad_user::check_login($_POST['login']);
+}
+
+function action_send_pass_recovery(){
+	if(!isset($_POST['login'], $_POST['email']))
+		return false;
+	global $DB, $ALERTS;
+	$login = login_clear($_POST['login']);
+	if(strcmp($login, $_POST['login']) != 0){
+		if(!AJAX){
+			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_1, 'warning');
+		}
+		return array('status' => 1, 'message' => STR_ACTION_SEND_PASS_RECOVERY_1);
+	}
+	$email = trim($_POST['email']);
+	$user = $DB->getRow('SELECT `id`, `email` FROM `our_u_users` WHERE `login` = ?s', $login);
+	
+	if(!$user){
+		if(!AJAX){
+			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_1, 'warning');
+		}
+		return array('status' => 1, 'message' => STR_ACTION_SEND_PASS_RECOVERY_1);
+	}
+
+	if(strcmp($user['email'], $email) != 0){
+		if(!AJAX){
+			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_2, 'warning');
+		}
+		return array('status' => 2, 'message' => STR_ACTION_SEND_PASS_RECOVERY_2);
+	}
+	
+	$ret = send_pass_recovery_mail((int)$user['id']);
+	if($ret == -4){
+		if(!AJAX){
+			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_3, 'warning');
+		}
+		return array('status' => 0, 'message' => STR_ACTION_SEND_PASS_RECOVERY_3);
+	}else if($ret == 0){
+		if(!AJAX){
+			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_4, 'warning');
+		}
+		return array('status' => 3, 'message' => STR_ACTION_SEND_PASS_RECOVERY_4);
+	}else{
+		if(!AJAX){
+			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_5, 'warning');
+		}
+		return array('status' => 3, 'message' => STR_ACTION_SEND_PASS_RECOVERY_5);
+	}
 }
 
 /**

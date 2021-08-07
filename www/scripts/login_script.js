@@ -46,10 +46,11 @@ jQuery(document).ready(function($){
 			value = $this.val();
 		switch(name){
 			case 'login':
-				if(/^[a-zA-Z0-9_\-]+$/.test(value)){
+				if(/^[a-zA-Z0-9_\-]{1,}$/.test(value)){
 					check_login($this);
 					break;
 				}
+				check_login_abort();
 				$this.removeClass('is-valid').addClass('is-invalid');
 				$this.nextAll('.invalid-feedback').first().text('Логин должен состоять из a-z A-Z 0-9 _ -').show();
 				break;
@@ -100,25 +101,9 @@ jQuery(document).ready(function($){
 				},
 				'json'
 			);
-			/*
-			$.ajax({
-				url: '/ajax.php',
-				type: 'post',
-				data: {'action':'check_login', 'login':value},
-				dataType: 'json',
-				cache: false,
-				success: function(result){
-					if(result.hasOwnProperty('check_login') && result.check_login){
-						$this.removeClass('is-invalid').addClass('is-valid');
-						$this.nextUntil('.invalid-feedback').hide();
-					}else{
-						$this.removeClass('is-valid').addClass('is-invalid');
-						$this.nextUntil('.invalid-feedback').text('Логин занят').show();
-					}
-				}
-			});
-			*/
 		}, 1000);
 	}
-	
+	function check_login_abort(){
+		clearTimeout(check_login_timer);
+	}
 });

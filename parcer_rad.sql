@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1
--- Время создания: Июл 03 2021 г., 20:12
+-- Время создания: Авг 07 2021 г., 20:38
 -- Версия сервера: 5.7.15
 -- Версия PHP: 7.0.10
 
@@ -50,10 +50,11 @@ CREATE TABLE `our_u_roles` (
 --
 
 INSERT INTO `our_u_roles` (`id`, `role`, `description`, `level`) VALUES
-(1, 'view_debug_info', 'видеть отладочную информацию', 100),
+(1, 'view_debug_info', 'видеть отладочную информацию', 101),
 (2, 'edit_users', 'управлять пользователями', 100),
 (3, 'edit_settings', 'управлять настройками сайта', 100),
-(4, 'ignore_max_token_remember', 'Игнорирование ограничения по количеству запомненных устройств', 100);
+(4, 'ignore_max_token_remember', 'Игнорирование ограничения по количеству запомненных устройств', 100),
+(5, 'view_db_stat', 'Видеть статистику базы данных', 101);
 
 -- --------------------------------------------------------
 
@@ -105,6 +106,13 @@ CREATE TABLE `our_u_users_roles` (
   `work_time` varchar(255) NOT NULL DEFAULT 'INF' COMMENT 'sql time INTERVAL / "INF"',
   `action_id` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Дамп данных таблицы `our_u_users_roles`
+--
+
+INSERT INTO `our_u_users_roles` (`user_id`, `role_id`, `start_time`, `end_time`, `work_time`, `action_id`) VALUES
+(1, 1, '2021-08-05 12:28:54', NULL, 'INF', NULL);
 
 -- --------------------------------------------------------
 
@@ -274,7 +282,7 @@ ALTER TABLE `stud_teachers`
 -- AUTO_INCREMENT для таблицы `our_u_roles`
 --
 ALTER TABLE `our_u_roles`
-  MODIFY `id` smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 --
 -- AUTO_INCREMENT для таблицы `our_u_users`
 --

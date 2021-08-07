@@ -5,9 +5,10 @@ header('Content-Type: text/html; charset=UTF-8');
 define('MAIN_DIR', __DIR__.'/');
 define('AJAX', false);
 require_once MAIN_DIR.'defines.php';
+//языковые константы, используются в событиях (actions)
 require_once MAIN_DIR.'langs/ru-lang.php';
 
-//подключаем функциии
+//подключаем функции из файлов includes/functions/*-functions.php
 require_once MAIN_DIR.'includes/functions/other-functions.php';
 $files = file_list(MAIN_DIR.'includes/functions/', '.php', '^.*?-functions');
 for($i=0; $i<sizeof($files); $i++){
@@ -18,6 +19,9 @@ for($i=0; $i<sizeof($files); $i++){
 //require_once MAIN_DIR.'includes/functions/timetable-functions.php';
 
 require_once MAIN_DIR.'includes/classes/parser-class.php';
+require_once MAIN_DIR.'includes/phpmailer/PHPMailer.php';
+require_once MAIN_DIR.'includes/phpmailer/Exception.php';
+require_once MAIN_DIR.'includes/phpmailer/SMTP.php';
 
 require_once MAIN_DIR.'includes/classes/log-class.php';
 if(defined('USE_LOG') && USE_LOG)
@@ -40,7 +44,7 @@ $OPTIONS['referer_data'] = parse_url(empty($_SERVER['HTTP_REFERER']) ? '' : $_SE
 is_session_exists();
 
 require_once MAIN_DIR.'includes/classes/alerts-class.php';
-$ALERTS = new rad_alerts();//TODO переделать логику, добавить запоминание в БД
+$ALERTS = new rad_alerts();
 
 require_once MAIN_DIR.'includes/classes/user-class.php';
 $USER = new rad_user();

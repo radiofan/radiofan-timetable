@@ -149,6 +149,7 @@ class rad_user{
 	}
 	
 	/**
+	 * добавляет в БД нового пользователя, также перед добавлением производит проверки
 	 * @param string $login - логин пользователя
 	 * @param string $password - пароль пользователя (НЕ хэш)
 	 * @param string $email - почта пользователя
@@ -177,7 +178,7 @@ class rad_user{
 		$pass_hash = '0x'.self::password_hash($password_clear, 0);
 		
 		$login_clear = login_clear($login);
-		if(mb_strlen($password_clear) < 1){
+		if(mb_strlen($login_clear) < 1){
 			return -3;
 		}
 		if(strcmp($login_clear, $login) != 0){
@@ -188,7 +189,7 @@ class rad_user{
 		}
 
 		$email = trim($email);
-		if($email === ''){
+		if(mb_strlen($email)< 1){
 			return -6;
 		}
 		if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -199,7 +200,7 @@ class rad_user{
 			return -8;
 		}
 
-		if($DB->query(
+		if(!$DB->query(
 			'INSERT INTO `our_u_users` (`login`, `password`, `email`, `date`, `level`) VALUES(?s, ?p, ?s, ?p, ?i)',
 			$login_clear,
 			$pass_hash,
@@ -211,6 +212,20 @@ class rad_user{
 		}
 		
 		return $DB->insertId();
+	}
+	
+	/**
+	 * проверяет незанятость логина
+	 * @param string $login - логин пользователя, пропускается через login_clear
+	 * @see login_clear();
+	 * @return bool - true если логин не занят
+	 */
+	static public function check_login($login){
+		global $DB;
+		$login = login_clear($login);
+		if(mb_strlen($login) < 1)
+			return false;
+		return !$DB->getOne('SELECT `id` FROM `our_u_users` WHERE `login` = ?s', $login);
 	}
 
 	/**
@@ -291,7 +306,7 @@ class rad_user{
 			'data' => base64_decode($token_data[0], 1),
 			'hash' => base64_decode($token_data[1], 1)
 		);
-		if($ret['data'] === false ||$ret['hash'] === false)
+		if($ret['data'] === false || $ret['hash'] === false)
 			return false;
 		$ret['data'] = json_decode($ret['data'], true, 10);
 		return $ret;
@@ -408,6 +423,7 @@ class rad_user{
 		//обновляем параметры
 		global $DB;
 		$len = sizeof($args);
+		//TODO замутить транзакцию
 		for($i=0; $i<$len; $i++){
 			$key = option_name_clear($args[$i]);
 			if(isset($this->options[$key])){
