@@ -1,6 +1,6 @@
 jQuery(document).ready(function($){
 	function rad_alert(message){
-		//TODO
+		//TODO rad_alert
 		alert(message);
 	}
 	

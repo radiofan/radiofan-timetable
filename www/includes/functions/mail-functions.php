@@ -71,6 +71,7 @@ function send_verified_mail($user_id){
 		return -1;
 	if($new_user->get_user_level() > $new_user::VERIFIED){
 		$new_user->set_option('old_user_level', $new_user->get_user_level());
+		$new_user->update_options('old_user_level');
 	}
 	$new_user->set_user_level($new_user::USER);
 	$now_time = new DateTime();
@@ -78,7 +79,7 @@ function send_verified_mail($user_id){
 	$end_time = $now_time->add(new DateInterval('P'.MAIL_VERIFY_TOKEN_LIVE_DAYS.'D')); 
 	$token = $new_user::encode_cookie_token(array('user_id' => $new_user->get_id(), 'time_end' => $end_time->format(DB_DATE_FORMAT)), $token_hash);
 	$new_user->set_option('mail_verified_token', $token);
-	$new_user->update_options('mail_verified_token', 'old_user_level');
+	$new_user->update_options('mail_verified_token');
 
 	$mail_body = get_verified_mail_body(array(
 		'verify_link' => 'http'.(USE_SSL ? 's' : '').'://'.$_SERVER['HTTP_HOST'].'/activation/',

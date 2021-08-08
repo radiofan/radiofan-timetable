@@ -6,6 +6,7 @@ if(!defined('MAIN_DIR'))
 error_reporting(E_ALL);
 
 class rad_log{
+	//TODO сделать разделение по файлам
 	private $stack_trace;
 	private $logfile_path;
 	private $error_type = array(

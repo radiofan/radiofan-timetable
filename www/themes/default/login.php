@@ -1,4 +1,7 @@
 <?php
+/**
+ * функция вывода тела страницы 'login'
+ */
 function view_login_page(){
 	global $URL;
 	$type = $URL->get_parameter('type');
@@ -64,6 +67,12 @@ function view_login_page(){
 <?php
 }
 
+/**
+ * функция проверки на доступ к странице 'login'
+ * если юзер зареган и не умеет смотреть debug, то редиректим его на главную
+ * если параметр type(1) не равен 'password-recovery', 'sign-in', '', то false
+ * @return bool
+ */
 function test_view_login(){
 	global $USER, $URL;
 	//если пользователь зарегистрирован, но пытается зайти на сттраницу регистрации (не имея возможности дебага)
@@ -88,6 +97,12 @@ function test_view_login(){
 	return true;
 }
 
+/**
+ * Дорабатывает title страницы добавляя к нему
+ * ' | Восстановление пароля' или ' | Регистрация'
+ * @param $data
+ * @return array
+ */
 function footer_header_data_login($data){
 	global $URL;
 	$type = $URL->get_parameter('type');

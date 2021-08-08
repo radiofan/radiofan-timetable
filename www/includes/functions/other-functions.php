@@ -41,7 +41,6 @@ function is_login(){
 	if(is_session_exists()){
 		//если сессия создана, но секретный ключ не пробивается
 		if(!isset($_SESSION['secret_key']) || sha1($OPTIONS['user_agent']) !== $_SESSION['secret_key']){
-			//TODO log steal session 
 			//грохаем все аутентификационные данные
 			session_unset();
 			session_destroy();

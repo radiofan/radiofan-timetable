@@ -110,7 +110,7 @@ class rad_user{
 	 * @return string
 	 */
 	static public function password_hash($password, $binary=true){
-		return sha1(SALT . trim($password), $binary);//TODO генерация хеша пароля переделать
+		return sha1(SALT . trim($password), $binary);
 	}
 
 	/**
@@ -225,8 +225,64 @@ class rad_user{
 		$login = login_clear($login);
 		if(mb_strlen($login) < 1)
 			return false;
-		return !$DB->getOne('SELECT `id` FROM `our_u_users` WHERE `login` = ?s', $login);
+		return !is_string($DB->getOne('SELECT `id` FROM `our_u_users` WHERE `login` = ?s', $login));
 	}
+
+	/**
+	 * дает юзеру уровень VERIFIED, или восстанавливает прежний
+	 * удаляет параметры 'mail_verified_token' и 'old_user_level'
+	 * @see send_verified_mail
+	 * //TODO обернуть в транзакцию
+	 */
+	public function mail_verify(){
+		$old_level = $this->get_option('old_user_level');
+		$old_level = absint($old_level);
+		$this->set_option('old_user_level', null);
+		$this->set_option('mail_verified_token', null);
+		$this->update_options('old_user_level', 'mail_verified_token');
+		
+		if($this->user_level >= self::VERIFIED)
+			return;
+		
+		if($old_level > self::ADMIN)
+			return;
+		if($old_level <= self::VERIFIED){
+			$this->set_user_level(self::VERIFIED);
+		}else{
+			$this->set_user_level($old_level);
+		}
+	}
+
+	/**
+	 * Делает юзера гостем и удаляет сессию текущего юзера
+	 */
+	function user_logout(){
+		if(is_session_exists()){
+			session_unset();
+			session_destroy();
+			setcookie(session_name(), '', time() - SECONDS_PER_DAY);
+		}
+		if(isset($_COOKIE['token'])){
+			$token_data = self::decode_cookie_token((string)$_COOKIE['token']);
+			if($token_data){
+				//токен распарсился, грохнем его
+				global $DB;
+				if(!is_null($token_data['data']) && isset($token_data['data']['user_id'])){
+					$user_id = absint($token_data['data']['user_id']);
+					$token = hex_clear($token_data['hash']);
+					if($user_id === $this->id && mb_strlen($token) === 64){//длина sha256
+						$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$token);
+					}
+				}
+			}
+		}
+		setcookie('token', '', time()- SECONDS_PER_DAY);
+		$this->set_guest();
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Все что связано с токенами
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/**
 	 * Создает токен аутентификации для текущего пользователя
@@ -310,33 +366,6 @@ class rad_user{
 			return false;
 		$ret['data'] = json_decode($ret['data'], true, 10);
 		return $ret;
-	}
-
-	/**
-	 * Делает юзера гостем и удаляет сессию текущего юзера
-	 */
-	function user_logout(){
-		if(is_session_exists()){
-			session_unset();
-			session_destroy();
-			setcookie(session_name(), '', time() - SECONDS_PER_DAY);
-		}
-		if(isset($_COOKIE['token'])){
-			$token_data = self::decode_cookie_token((string)$_COOKIE['token']);
-			if($token_data){
-				//токен распарсился, грохнем его
-				global $DB;
-				if(!is_null($token_data['data']) && isset($token_data['data']['user_id'])){
-					$user_id = absint($token_data['data']['user_id']);
-					$token = hex_clear($token_data['hash']);
-					if($user_id === $this->id && mb_strlen($token) === 64){//длина sha256
-						$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$token);
-					}
-				}
-			}
-		}
-		setcookie('token', '', time()- SECONDS_PER_DAY);
-		$this->set_guest();
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

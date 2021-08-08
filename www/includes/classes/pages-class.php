@@ -159,12 +159,14 @@ class rad_pages_viewer{
 		$this->pages['404']->type = rad_page::TYPE_SYSTEM;
 		$this->pages['404']->file_name = 'error.php';
 		
+		/*
 		//403
 		$this->pages['403'] = new rad_page();
 		$this->pages['403']->title = 'Доступ запрещен';
 		$this->pages['403']->type = rad_page::TYPE_SYSTEM;
 		$this->pages['403']->file_name = 'error.php';
 		$URL->add_page('403', 'access-denied');
+		*/
 		
 		//страница входа
 		$this->pages['login'] = new rad_page();
@@ -174,6 +176,14 @@ class rad_pages_viewer{
 		$this->pages['login']->add_scripts('login_script.js');
 		$URL->add_page('login', 'login');
 		$URL->set_parametres('login', 'type', 1);
+		
+		//страница верификации email/активации аккаунта
+		$this->pages['activation'] = new rad_page();
+		$this->pages['activation']->title = 'Активация';
+		$this->pages['activation']->type = rad_page::TYPE_SYSTEM;
+		$this->pages['activation']->file_name = 'settings.php';
+		$URL->add_page('activation', 'activation');
+		$URL->set_parametres('activation', 'token', 1);
 		/////////////////////////////////////////////////////////////////////////////////////
 		
 		//страницы администрирования
@@ -199,7 +209,7 @@ class rad_pages_viewer{
 		$this->pages['admin_edit_settings'] = new rad_page();
 		$this->pages['admin_edit_settings']->title = 'Управление сайтом';
 		$this->pages['admin_edit_settings']->type = rad_page::TYPE_ADMIN;
-		$this->pages['admin_edit_settings']->file_name = 'settings.php';
+		$this->pages['admin_edit_settings']->file_name = 'admin_settings.php';
 		$this->pages['admin_edit_settings']->user_level = rad_user::NEDOADMIN;
 		$this->pages['admin_edit_settings']->add_roles('edit_settings');
 		$URL->add_page('admin_edit_settings', 'edit-settings', 'admin');
@@ -225,7 +235,13 @@ class rad_pages_viewer{
 		global $URL;
 		$this->current_page_id = $URL->get_current_page();
 	}
-	
+
+	/**
+	 * Подключает файл страницы, если он еще не был подключен
+	 * файл располагаются по пути MAIN_DIR.'themes/'.$theme.'/'.$this->pages[$page_id]->file_name
+	 * @param string $page_id
+	 * @param string $theme
+	 */
 	private function load_page_files($page_id, $theme='default'){
 		$key = $theme.'/'.$this->pages[$page_id]->file_name;
 		if(!isset($this->loaded_page_files[$key])){
@@ -233,7 +249,15 @@ class rad_pages_viewer{
 			$this->loaded_page_files[$key] = true;
 		}
 	}
-	
+
+	/**
+	 * производит проверку на разрешение отображение текущей страницы
+	 * может производить редиректы
+	 * отображать страницу 404
+	 * в файле страницы может располагаться функция 'test_view_'.$page_id
+	 * если она вернет false то текущая страница 404
+	 * @param string $page_id
+	 */
 	private function choice_page($page_id){
 		global $USER, $URL;
 		
@@ -270,7 +294,15 @@ class rad_pages_viewer{
 		}
 		
 	}
-	
+
+	/**
+	 * подготавливает данные для вывода в футере и хэдаре
+	 * а именно скрипты либы стили и титл
+	 * в файле страницы может располагаться функция 'footer_header_data_'.$page_id($data)
+	 * которая должна возвращать обработанный массив с данными для футера и хэдара
+	 * @param $page_id
+	 * @return array
+	 */
 	private function prapare_footer_header_data($page_id){
 		$ret = array();
 		$ret['title'] = $this->pages[$page_id]->title;
@@ -306,7 +338,11 @@ class rad_pages_viewer{
 		return $ret;
 	}
 	
-	//Производит вывод текущей страницы
+	/**
+	 * Производит вывод текущей страницы
+	 * подключает файлы для страницы
+	 * и вызывает в ней функцию 'view_'.$this->current_page_id.'_page'($page_data)
+	 */
 	function view_current_page(){
 		$this->load_current_page();
 		if(!isset($this->pages[$this->current_page_id]))
