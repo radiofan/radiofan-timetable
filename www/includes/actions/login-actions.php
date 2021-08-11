@@ -7,10 +7,10 @@
 function action_login(){
 	if(!isset($_POST['login'], $_POST['password']))
 		return false;
-	
-	global $OPTIONS, $USER, $ALERTS;
+
+	global $USER, $ALERTS;
 	$return_data = true;
-	
+
 	if($USER->get_id())
 		return true;
 	if(!$USER->load_by_loginpass($_POST['login'], $_POST['password'])){
@@ -21,25 +21,23 @@ function action_login(){
 			return false;
 		}
 	}
-	if(!is_session_exists())
-		my_start_session();
-	$_SESSION['user_id'] = $USER->get_id();
-	//небольшая защита от кражи сессии
-	$_SESSION['secret_key'] = sha1($OPTIONS['user_agent']);
-	if(isset($_POST['remember']) && $_POST['remember']){
-		//создадим токен для пользователя
-		$ret = $USER->create_token();
-		if(isset($ret['error'])){
-			if(AJAX){
-				$return_data = array('status' => 0, 'message' => STR_ACTION_LOGIN_2);
-			}else{
-				$ALERTS->add_alert(STR_ACTION_LOGIN_2, 'info');
-				$return_data = true;
-			}
-		}else{
-			setcookie('token', $ret['token'], $ret['date_end_token']->getTimestamp(), '/', null, USE_SSL, 1);
+	$type = isset($_POST['remember']) && $_POST['remember'] ? 'remember' : 'session';
+	$ret = $USER->create_token($type);
+	if($ret['status'] == -3){
+		if(!AJAX){
+			$ALERTS->add_alert(STR_ACTION_LOGIN_2, 'danger');
 		}
+		$return_data = array('status' => 2, 'message' => STR_ACTION_LOGIN_2);
+	}else if($ret['status']){
+		if(!AJAX){
+			$ALERTS->add_alert(STR_UNDEFINED_ERROR, 'danger');
+		}
+		$return_data = array('status' => 3, 'message' => STR_UNDEFINED_ERROR);
+	}else{
+		$end_time = $type == 'session' ? 0 : $ret['date_end_token']->getTimestamp();
+		setcookie('sid', $ret['token'], $end_time, '/', null, USE_SSL, 1);
 	}
+	
 	return $return_data;
 }
 
@@ -51,11 +49,11 @@ function action_login(){
 function action_signin(){
 	if(!isset($_POST['login'], $_POST['password'], $_POST['email']))
 		return false;
-	global $USER, $ALERTS, $OPTIONS;
+	global $USER, $ALERTS;
 	if($USER->get_id())
 		return false;
 	
-	$new_user_id = rad_user::create_new_user($_POST['login'], $_POST['password'], $_POST['email'], rad_user::USER);
+	$new_user_id = rad_user::create_new_user($_POST['login'], $_POST['password'], $_POST['email'], rad_user_roles::USER);
 	
 	$ret = '';
 	$status = 0;
@@ -107,12 +105,17 @@ function action_signin(){
 	}
 	
 	send_verified_mail($new_user_id);
-	if(!is_session_exists())
-		my_start_session();
-	$_SESSION['user_id'] = $new_user_id;
-	setcookie('token', '', time()-SECONDS_PER_DAY);
-	//небольшая защита от кражи сессии
-	$_SESSION['secret_key'] = sha1($OPTIONS['user_agent']);
+	//$USER->user_logout();
+	$USER->load_user($new_user_id);
+	$ret = $USER->create_token();
+	if($ret['status']){
+		if(!AJAX){
+			$ALERTS->add_alert(STR_UNDEFINED_ERROR, 'danger');
+		}
+		return array('status' => 4, 'message' => STR_UNDEFINED_ERROR);
+	}else{
+		setcookie('sid', $ret['token'], 0, '/', null, USE_SSL, 1);
+	}
 	
 	//TODO привествие
 	return array('status' => 0, 'message' => STR_ACTION_SIGNIN_10);
@@ -155,7 +158,7 @@ function action_send_pass_recovery(){
 		return array('status' => 1, 'message' => STR_ACTION_SEND_PASS_RECOVERY_1);
 	}
 
-	if(strcmp($user['email'], $email) != 0){
+	if(strcmp($user['email'], $email)){
 		if(!AJAX){
 			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_2, 'warning');
 		}

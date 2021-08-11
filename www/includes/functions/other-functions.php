@@ -36,6 +36,7 @@ function include_file($path){
  * проверка на вход на сайт
  * @return bool
  */
+/*
 function is_login(){
 	global $OPTIONS;
 	if(is_session_exists()){
@@ -53,6 +54,7 @@ function is_login(){
 		return check_token_login();
 	}
 }
+*/
 
 /**
  * Тоже проверка входа на сайт, только по токену в куки
@@ -140,6 +142,7 @@ function my_array_column($array, $columns, $index = null){
  * проверка на существование сессии и её запуск, если данные в ней есть, но сессия не запущена
  * @return bool
  */
+/*
 function is_session_exists(){
 	if(!session_id() && (isset($_REQUEST[session_name()]) || isset($_COOKIE[session_name()]))){
 	//if(!session_id() && isset($_REQUEST[session_name()])){
@@ -158,8 +161,10 @@ function is_session_exists(){
 	}
 	return false;
 }
+*/
 
 /** запуск сессии с нужными параметрами */
+/*
 function my_start_session(){
 	$params = session_get_cookie_params();
 	$params['httponly'] = true;
@@ -168,6 +173,7 @@ function my_start_session(){
 	
 	session_start();
 }
+*/
 
 /**
  * возвращает протокол, по которому обратились к странице

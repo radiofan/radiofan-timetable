@@ -30,8 +30,9 @@ if(defined('USE_LOG') && USE_LOG)
 require_once MAIN_DIR.'includes/classes/db-class.php';
 $DB = new rad_db(array('host' => MAIN_DBHOST, 'user' => MAIN_DBUSER, 'pass' => MAIN_DBPASS, 'db' => MAIN_DBNAME));
 
+
 require_once MAIN_DIR.'includes/classes/data-class.php';
-$DATA = new rad_data();
+$DATA = new rad_data();//TODO
 
 $OPTIONS = array();
 //$OPTIONS['browser_data'] = $_SERVER['HTTP_USER_AGENT'];//get_browser
@@ -41,9 +42,9 @@ $OPTIONS['time_start'] = $_SERVER['REQUEST_TIME_FLOAT'];
 $OPTIONS['user_ip'] = get_ip();
 $OPTIONS['referer_data'] = parse_url(empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER']);
 
-is_session_exists();
+//is_session_exists();
 
-require_once MAIN_DIR.'includes/classes/user-class.php';
+require_once MAIN_DIR.'includes/classes/user-class/03-user-class.php';
 $USER = new rad_user();
 
 require_once MAIN_DIR.'includes/classes/cookie-validator-class.php';

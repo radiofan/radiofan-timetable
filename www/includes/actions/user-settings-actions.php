@@ -37,7 +37,7 @@ function action_pass_recovery(){
 		return false;
 
 	if(($curr_user->get_user_level() >= $curr_user::NEDOADMIN && !ADMIN_RECOVERY_PASS) || $curr_user->get_user_level() < $curr_user::VERIFIED){
-		return array('status' => 1, 'message' => STR_ACTION_PASS_RECOVERY_1);
+		return array('status' => 1, 'message' => STR_UNDEFINED_ERROR);
 	}
 	
 	$curr_user->set_option('pass_recovery_token', null);
@@ -76,9 +76,9 @@ function action_pass_recovery(){
 			break;
 		case -3:
 			if(!AJAX){
-				$ALERTS->add_alert(STR_ACTION_PASS_RECOVERY_1, 'info');
+				$ALERTS->add_alert(STR_UNDEFINED_ERROR, 'info');
 			}else{
-				return array('status' => 3, 'message' => STR_ACTION_PASS_RECOVERY_1);
+				return array('status' => 3, 'message' => STR_UNDEFINED_ERROR);
 			}
 			break;
 	}

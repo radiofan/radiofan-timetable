@@ -58,7 +58,7 @@ function view_activation_page_failed(){
 			<a href="/">На главную</a>
 		</div>
 		<div class="child-center">
-			<h1><?= STR_ACTION_PASS_RECOVERY_1; ?></h1>
+			<h1><?= STR_UNDEFINED_ERROR; ?></h1>
 			<p>Повторите запрос в <a href="/settings">настройках</a></p>
 		</div>
 	</div>
@@ -201,7 +201,7 @@ function view_pass_recovery_page_failed(){
 			<a href="/">На главную</a>
 		</div>
 		<div class="child-center">
-			<h1><?= STR_ACTION_PASS_RECOVERY_1; ?></h1>
+			<h1><?= STR_UNDEFINED_ERROR; ?></h1>
 			<p>Повторите <a href="/login/password-recovery">запрос</a></p>
 		</div>
 	</div>

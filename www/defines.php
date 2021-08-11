@@ -1,7 +1,8 @@
 <?php
 define('DATA_IN_DB', 1);
 define('CLEAR_POST', 1);
-define('SALT', '');//ПРИ СМЕНЕ СОЛИ ВСЕ ПАРОЛИ СТАНУТ НЕ ДЕЙСТВИТЕЛЬНЫ!
+define('SALT_START', '');//ПРИ СМЕНЕ СОЛИ ВСЕ ПАРОЛИ СТАНУТ НЕ ДЕЙСТВИТЕЛЬНЫ!
+define('SALT_END', '');//ПРИ СМЕНЕ СОЛИ ВСЕ ПАРОЛИ СТАНУТ НЕ ДЕЙСТВИТЕЛЬНЫ!
 define('USE_LOG', 1);
 define('DEBUG_SMTP', 0);
 define('USE_SSL', 0);
@@ -17,8 +18,10 @@ define('SECONDS_PER_HOUR', 3600);
 define('SECONDS_PER_MINUTE', 60);
 define('DB_DATE_FORMAT', 'Y-m-d H:i:s');
 
-/** int TOKEN_LIVE_DAYS - время жизни запоминающего токена в сутках @see action_login */
-define('TOKEN_LIVE_DAYS', 30);
+/** int REMEMBER_TOKEN_LIVE_DAYS - время жизни запоминающего токена в сутках @see action_login */
+define('REMEMBER_TOKEN_LIVE_DAYS', 30);
+/** int SESSION_TOKEN_LIVE_SECONDS - время жизни сессионного токена в секундах */
+define('SESSION_TOKEN_LIVE_SECONDS', 10*SECONDS_PER_MINUTE);
 /** int MAX_TOKEN_REMEMBER - максималное колличество используемых токенов @see action_login */
 define('MAX_TOKEN_REMEMBER', 20);
 /** int MAIL_VERIFY_TOKEN_LIVE_DAYS - время жизни токена подтверждения почты в сутках */
