@@ -138,6 +138,7 @@ class rad_url{
 	 */
 	function set_current_404(){
 		$this->current_page = '404';
+		http_response_code(404);
 		//$this->breadcrumbs = array('404' => '404');
 	}
 	

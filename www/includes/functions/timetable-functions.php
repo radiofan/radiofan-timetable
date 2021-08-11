@@ -15,6 +15,7 @@ function gen_timetable_html(){
 	 * Дата последенего обновления
 	 * Очистка БД
 	 * Рабочие столы
+	 * скрытие нетекущей недели
 	 */
 	$elems_add = $COOKIE_V->timetable_validation(1);
 	$elems_add = $elems_add['elements'];

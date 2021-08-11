@@ -28,7 +28,7 @@ function view_login_page(){
 				<form class="in-form in-form-login <?= ($type == 'sign-in') ? 'display-none' : '';?>" method="post" action="/login" data-not-ajax="true">
 					<input type="hidden" name="action" value="login">
 					<input class="form-control" type="text" placeholder="Логин" name="login"><br>
-					<input class="form-control" id="login_pass" style="width:calc(100% - 50px);float: left;" type="password" placeholder="Пароль" name="password">
+					<input class="form-control" autocomplete="off" id="login_pass" style="width:calc(100% - 50px);float: left;" type="password" placeholder="Пароль" name="password">
 					<div class="password-view not-select" title="Показать пароль" data-view-pattern="(ಠ_ಠ)" data-target="#login_pass">
 						(–_–)
 					</div><br>
@@ -42,7 +42,7 @@ function view_login_page(){
 					<div class="invalid-feedback">Логин занят</div><br>
 					<input class="form-control" type="email" placeholder="Почта" name="email">
 					<div class="invalid-feedback">Заполните поле</div><br>
-					<input class="form-control" id="signin_pass" style="width:calc(100% - 50px);float: left;" type="password" placeholder="Пароль" name="password">
+					<input class="form-control" autocomplete="off" id="signin_pass" style="width:calc(100% - 50px);float: left;" type="password" placeholder="Пароль" name="password">
 					<div class="password-view not-select" title="Показать пароль" data-view-pattern="(ಠ_ಠ)" data-target="#signin_pass">
 						(–_–)
 					</div>

@@ -28,7 +28,6 @@ function send_mail($body, $subject, $to){
 	$MAIL->Port = SMTP_PORT;
 	*/
 	$MAIL->Host = SMTP_SERVER;
-	//$MAIL->SMTPAuth = true;
 	$MAIL->Username = SMTP_USER;
 	$MAIL->Password = SMTP_PASS;
 	$MAIL->SMTPSecure = '';
@@ -169,7 +168,7 @@ function get_verified_mail_body($data){
 			<td style="text-align:left">
 				Подтвердить почту <a href="'.$data['verify_link'].$data['token'].'">'.$data['verify_link'].'</a>
 				<br>
-				Ссылка доступна до <b>'.$data['time_end']->format('d.m.Y H:i').'</b>
+				Ссылка доступна до <b>'.$data['time_end']->format('d.m.Y H:i').' ('.get_msk_time_offset($data['time_end']).')</b>
 			</td>
 		</tr>
 		<tr>
@@ -182,6 +181,7 @@ function get_verified_mail_body($data){
 
 	return $html;
 }
+
 
 /**
  * возвращает тело письма для восстановления пароля
@@ -203,14 +203,14 @@ function get_pass_recovery_body($data){
 			<td style="text-align:left">
 				Был произведен запрос на смену пароля для пользователя <span style="background-color:#e6e6e6;font-weight:bold">&nbsp;'.$data['login'].'&nbsp;</span>
 				<br>
-				Если это были не вы проигнорируйте сообщение
+				Если это были не вы, проигнорируйте сообщение
 			</td>
 		</tr>
 		<tr>
 			<td style="text-align:left">
 				Ссылка для смены пароля <a href="'.$data['verify_link'].$data['token'].'">'.$data['verify_link'].'</a>
 				<br>
-				Ссылка доступна до <b>'.$data['time_end']->format('d.m.Y H:i').'</b>
+				Ссылка доступна до <b>'.$data['time_end']->format('d.m.Y H:i').' ('.get_msk_time_offset($data['time_end']).')</b>
 			</td>
 		</tr>
 		<tr>

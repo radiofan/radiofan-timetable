@@ -3,8 +3,26 @@ jQuery(document).ready(function($){
 		//TODO rad_alert
 		alert(message);
 	}
-	
-	
+
+	//переключение видимости пароля
+	$('.password-view').on('click.password_view', function(e){
+		let $this = $(this);
+		let pass_inp_selector = $this.data('target');
+		let $pass_inp = $(pass_inp_selector);
+		if($pass_inp){
+			if($pass_inp.attr('type') == 'password'){
+				$pass_inp.attr('type', 'text');
+				$this.attr('title', 'Скрыть пароль');
+			}else{
+				$pass_inp.attr('type', 'password');
+				$this.attr('title', 'Показать пароль');
+			}
+			let plh = $this.data('viewPattern');
+			$this.data('viewPattern', $this.text());
+			$this.text(plh);
+			$pass_inp.focus();
+		}
+	});
 	
 	$('form').not(DATA.ignoreForms).on('submit', function(e){
 		let $this = $(this);

@@ -172,7 +172,7 @@ class rad_user{
 		if(mb_strlen($password_clear) < 6){
 			return -1;
 		}
-		if(strcmp($password_clear, $password) != 0){
+		if(strcmp($password_clear, $password)){
 			return -2;
 		}
 		$pass_hash = '0x'.self::password_hash($password_clear, 0);
@@ -212,6 +212,34 @@ class rad_user{
 		}
 		
 		return $DB->insertId();
+	}
+
+	/**
+	 * Обновляет пароль текущего пользователя
+	 * @param string $new_password - новый пароль пользователя (НЕ хэш)
+	 * @return int
+	 *  0: пароль обновлен
+	 * -1: пароль короткий;
+	 * -2: пароль содержит недопустимые символы;
+	 * -3: ошибка базы;
+	 */
+	public function change_password($new_password){
+		global $DB;
+		$password_clear = password_clear($new_password);
+		if(mb_strlen($password_clear) < 6){
+			return -1;
+		}
+		if(strcmp($password_clear, $new_password)){
+			return -2;
+		}
+		$pass_hash = '0x'.self::password_hash($password_clear, 0);
+		if($DB->query('UPDATE `our_u_users` SET `password` = ?p WHERE `id` = ?i', $pass_hash, $this->id)){
+			return 0;
+		}else{
+			return -3;
+		}
+		
+		return 0;
 	}
 	
 	/**
@@ -371,7 +399,6 @@ class rad_user{
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Все что связано с параметрами
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//TODO опции не протестированы
 	/**
 	 * Загружает параметры пользователя из БД
 	 * @return bool - false если пользователь гость
@@ -478,6 +505,7 @@ class rad_user{
 	/**
 	 * Обновляет значение всех параметров юзера в БД
 	 * блокирует и разблокирует таблицу `our_u_options`
+	 * //TODO опции не протестированы
 	 */
 	function update_all_options(){
 		//проверка на гостя

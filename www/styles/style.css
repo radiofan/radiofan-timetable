@@ -177,9 +177,48 @@
 
 /*недостатки бутстрапа*/
 
+@media (max-width: 575.98px){
+	body{
+		padding-top:150px;
+	}
+}
+
+@media (min-width: 576px) and (max-width: 805.98px){
+	body{
+		padding-top:100px;
+	}
+}
+
+@media(min-width: 806px){
+	body{
+		padding-top:70px;
+	}
+}
 body{
-	padding-top:70px;
 	padding-bottom:30px;
+}
+
+.navbar.navbar-inverse .dropdown-menu{
+	background-color: #222;
+	border-color: #080808;
+}
+.navbar.navbar-inverse .dropdown-menu .nav-link{
+	 color: #fff;
+}
+
+.navbar.navbar-inverse .dropdown-menu .nav-link:hover{
+	color: #333;
+}
+
+.dropdown-toggle::after {
+	display: inline-block;
+	margin-left: .255em;
+	vertical-align: .255em;
+	content: "";
+	border-top: .3em solid;
+	border-right: .3em solid transparent;
+	border-bottom: 0;
+	border-left: .3em solid transparent;
 }
 
 .a{
@@ -193,6 +232,35 @@ body{
 
 .modal-title{
 	display:inline;
+}
+
+.navbar-inverse .nav-link.active{
+	color:white !important;
+}
+
+.navbar-event{
+	min-width:150px;
+}
+
+.logo{
+	font-family: Verdana,sans-serif;
+	color: #fff !important;
+	padding: 2px 0 2px 20px;
+}
+.logo-addition{
+	font-family: Verdana,sans-serif;
+	color: #fff !important;
+}
+.svg-logo-line{
+	fill:none;
+	stroke:#fff;
+	stroke-width:3;
+}
+.svg-stroke-white{
+	stroke:#fff;
+}
+.svg-fill-white{
+	fill:#fff;
 }
 
 .card{

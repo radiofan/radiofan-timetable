@@ -181,9 +181,17 @@ class rad_pages_viewer{
 		$this->pages['activation'] = new rad_page();
 		$this->pages['activation']->title = 'Активация';
 		$this->pages['activation']->type = rad_page::TYPE_SYSTEM;
-		$this->pages['activation']->file_name = 'settings.php';
+		$this->pages['activation']->file_name = 'email_verif_pass_rec.php';
 		$URL->add_page('activation', 'activation');
 		$URL->set_parametres('activation', 'token', 1);
+		
+		//страница смены пароля
+		$this->pages['pass_recovery'] = new rad_page();
+		$this->pages['pass_recovery']->title = 'Восстановление пароля';
+		$this->pages['pass_recovery']->type = rad_page::TYPE_SYSTEM;
+		$this->pages['pass_recovery']->file_name = 'email_verif_pass_rec.php';
+		$URL->add_page('pass_recovery', 'recovery-password');
+		$URL->set_parametres('pass_recovery', 'token', 1);
 		/////////////////////////////////////////////////////////////////////////////////////
 		
 		//страницы администрирования

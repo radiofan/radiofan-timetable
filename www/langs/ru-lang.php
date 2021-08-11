@@ -23,4 +23,8 @@ define('STR_ACTION_SEND_PASS_RECOVERY_3', 'Предыдущий запрос н�
 define('STR_ACTION_SEND_PASS_RECOVERY_4', 'На почту было выслано письмо для восстановления пароля');
 define('STR_ACTION_SEND_PASS_RECOVERY_5', 'Не удалось отправить письмо');
 
+define('STR_ACTION_PASS_RECOVERY_1', 'Произошла неопознанная ошибка');
+define('STR_ACTION_PASS_RECOVERY_2', 'Ссылка устарела');
+define('STR_ACTION_PASS_RECOVERY_3', 'Пароль успешно обновлен');
+
 ?>

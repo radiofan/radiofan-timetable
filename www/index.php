@@ -37,6 +37,7 @@ $OPTIONS = array();
 //$OPTIONS['browser_data'] = $_SERVER['HTTP_USER_AGENT'];//get_browser
 $OPTIONS['protocol'] = get_protocol();
 $OPTIONS['user_agent'] = empty($_SERVER['HTTP_USER_AGENT']) ? '' : $_SERVER['HTTP_USER_AGENT'];
+$OPTIONS['domen'] = $_SERVER['SERVER_NAME'];
 $OPTIONS['time_start'] = $_SERVER['REQUEST_TIME_FLOAT'];
 $OPTIONS['user_ip'] = get_ip();
 $OPTIONS['referer_data'] = parse_url(empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER']);

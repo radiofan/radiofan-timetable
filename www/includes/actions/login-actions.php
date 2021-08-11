@@ -2,6 +2,7 @@
 
 /**
  * событие входа пользователя
+ * @param $_POST = ['login' => string, 'password' => string]
  */
 function action_login(){
 	if(!isset($_POST['login'], $_POST['password']))
@@ -32,7 +33,7 @@ function action_login(){
 			if(AJAX){
 				$return_data = array('status' => 0, 'message' => STR_ACTION_LOGIN_2);
 			}else{
-				$ALERTS->add_alert(STR_ACTION_LOGIN_2, 'warning');
+				$ALERTS->add_alert(STR_ACTION_LOGIN_2, 'info');
 				$return_data = true;
 			}
 		}else{
@@ -44,6 +45,8 @@ function action_login(){
 
 /**
  * событие регистрации пользователя
+ * @param $_POST = ['login' => string, 'password' => string, 'email' => string]
+ * @return false|array [status => int, 'message' => string]
  */
 function action_signin(){
 	if(!isset($_POST['login'], $_POST['password'], $_POST['email']))
@@ -117,7 +120,8 @@ function action_signin(){
 
 /**
  * Проверяет незанятость логина
- * true - логин свободен
+ * @param $_POST = ['login' => string]
+ * @return bool true - логин свободен
  */
 function action_check_login(){
 	if(!isset($_POST['login']))
@@ -125,6 +129,11 @@ function action_check_login(){
 	return rad_user::check_login($_POST['login']);
 }
 
+/**
+ * запрос на восстановление пароля, отправляет сообщение с ссылкой
+ * @param $_POST = ['login' => string, 'email' => string]
+ * @return false|array [status => int, 'message' => string]
+ */
 function action_send_pass_recovery(){
 	if(!isset($_POST['login'], $_POST['email']))
 		return false;
@@ -158,12 +167,12 @@ function action_send_pass_recovery(){
 		if(!AJAX){
 			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_3, 'warning');
 		}
-		return array('status' => 0, 'message' => STR_ACTION_SEND_PASS_RECOVERY_3);
+		return array('status' => 3, 'message' => STR_ACTION_SEND_PASS_RECOVERY_3);
 	}else if($ret == 0){
 		if(!AJAX){
-			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_4, 'warning');
+			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_4, 'info');
 		}
-		return array('status' => 3, 'message' => STR_ACTION_SEND_PASS_RECOVERY_4);
+		return array('status' => 0, 'message' => STR_ACTION_SEND_PASS_RECOVERY_4);
 	}else{
 		if(!AJAX){
 			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_5, 'warning');

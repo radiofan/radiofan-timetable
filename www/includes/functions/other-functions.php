@@ -74,7 +74,7 @@ function check_token_login(){
 		if($check_token_data){
 			$sha_user_agent = sha1($OPTIONS['user_agent']);
 			$check_token_data['time_end'] = DateTime::createFromFormat(DB_DATE_FORMAT, $check_token_data['time_end']);
-			if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) == 0 && $check_token_data['time_end']->getTimestamp() > time()){
+			if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) === 0 && $check_token_data['time_end']->getTimestamp() > time()){
 				//токен подошел
 				//обновим время жизни
 				$time_end = (new DateTime())->add(new DateInterval('P'.TOKEN_LIVE_DAYS.'D'));
@@ -262,6 +262,26 @@ function round_memsize($size){
 	}
 	
 	return $size.' '.$unit;
+}
+
+/**
+ * Возвращает строку смещения относительно московского времени
+ * типа 'МСК' (если смещение == 0), 'МСК+4', 'МСК-3', 'МСК+2:30'
+ * @param DateTime $date_time
+ * @return string 
+ */
+function get_msk_time_offset($date_time){
+	$offset = $date_time->getOffset() / SECONDS_PER_HOUR - 3.0;
+	$offset_str = '';
+	if($offset != 0){
+		$offset_str = ($offset >= 0 ? '+' : '-').absint($offset);
+		$offset = abs($offset);
+		if(intval($offset) != $offset){
+			$offset -= intval($offset);
+			$offset_str .= ':'.round(60 * $offset);
+		}
+	}
+	return 'МСК'.$offset_str;
 }
 
 /**
