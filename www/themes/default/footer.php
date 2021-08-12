@@ -45,7 +45,7 @@ if(can_user('view_debug_info')){
 
 <script src="/scripts/script.js?ver=<?php echo filemtime(MAIN_DIR. 'scripts/script.js'); ?>"></script>
 <?php
-	if($USER->get_user_level() >= rad_user::NEDOADMIN){
+	if($USER->get_user_level() >= rad_user_roles::NEDOADMIN){
 		echo '<script src="/scripts/admin_script.js?ver='.filemtime(MAIN_DIR. 'scripts/admin_script.js').'"></script>';
 	}
 	echo implode(PHP_EOL, $PAGE_DATA['addition_scripts']);

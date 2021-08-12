@@ -52,7 +52,7 @@ $COOKIE_V = new rad_cookie();
 
 require_once MAIN_DIR.'includes/actions/actions.php';
 $ret = do_actions();
-if($USER->can_user('view_db_stat'))
+if($USER->roles->can_user('view_db_stat'))
 	$ret['debug'] = array('db_stat' => $DB->getStats());
 die(json_encode($ret));
 

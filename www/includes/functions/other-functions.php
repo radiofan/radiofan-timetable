@@ -32,80 +32,16 @@ function include_file($path){
 	return false;
 }
 
-/**
- * проверка на вход на сайт
- * @return bool
- */
-/*
-function is_login(){
-	global $OPTIONS;
-	if(is_session_exists()){
-		//если сессия создана, но секретный ключ не пробивается
-		if(!isset($_SESSION['secret_key']) || sha1($OPTIONS['user_agent']) !== $_SESSION['secret_key']){
-			//грохаем все аутентификационные данные
-			session_unset();
-			session_destroy();
-			setcookie(session_name(), '', time() - SECONDS_PER_DAY);
-			setcookie('token', '', time()- SECONDS_PER_DAY);
-			return false;
-		}
-		return !empty($_SESSION['user_id']);
-	}else{
-		return check_token_login();
-	}
-}
-*/
-
-/**
- * Тоже проверка входа на сайт, только по токену в куки
- * Если куки верны, то запускается сессия
- * Если куки не верны, то они удаляются
- * @return bool
- */
-function check_token_login(){
-	if(!isset($_COOKIE['token']))
-		return false;
-	$token_data = rad_user::decode_cookie_token((string)$_COOKIE['token']);
-	$hash = hex_clear($token_data['hash']);
-	//тест данных
-	if(isset($token_data['data']['user_id']) && mb_strlen($hash) === 64){//длина sha256
-		$user_id = absint($token_data['data']['user_id']);
-		global $DB, $OPTIONS;
-		$check_token_data = $DB->getRow('SELECT `time_end`, `user_agent` FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
-		//получение данных токена из БД
-		if($check_token_data){
-			$sha_user_agent = sha1($OPTIONS['user_agent']);
-			$check_token_data['time_end'] = DateTime::createFromFormat(DB_DATE_FORMAT, $check_token_data['time_end']);
-			if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) === 0 && $check_token_data['time_end']->getTimestamp() > time()){
-				//токен подошел
-				//обновим время жизни
-				$time_end = (new DateTime())->add(new DateInterval('P'.TOKEN_LIVE_DAYS.'D'));
-				$DB->query('UPDATE `our_u_tokens` SET `time_end` = ?s WHERE `user_id` = ?i AND `token` = ?p', $time_end->format(DB_DATE_FORMAT), $user_id, '0x'.$hash);
-				setcookie('token', (string)$_COOKIE['token'], $time_end->getTimestamp(), '/', null, USE_SSL, 1);
-				if(!is_session_exists())
-					my_start_session();
-				$_SESSION['user_id'] = $user_id;
-				$_SESSION['secret_key'] = $sha_user_agent;
-				return true;
-			}else{
-				//токен существует, но либо старый, либо не совпадают user_agent
-				$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
-			}
-		}
-	}
-	setcookie('token', '', time()-SECONDS_PER_DAY);
-	return false;
-}
 
 /**
  * обертка can_user() для текущего пользователя
- * @see rad_user::can_user()
+ * @see rad_user_roles::can_user()
  * @param string|string[] $role
  * @return bool
  */
 function can_user($role){
 	global $USER;
-	return $USER->can_user($role);
+	return $USER->roles->can_user($role);
 }
 
 /**
@@ -137,43 +73,6 @@ function my_array_column($array, $columns, $index = null){
 	}
 	return $ret;
 }
-
-/**
- * проверка на существование сессии и её запуск, если данные в ней есть, но сессия не запущена
- * @return bool
- */
-/*
-function is_session_exists(){
-	if(!session_id() && (isset($_REQUEST[session_name()]) || isset($_COOKIE[session_name()]))){
-	//if(!session_id() && isset($_REQUEST[session_name()])){
-		$sessid = isset($_REQUEST[session_name()]) ? $_REQUEST[session_name()] : '';
-		if(!$sessid)
-			$sessid = $_COOKIE[session_name()];
-		session_id($sessid);
-		my_start_session();
-		if(empty($_SESSION)){
-			session_destroy();
-			return false;
-		}
-		return true;
-	}else if(session_id()){
-		return true;
-	}
-	return false;
-}
-*/
-
-/** запуск сессии с нужными параметрами */
-/*
-function my_start_session(){
-	$params = session_get_cookie_params();
-	$params['httponly'] = true;
-	$params['secure'] = USE_SSL;
-	session_set_cookie_params($params['lifetime'], $params['path'], $params['domain'], $params['secure'], $params['httponly']);
-	
-	session_start();
-}
-*/
 
 /**
  * возвращает протокол, по которому обратились к странице

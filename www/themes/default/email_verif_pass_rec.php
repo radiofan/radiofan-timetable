@@ -21,8 +21,8 @@ function view_activation_page(){
 
 	$time_end = DateTime::createFromFormat(DB_DATE_FORMAT, $token_data['data']['time_end']);
 	if($time_end < (new DateTime())){
-		$curr_user->set_option('mail_verified_token', null);
-		$curr_user->update_options('mail_verified_token');
+		$curr_user->options->set_option('mail_verified_token', null);
+		$curr_user->options->update_options('mail_verified_token');
 		view_activation_page_old_token();
 		return;
 	}
@@ -102,7 +102,7 @@ function test_view_activation(){
 	$curr_user = new rad_user(absint($token_data['data']['user_id']));
 	if(!$curr_user->get_id())
 		return false;
-	$real_token = $curr_user->get_option('mail_verified_token');
+	$real_token = $curr_user->options->get_option('mail_verified_token');
 	if(!$real_token)
 		return false;
 	if(strcmp($real_token, $token))
@@ -138,8 +138,8 @@ function view_pass_recovery_page(){
 
 	$time_end = DateTime::createFromFormat(DB_DATE_FORMAT, $token_data['data']['time_end']);
 	if($time_end < (new DateTime())){
-		$curr_user->set_option('pass_recovery_token', null);
-		$curr_user->update_options('pass_recovery_token');
+		$curr_user->options->set_option('pass_recovery_token', null);
+		$curr_user->options->update_options('pass_recovery_token');
 		view_pass_recovery_page_old_token();
 		return;
 	}
@@ -246,7 +246,7 @@ function test_view_pass_recovery(){
 	$curr_user = new rad_user(absint($token_data['data']['user_id']));
 	if(!$curr_user->get_id())
 		return false;
-	$real_token = $curr_user->get_option('pass_recovery_token');
+	$real_token = $curr_user->options->get_option('pass_recovery_token');
 	if(!$real_token)
 		return false;
 	if(strcmp($real_token, $token))

@@ -77,7 +77,7 @@ function test_view_login(){
 	global $USER, $URL;
 	//если пользователь зарегистрирован, но пытается зайти на сттраницу регистрации (не имея возможности дебага)
 	//отправим его на главную
-	if($USER->get_user_level() > 0 && !$USER->can_user('view_debug_info')){
+	if($USER->get_user_level() > 0 && !$USER->roles->can_user('view_debug_info')){
 		redirect('/');
 		return false;
 	}

@@ -5,7 +5,6 @@
  * путь реферера должен совпадать с $URL->get_current_url()
  * хост реферера должен совпадать с доменом
  * если токен валиден, но имеются ошибки, или все прошло успешно, происходит редирект на '/login'
- * //TODO сброс активных сессий
  * @param $_POST = ['password' => string]
  * @return false|array [status => int, 'message' => string]
  */
@@ -30,18 +29,18 @@ function action_pass_recovery(){
 	$curr_user = new rad_user(absint($token_data['data']['user_id']));
 	if(!$curr_user->get_id())
 		return false;
-	$real_token = $curr_user->get_option('pass_recovery_token');
+	$real_token = $curr_user->options->get_option('pass_recovery_token');
 	if(!$real_token)
 		return false;
 	if(strcmp($real_token, $token))
 		return false;
 
-	if(($curr_user->get_user_level() >= $curr_user::NEDOADMIN && !ADMIN_RECOVERY_PASS) || $curr_user->get_user_level() < $curr_user::VERIFIED){
+	if(($curr_user->get_user_level() >= rad_user_roles::NEDOADMIN && !ADMIN_RECOVERY_PASS) || $curr_user->get_user_level() < rad_user_roles::VERIFIED){
 		return array('status' => 1, 'message' => STR_UNDEFINED_ERROR);
 	}
 	
-	$curr_user->set_option('pass_recovery_token', null);
-	$curr_user->update_options('pass_recovery_token');
+	$curr_user->options->set_option('pass_recovery_token', null);
+	$curr_user->options->update_options('pass_recovery_token');
 
 	$time_end = DateTime::createFromFormat(DB_DATE_FORMAT, $token_data['data']['time_end']);
 	if($time_end < (new DateTime())){
@@ -74,7 +73,7 @@ function action_pass_recovery(){
 				return array('status' => 3, 'message' => STR_ACTION_SIGNIN_2);
 			}
 			break;
-		case -3:
+		default:
 			if(!AJAX){
 				$ALERTS->add_alert(STR_UNDEFINED_ERROR, 'info');
 			}else{

@@ -13,7 +13,7 @@ function view_header($PAGE_DATA){
 	<?= implode(PHP_EOL, $PAGE_DATA['addition_styles']); ?>
 	<link rel="stylesheet" href="/styles/style.css?ver=<?= filemtime(MAIN_DIR. 'styles/style.css'); ?>">
 	<?php
-	if($USER->get_user_level() >= rad_user::NEDOADMIN){
+	if($USER->get_user_level() >= rad_user_roles::NEDOADMIN){
 		echo '<link rel="stylesheet" href="/styles/admin_style.css?ver='.filemtime(MAIN_DIR. 'styles/admin_style.css').'">';
 	}
 	?>
@@ -102,7 +102,7 @@ function view_header($PAGE_DATA){
 			<ul class="nav navbar-nav">
 				<?php
 				//вход
-				if($USER->get_user_level() < $USER::USER || can_user('view_debug_info')){
+				if($USER->get_user_level() < rad_user_roles::USER || can_user('view_debug_info')){
 					echo '
 					<li class="nav-item">
 						<a class="nav-link'.($URL->get_current_page() == 'login' ? ' active' : '').'" href = "/login" title="Войти/Зарегистрироваться">Войти</a>
@@ -124,14 +124,14 @@ function view_header($PAGE_DATA){
 						</ul>
 					</li>';
 				//Настройки
-				if($USER->get_user_level() >= $USER::USER){
+				if($USER->get_user_level() >= rad_user_roles::USER){
 					echo '
 					<li class="nav-item">
 						<a class="nav-link'.($URL->get_current_page() == 'user_settings' ? ' active' : '').'" href = "/settings">Настройки</a>
 					</li>';
 				}
 				//админка
-				if($USER->get_user_level() >= $USER::NEDOADMIN){
+				if($USER->get_user_level() >= rad_user_roles::NEDOADMIN){
 					echo '
 					<li class="nav-item">
 						<a class="nav-link'.($URL->get_current_page() == 'admin' ? ' active' : '').'" href="/adminka">Админка</a>

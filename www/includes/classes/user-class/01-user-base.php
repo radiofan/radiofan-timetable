@@ -6,7 +6,9 @@ require_once MAIN_DIR.'includes/classes/user-class/01-1-user-roles.php';
 require_once MAIN_DIR.'includes/classes/user-class/01-2-user-options.php';
 
 /**
- * @property-read $user_level @see rad_user_roles::get_user_level()
+ * @property-read int $user_level @see rad_user_roles::get_user_level()
+ * @property-read rad_user_roles $roles - объект отвечающий за права
+ * @property-read rad_user_options $options - объект отвечающий за параметры
  */
 abstract class rad_user_base{
 	/**  @var int $id - ID пользователя в БД */
@@ -32,8 +34,6 @@ abstract class rad_user_base{
 	 * @param int $id - ID юзера, 0 для дефолтного юзера
 	 */
 	function __construct($id){
-		$this->roles = new rad_user_roles(0);
-		$this->options = new rad_user_options(0);
 		$id = absint($id);
 		if(!empty($id)){
 			if($this->load_user($id))

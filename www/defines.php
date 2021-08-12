@@ -21,7 +21,7 @@ define('DB_DATE_FORMAT', 'Y-m-d H:i:s');
 /** int REMEMBER_TOKEN_LIVE_DAYS - время жизни запоминающего токена в сутках @see action_login */
 define('REMEMBER_TOKEN_LIVE_DAYS', 30);
 /** int SESSION_TOKEN_LIVE_SECONDS - время жизни сессионного токена в секундах */
-define('SESSION_TOKEN_LIVE_SECONDS', 10*SECONDS_PER_MINUTE);
+define('SESSION_TOKEN_LIVE_SECONDS', 20*SECONDS_PER_MINUTE);
 /** int MAX_TOKEN_REMEMBER - максималное колличество используемых токенов @see action_login */
 define('MAX_TOKEN_REMEMBER', 20);
 /** int MAIL_VERIFY_TOKEN_LIVE_DAYS - время жизни токена подтверждения почты в сутках */

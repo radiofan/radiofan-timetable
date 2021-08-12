@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1
--- Время создания: Авг 07 2021 г., 20:38
+-- Время создания: Авг 12 2021 г., 14:19
 -- Версия сервера: 5.7.15
 -- Версия PHP: 7.0.10
 
@@ -31,6 +31,13 @@ CREATE TABLE `our_u_options` (
   `key` varchar(30) NOT NULL,
   `value` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Дамп данных таблицы `our_u_options`
+--
+
+INSERT INTO `our_u_options` (`user_id`, `key`, `value`) VALUES
+(2, 'mail_verified_token', 's:149:"eyJ1c2VyX2lkIjoyLCJ0aW1lX2VuZCI6IjIwMjEtMDgtMTkgMTM6Mzg6MzIifQ.OTVmMmZmZDc4YjAwNWMxNzIyZDNjMzVjZmYzYWJiYzg4ZDc0OTE3NDcxMmQ2M2QyZTlmOTZiYTIzOTIwNmQ3Mw";');
 
 -- --------------------------------------------------------
 
@@ -67,7 +74,8 @@ CREATE TABLE `our_u_tokens` (
   `token` varbinary(32) NOT NULL,
   `user_agent` varbinary(20) NOT NULL,
   `time_start` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `time_end` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `time_end` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `time_work` tinytext NOT NULL COMMENT 'DateTimeInterval, время на которое будет обновляться токен если сессия активна'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -79,7 +87,7 @@ CREATE TABLE `our_u_tokens` (
 CREATE TABLE `our_u_users` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `login` varchar(30) NOT NULL,
-  `password` varbinary(20) NOT NULL,
+  `password` varbinary(32) NOT NULL,
   `email` tinytext NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `level` smallint(6) NOT NULL DEFAULT '1'
@@ -90,7 +98,9 @@ CREATE TABLE `our_u_users` (
 --
 
 INSERT INTO `our_u_users` (`id`, `login`, `password`, `email`, `date`, `level`) VALUES
-(1, 'radiofan', 0xaaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d, 'radiofan22@mail.ru', '2021-06-30 12:35:52', 100);
+(1, 'RADIOFAN', 0x47c5c1f44b111eff47cf6b778e9938d1e445bcdcf0291a6acf7241ed49bf2081, 'radiofan22@mail.ru', '2021-08-12 06:09:50', 100),
+(2, 'jopa', 0x93df687fb7b67ec04273abb850884fcfb14b81acaf017c0619ed0fb3ee226968, 'aaa@aaa.aaa', '2021-08-12 06:38:21', 1),
+(3, 'jopa1', 0xb82ef44f194b6ca90bc611dd4818f623fd0cac90df4f4d35317d432cf115d81a, 'aaa@aaa.aaa', '2021-08-12 06:49:10', 5);
 
 -- --------------------------------------------------------
 
@@ -112,7 +122,7 @@ CREATE TABLE `our_u_users_roles` (
 --
 
 INSERT INTO `our_u_users_roles` (`user_id`, `role_id`, `start_time`, `end_time`, `work_time`, `action_id`) VALUES
-(1, 1, '2021-08-05 12:28:54', NULL, 'INF', NULL);
+(1, 1, '2021-08-12 06:17:23', NULL, 'INF', NULL);
 
 -- --------------------------------------------------------
 
@@ -287,7 +297,7 @@ ALTER TABLE `our_u_roles`
 -- AUTO_INCREMENT для таблицы `our_u_users`
 --
 ALTER TABLE `our_u_users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 --
 -- AUTO_INCREMENT для таблицы `parameters`
 --
@@ -324,7 +334,7 @@ ALTER TABLE `our_u_tokens`
 --
 ALTER TABLE `our_u_users_roles`
   ADD CONSTRAINT `role_id_key` FOREIGN KEY (`role_id`) REFERENCES `our_u_roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `user_id_key` FOREIGN KEY (`user_id`) REFERENCES `our_u_users` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `user_id_key` FOREIGN KEY (`user_id`) REFERENCES `our_u_users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

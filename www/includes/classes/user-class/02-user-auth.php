@@ -47,10 +47,46 @@ abstract class rad_user_auth extends rad_user_base{
 	
 	
 	/**
-	 * @param string $token
+	 * загружает ползователя с помощью токена
+	 * если не удачно, текущий экземпляр станет гостем
+	 * @param string $token - $_COOKIE['sid']
+	 * @return bool - загружен ли пользователь
 	 */
 	final function load_user_by_token($token){
-		
+		global $DB, $OPTIONS;
+		$token_data = self::decode_cookie_token($token);
+		if($token_data){
+			if(is_array($token_data['data']) && isset($token_data['data']['user_id'])){
+				$user_id = absint($token_data['data']['user_id']);
+				$hash = hex_clear($token_data['hash']);
+				if($user_id && mb_strlen($hash) === 64){//длина sha256
+					$check_token_data = $DB->getRow('SELECT `time_end`, `user_agent`, `time_work` FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
+					if($check_token_data){
+						$sha_user_agent = sha1($OPTIONS['user_agent']);
+						$check_token_data['time_end'] = DateTime::createFromFormat(DB_DATE_FORMAT, $check_token_data['time_end']);
+						$now_time = new DateTime();
+						if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) === 0 && $check_token_data['time_end'] > $now_time){
+							//токен подошел
+							//обновим время жизни
+							$type = $check_token_data['time_work'] === 'PT'.SESSION_TOKEN_LIVE_SECONDS.'S' ? 'session' : 'remember';
+							$time_end = $now_time->add(new DateInterval($check_token_data['time_work']));
+							$DB->query('UPDATE `our_u_tokens` SET `time_end` = ?s WHERE `user_id` = ?i AND `token` = ?p', $time_end->format(DB_DATE_FORMAT), $user_id, '0x'.$hash);
+							if($type == 'remember')
+								setcookie('sid', $token, $time_end->getTimestamp(), '/', null, USE_SSL, 1);
+							//вход
+							$this->load_user($user_id);
+							return true;
+						}else{
+							//токен существует, но либо старый, либо не совпадают user_agent
+							$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
+						}
+					}
+				}
+			}
+		}
+		setcookie('sid', '', time()-SECONDS_PER_DAY);
+		$this->set_guest();
+		return false;
 	}
 
 	/**
@@ -134,15 +170,12 @@ abstract class rad_user_auth extends rad_user_base{
 			return $ret;
 		}
 		
-		$work_time = '';
 		$date_interval = '';
 		switch($type){
 			case 'session':
-				$work_time = SESSION_TOKEN_LIVE_SECONDS.' SECOND';
 				$date_interval = 'PT'.SESSION_TOKEN_LIVE_SECONDS.'S';
 				break;
 			case 'remember':
-				$work_time = REMEMBER_TOKEN_LIVE_DAYS.' DAY';
 				$date_interval = 'P'.REMEMBER_TOKEN_LIVE_DAYS.'D';
 				break;
 			default:
@@ -164,20 +197,18 @@ abstract class rad_user_auth extends rad_user_base{
 			$sha_user_agent = sha1($OPTIONS['user_agent']);
 			$time_start = new DateTime();
 			$token = hash('sha256', mt_rand().$this->pass_hash.$sha_user_agent.$time_start->getTimestamp().$this->id);
+			$ret['date_end_token'] = $time_start->add(new DateInterval($date_interval));
 			$DB->query(
-				'INSERT INTO `our_u_tokens` (`user_id`, `token`, `user_agent`, `time_start`, `time_end`, `time_work`) VALUES (?i, ?p, ?p, ?s, ?s + INTERVAL ?p, ?s)',
+				'INSERT INTO `our_u_tokens` (`user_id`, `token`, `user_agent`, `time_start`, `time_end`, `time_work`) VALUES (?i, ?p, ?p, ?s, ?s, ?s)',
 				$this->id,
 				'0x'.$token,
 				'0x'.$sha_user_agent,
 				$time_start->format(DB_DATE_FORMAT),
-				$time_start->format(DB_DATE_FORMAT),
-				$work_time,
-				$work_time
+				$ret['date_end_token']->format(DB_DATE_FORMAT),
+				$date_interval
 			);
 			$DB->query('UNLOCK TABLES');
-			$token = self::encode_cookie_token(array('user_id' => $this->id), $token);
-			$ret['token'] = $token;
-			$ret['date_end_token'] = $time_start->add(new DateInterval($date_interval));
+			$ret['token'] = self::encode_cookie_token(array('user_id' => $this->id), $token);
 			return $ret;
 		}
 	}
@@ -204,7 +235,7 @@ abstract class rad_user_auth extends rad_user_base{
 	 */
 	final public function clear_all_tokens(){
 		if($this->id)
-			self::delete_old_tokens($this->id);
+			self::delete_all_tokens($this->id);
 	}
 
 	/**

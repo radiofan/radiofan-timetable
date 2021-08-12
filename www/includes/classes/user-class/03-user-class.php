@@ -48,20 +48,20 @@ final class rad_user extends rad_user_auth{
 	static public function create_new_user($login, $password, $email, $level){
 		global $DB;
 		$password_clear = password_clear($password);
-		if(mb_strlen($password_clear) < 6){
-			return -1;
-		}
 		if(strcmp($password_clear, $password)){
 			return -2;
+		}
+		if(mb_strlen($password_clear) < 6){
+			return -1;
 		}
 		$pass_hash = '0x'.self::password_hash($password_clear, $login, 0);
 		
 		$login_clear = login_clear($login);
+		if(strcmp($login_clear, $login)){
+			return -4;
+		}
 		if(mb_strlen($login_clear) < 1){
 			return -3;
-		}
-		if(strcmp($login_clear, $login) != 0){
-			return -4;
 		}
 		if($DB->getOne('SELECT `id` FROM `our_u_users` WHERE `login` = ?s', $login)){
 			return -5;

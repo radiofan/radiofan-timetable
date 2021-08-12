@@ -11,7 +11,7 @@ class rad_page{
 	/** @var string $title - заголовок страницы */
 	public $title = '';
 	/** @var int $user_level - минимальный уровень юзера для доступа к странице */
-	public $user_level = rad_user::GUEST;
+	public $user_level = rad_user_roles::GUEST;
 	/** @var array $need_roles - массив необходимых прав для доступа к странице */
 	public $need_roles;
 	/** @var int $type - тип страницы */
@@ -118,7 +118,7 @@ class rad_page{
 			$args[$i] = trim($args[$i]);
 			if(in_array($args[$i], $this->need_roles))
 				continue;
-			if(is_null(rad_user::get_roles_range('role', 'level', $args[$i]))){
+			if(is_null(rad_user_roles::get_roles_range('role', 'level', $args[$i]))){
 				trigger_error('undefined role:'.$args[$i], E_USER_WARNING);
 			}
 			$this->need_roles[] = $args[$i];
@@ -201,7 +201,7 @@ class rad_pages_viewer{
 		$this->pages['admin']->title = 'Управление';
 		$this->pages['admin']->type = rad_page::TYPE_SYSTEM;
 		$this->pages['admin']->file_name = 'admin.php';
-		$this->pages['admin']->user_level = rad_user::NEDOADMIN;
+		$this->pages['admin']->user_level = rad_user_roles::NEDOADMIN;
 		$URL->add_page('admin', 'adminka');
 		
 		//страница управления пользователями
@@ -209,7 +209,7 @@ class rad_pages_viewer{
 		$this->pages['admin_edit_users']->title = 'Управление пользователями';
 		$this->pages['admin_edit_users']->type = rad_page::TYPE_ADMIN;
 		$this->pages['admin_edit_users']->file_name = 'admin_edit_users.php';
-		$this->pages['admin_edit_users']->user_level = rad_user::NEDOADMIN;
+		$this->pages['admin_edit_users']->user_level = rad_user_roles::NEDOADMIN;
 		$this->pages['admin_edit_users']->add_roles('edit_users');
 		$URL->add_page('admin_edit_users', 'edit-users', 'admin');
 
@@ -218,7 +218,7 @@ class rad_pages_viewer{
 		$this->pages['admin_edit_settings']->title = 'Управление сайтом';
 		$this->pages['admin_edit_settings']->type = rad_page::TYPE_ADMIN;
 		$this->pages['admin_edit_settings']->file_name = 'admin_settings.php';
-		$this->pages['admin_edit_settings']->user_level = rad_user::NEDOADMIN;
+		$this->pages['admin_edit_settings']->user_level = rad_user_roles::NEDOADMIN;
 		$this->pages['admin_edit_settings']->add_roles('edit_settings');
 		$URL->add_page('admin_edit_settings', 'edit-settings', 'admin');
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +230,7 @@ class rad_pages_viewer{
 		$this->pages['user_settings']->title = 'Настройки';
 		$this->pages['user_settings']->type = rad_page::TYPE_PAGE;
 		$this->pages['user_settings']->file_name = 'settings.php';
-		$this->pages['user_settings']->user_level = rad_user::USER;
+		$this->pages['user_settings']->user_level = rad_user_roles::USER;
 		$URL->add_page('user_settings', 'settings');
 	}
 
@@ -274,7 +274,7 @@ class rad_pages_viewer{
 		
 		//Если уровень страницы - админская, а юзер не админ
 		//то эта страница 404
-		if($USER->get_user_level() < $USER::NEDOADMIN && $curr_p->user_level >= $USER::NEDOADMIN){
+		if($USER->get_user_level() < rad_user_roles::NEDOADMIN && $curr_p->user_level >= rad_user_roles::NEDOADMIN){
 			$URL->set_current_404();
 			$this->current_page_id = '404';
 		}

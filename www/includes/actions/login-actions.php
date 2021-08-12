@@ -1,15 +1,15 @@
 <?php
 
 /**
- * событие входа пользователя
+ * событие входа пользователя, если не ajax запрос и все прошло успешно, то редирктит на главную
  * @param $_POST = ['login' => string, 'password' => string]
+ * @return bool|array [status => int, 'message' => string]
  */
 function action_login(){
 	if(!isset($_POST['login'], $_POST['password']))
 		return false;
 
 	global $USER, $ALERTS;
-	$return_data = true;
 
 	if($USER->get_id())
 		return true;
@@ -27,18 +27,21 @@ function action_login(){
 		if(!AJAX){
 			$ALERTS->add_alert(STR_ACTION_LOGIN_2, 'danger');
 		}
-		$return_data = array('status' => 2, 'message' => STR_ACTION_LOGIN_2);
+		return array('status' => 2, 'message' => STR_ACTION_LOGIN_2);
 	}else if($ret['status']){
 		if(!AJAX){
 			$ALERTS->add_alert(STR_UNDEFINED_ERROR, 'danger');
 		}
-		$return_data = array('status' => 3, 'message' => STR_UNDEFINED_ERROR);
+		return array('status' => 3, 'message' => STR_UNDEFINED_ERROR);
 	}else{
 		$end_time = $type == 'session' ? 0 : $ret['date_end_token']->getTimestamp();
 		setcookie('sid', $ret['token'], $end_time, '/', null, USE_SSL, 1);
 	}
-	
-	return $return_data;
+	if(AJAX){
+		return true;
+	}else{
+		redirect('/');
+	}
 }
 
 /**
@@ -104,6 +107,7 @@ function action_signin(){
 		return array('status' => $status, 'message' => $ret);
 	}
 	
+	//TODO переделать
 	send_verified_mail($new_user_id);
 	//$USER->user_logout();
 	$USER->load_user($new_user_id);
@@ -142,7 +146,7 @@ function action_send_pass_recovery(){
 		return false;
 	global $DB, $ALERTS;
 	$login = login_clear($_POST['login']);
-	if(strcmp($login, $_POST['login']) != 0){
+	if(strcmp($login, $_POST['login'])){
 		if(!AJAX){
 			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_1, 'warning');
 		}
