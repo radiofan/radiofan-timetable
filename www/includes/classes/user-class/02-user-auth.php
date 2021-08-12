@@ -28,12 +28,12 @@ abstract class rad_user_auth extends rad_user_base{
 			$this->set_guest();
 			return false;
 		}
-		$data = $DB->getRow('SELECT `password`, `id` FROM `our_u_users` WHERE `login` = ?s', $login);
+		$data = $DB->getRow('SELECT `id`, `password`, `login` FROM `our_u_users` WHERE `login` = ?s', $login);
 		if(!$data){
 			$this->set_guest();
 			return false;
 		}
-		$pass_hash = self::password_hash($password, $login);
+		$pass_hash = self::password_hash($password, $data['login']);
 		if(!hash_equals($data['password'], $pass_hash)){
 			$this->set_guest();
 			return false;
@@ -148,9 +148,9 @@ abstract class rad_user_auth extends rad_user_base{
 
 
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//Все что связано с токенами
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Все что связано с токенами
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/**
 	 * Создает токен аутентификации для текущего пользователя
@@ -193,24 +193,24 @@ abstract class rad_user_auth extends rad_user_base{
 			$DB->query('UNLOCK TABLES');
 			$ret['status'] = -3;
 			return $ret;
-		}else{
-			$sha_user_agent = sha1($OPTIONS['user_agent']);
-			$time_start = new DateTime();
-			$token = hash('sha256', mt_rand().$this->pass_hash.$sha_user_agent.$time_start->getTimestamp().$this->id);
-			$ret['date_end_token'] = $time_start->add(new DateInterval($date_interval));
-			$DB->query(
-				'INSERT INTO `our_u_tokens` (`user_id`, `token`, `user_agent`, `time_start`, `time_end`, `time_work`) VALUES (?i, ?p, ?p, ?s, ?s, ?s)',
-				$this->id,
-				'0x'.$token,
-				'0x'.$sha_user_agent,
-				$time_start->format(DB_DATE_FORMAT),
-				$ret['date_end_token']->format(DB_DATE_FORMAT),
-				$date_interval
-			);
-			$DB->query('UNLOCK TABLES');
-			$ret['token'] = self::encode_cookie_token(array('user_id' => $this->id), $token);
-			return $ret;
 		}
+		
+		$sha_user_agent = sha1($OPTIONS['user_agent']);
+		$time_start = new DateTime();
+		$token = hash('sha256', mt_rand().$this->pass_hash.$sha_user_agent.$time_start->getTimestamp().$this->id);
+		$ret['date_end_token'] = $time_start->add(new DateInterval($date_interval));
+		$DB->query(
+			'INSERT INTO `our_u_tokens` (`user_id`, `token`, `user_agent`, `time_start`, `time_end`, `time_work`) VALUES (?i, ?p, ?p, ?s, ?s, ?s)',
+			$this->id,
+			'0x'.$token,
+			'0x'.$sha_user_agent,
+			$time_start->format(DB_DATE_FORMAT),
+			$ret['date_end_token']->format(DB_DATE_FORMAT),
+			$date_interval
+		);
+		$DB->query('UNLOCK TABLES');
+		$ret['token'] = self::encode_cookie_token(array('user_id' => $this->id), $token);
+		return $ret;
 	}
 
 	/**
