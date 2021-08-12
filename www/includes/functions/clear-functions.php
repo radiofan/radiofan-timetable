@@ -43,6 +43,14 @@ function option_name_clear($text){
 }
 
 /**
+ * удаляет все символы кроме цифр
+ * @param $text
+ */
+function int_clear($text){
+	return preg_replace('/[^0-9]/iu', '', $text);
+}
+
+/**
  * сепаратор - любое кол-во, символы [ :/_,.+-];
  * кавычки " или '
  * @param string $text

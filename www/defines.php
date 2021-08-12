@@ -16,6 +16,9 @@ define('SECONDS_PER_DAY', 86400);
 /** 60*60 */
 define('SECONDS_PER_HOUR', 3600);
 define('SECONDS_PER_MINUTE', 60);
+define('BYTES_PER_KB', 1024);
+define('BYTES_PER_MB', 1048576);
+define('BYTES_PER_GB', 1073741824);
 define('DB_DATE_FORMAT', 'Y-m-d H:i:s');
 
 /** int REMEMBER_TOKEN_LIVE_DAYS - время жизни запоминающего токена в сутках @see action_login */

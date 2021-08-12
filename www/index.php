@@ -25,7 +25,7 @@ require_once MAIN_DIR.'includes/phpmailer/SMTP.php';
 
 require_once MAIN_DIR.'includes/classes/log-class.php';
 if(defined('USE_LOG') && USE_LOG)
-	$LOG = new rad_log(MAIN_DIR.'files/debug.log');
+	$LOG = new rad_log(MAIN_DIR.'files/logs/');
 
 require_once MAIN_DIR.'includes/classes/db-class.php';
 $DB = new rad_db(array('host' => MAIN_DBHOST, 'user' => MAIN_DBUSER, 'pass' => MAIN_DBPASS, 'db' => MAIN_DBNAME));

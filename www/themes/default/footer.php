@@ -1,6 +1,6 @@
 <?php
 function view_footer($PAGE_DATA){
-	global $URL, $USER;
+	global $URL, $USER, $OPTIONS;
 /*
 TODO: панель отдладки для админа
 <div class="navbar-fixed-bottom row-fluid">
@@ -54,5 +54,11 @@ if(can_user('view_debug_info')){
 </html>
 
 <?php
+	if(can_user('view_debug_info'))
+		echo '<!--
+		memory_peak: '.round_memsize(memory_get_peak_usage(1)).';
+		exec_time: '.(microtime(1) - $OPTIONS['time_start']).' sec
+		disk_space: '.round_memsize(disk_free_space(MAIN_DIR)).'/'.round_memsize(disk_total_space(MAIN_DIR)).'
+		-->';
 }
 ?>

@@ -198,6 +198,15 @@ function check_file($path){
 	return file_exists($path) && is_file($path);
 }
 
+/**
+ * Проверяет существование папки
+ * @param $path - путь до папки
+ * @return bool
+ */
+function check_dir($path){
+	return file_exists($path) && is_dir($path);
+}
+
 //получает список файлов
 //path - путь до директории
 //ext - расширение файлов (c точкой)
@@ -319,6 +328,19 @@ function is_serialized($data, $strict = true){
 	return false;
 }
 
+/**
+ * возвращает объем файла в байтах, обновляет кэш
+ * @param string $path - путь до файла
+ * @return false|int - false если файл не найден
+ */
+function get_filesize($path){
+	if(!check_file($path))
+		return false;
+	clearstatcache(1, $path);
+	return filesize($path);
+
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -328,14 +350,6 @@ function is_serialized($data, $strict = true){
 ////////////////////////////////////////////////////////////////////////////////
 
 
-//возвращает форматированный вес файла
-//path - путь до файла
-function get_filesize($path){
-	if(!file_exists($path))
-		return false;
-	return round_memsize(filesize($path));
-	
-}
 
 //отправка файла на скачку
 //path - путь до файла
