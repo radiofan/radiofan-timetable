@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Главная</title>
+	<link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+	<link rel="stylesheet" href="/styles/bootstrap-3.3.2.css">
+	<link rel="stylesheet" href="/styles/style.css">
+	<link rel="stylesheet" href="/styles/table_style.css">
+	<script src="/libs/jquery-3.4.1.min.js"></script>
+	<script src="/libs/jquery.cookie.js"></script>
+	<script src="/libs/jquery.searchSelect.js"></script>
+	<script src="/scripts/bootstrap-3.3.2.min.js"></script>
+	<script type="text/javascript">
+		/* <![CDATA[ */
+		var DATA = {
+			"ignoreForms":".login",
+			"cols_min_width": [
+				0,
+				25,
+				55,
+				100,
+				35,
+				50,
+				35,
+				50
+			],
+			"table_min_height": 150,
+			"max_elements_timetable": 50
+		};
+		/* ]]> */
+	</script>
+	<script src="/libs/jquery-ui-1.12.1.sortable.min.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand logo" href="/">
+			</a>
+			<a class="navbar-brand logo-addition" href="/">|timetable</a>
+			<div class="navbar-brand navbar-event">
+			</div>
+		</div>
+		<div class="collapse navbar-collapse" id="main-navbar">
+			<ul class="nav navbar-nav">
+				<li class="nav-item">
+					<a class="nav-link" href="/login" title="Войти/Зарегистрироваться">Войти</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Инфо</a>
+					<ul class="dropdown-menu">
+						<li class="nav-item">
+							<a class="nav-link dropdown-item" href="#">Новости</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link dropdown-item" href="#" title="Часто задоваемые Вопросы">ЧаВо</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link dropdown-item" href="#">О сайте</a>
+						</li>
+					</ul>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="/settings">Настройки</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="/adminka">Админка</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link nav-link-exit" href="/?action=exit">Выход<span>⍈</span></a>
+				</li>			</ul>
+		</div>
+	</div>
+</nav>
+<!-- page_id: main_page; breadcrumbs: ; -->
+<div class="container-fluid">
+	<div class="settings">
+		<div class="card">
+			<div class="card-header">
+				<div class="btn-group" role="group">
+					<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#settings_collapse" aria-expanded="false" aria-controls="settings_collapse">
+						Настройки
+					</button>
+					<button class="btn btn-link" type="button" data-toggle="modal" data-target="#additor-modal">
+						Добавить раздел
+					</button>
+					<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#sections_collapse" aria-expanded="false" aria-controls="sections_collapse">
+						Управлять разделами
+					</button>
+				</div>
+			</div>
+			<div id="settings_collapse" class="collapse settings-collapse">
+				<div class="card-body">
+					<div class="setting-row settings-teacher_add_hide">
+						<label>
+							<span>Скрыть звание препода</span>
+							<input type="checkbox" name="settings[teacher_add_hide]" value="1" data-settings="teacher_add_hide" checked="checked">
+						</label>
+					</div>
+					<hr>
+					<div class="setting-row settings-go2curr_day">
+						Идти к текущ(ей/ему)
+						<label>
+							<input type="radio" name="settings[go2curr_day]" value="0" data-settings="go2curr_day">
+							<span>Нет</span>
+						</label>
+						<label>
+							<input type="radio" name="settings[go2curr_day]" value="1" data-settings="go2curr_day">
+							<span>Неделе</span>
+						</label>
+						<label>
+							<input type="radio" name="settings[go2curr_day]" value="2" data-settings="go2curr_day" checked="checked">
+							<span>Дню</span>
+						</label>
+					</div>
+					<hr>
+					<div class="setting-row settings-cell_word_wrap">
+						<label>
+							<span>Переносить слова</span>
+							<input type="checkbox" name="settings[cell_word_wrap]" value="1" data-settings="cell_word_wrap" checked="checked">
+						</label>
+					</div>
+					<hr>
+					<div class="setting-row settings-cell_rowspan">
+						<label>
+							<span>Объединять уроки</span>
+							<input type="checkbox" name="settings[cell_rowspan]" value="1" data-settings="cell_rowspan" checked="checked">
+						</label>
+					</div>
+				</div>
+			</div>
+			<div id="sections_collapse" class="collapse settings-collapse">
+				<div class="card-body ui-sortable">
+					<div class="section-wrap" data-gr="1">
+						<div class="section-header">
+							<span class="section-draggable gr-drag ui-sortable-handle" title="Сортировать">⇅</span>
+							<span class="section-data">
+										<span class="section-type" data-toggle="collapse" data-target="#section-gr-1" aria-expanded="false" aria-controls="section-gr-1">Учитель: Московкина Е.а.</span> - <input style="display:inline-block;width:auto;" type="text" maxlength="30" value="Жопа" class="form-control edit-section-name" data-gr="1">
+									</span>
+							<span class="section-delete" title="Удалить">✗</span>
+						</div>
+						<div class="section-cols-wrap collapse ui-sortable" id="section-gr-1">
+							<div class="section-col col-lesson" data-pos="" data-col-type="lesson">
+								<span class="section-draggable col-drag ui-sortable-handle" title="Сортировать">⇅</span>
+								<span class="child-center">Урок</span>
+								<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+							</div>
+							<div class="section-col col-lesson-add" data-pos="" data-col-type="lesson-add">
+								<span class="section-draggable col-drag ui-sortable-handle" title="Сортировать">⇅</span>
+								<span class="child-center">Тип</span>
+								<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+							</div>
+							<div class="section-col col-group" data-pos="" data-col-type="group">
+								<span class="section-draggable col-drag ui-sortable-handle" title="Сортировать">⇅</span>
+								<span class="child-center">Группа</span>
+								<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+							</div>
+							<div class="section-col col-cabinet" data-pos="" data-col-type="cabinet">
+								<span class="section-draggable col-drag ui-sortable-handle" title="Сортировать">⇅</span>
+								<span class="child-center">Кабинет</span>
+								<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+							</div>
+							<div class="section-col col-teacher" data-pos="" data-col-type="teacher">
+								<span class="section-draggable col-drag ui-sortable-handle" title="Сортировать">⇅</span>
+								<span class="child-center">Препод</span>
+								<span class="section-showhide" title="Видимость"><input type="checkbox"></span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+<!------------------------------------------------------------------------------------------------------------------>
+	<div class="timetable-block">
+		<style>
+			.timetable-block .cell[data-col="1"]{
+				width:50px
+			}
+	
+			.timetable-block .cell[data-col="2"]{
+				width:90px
+			}
+	
+			.timetable-block .cell[data-col="4"]{
+				width:64px
+			}
+	
+			.timetable-block .cell[data-col="7"]{
+				width:101px
+			}
+	
+			.timetable-body .teacher_add{
+				display:none;
+			}
+		</style>
+		<div class="sticks">
+			<div class="stick" data-col="1" style="left: 49px;"></div>
+			<div class="stick" data-col="2" style="left: 140px;"></div>
+			<div class="stick" data-col="3" style="left: 391px;"></div>
+			<div class="stick" data-col="4" style="left: 456px;"></div>
+			<div class="stick" data-col="5" style="left: 537px;"></div>
+			<div class="stick" data-col="6" style="left: 618px;"></div>
+			<div class="stick" data-col="7" style="left: 720px;"></div>
+		</div>
+		<div class="timetable-head">
+			<div class="timetable-head-static timetable-table">
+				<div class="th"><div class="cell col-number" data-col="1">№ пары</div></div>
+				<div class="th"><div class="cell col-time" data-col="2">Время</div></div>
+			</div>
+			<div class="timetable-head-cont">
+				<div class="timetable-head-wrap">
+					<table class="timetable-table">
+						<thead>
+						<tr>
+							<th colspan="5"><div class="cell gr-1">Жопа</div></th>
+						</tr>
+						<tr>
+							<th><div class="cell gr-1 col-lesson" data-col="3">Урок</div></th>
+							<th><div class="cell gr-1 col-lesson-add" data-col="4">Тип</div></th>
+							<th><div class="cell gr-1 col-group" data-col="5">Группа</div></th>
+							<th><div class="cell gr-1 col-cabinet" data-col="6">Кабинет</div></th>
+							<th><div class="cell gr-1 col-teacher" data-col="7">Препод</div></th>
+						</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div class="timetable-body">
+			<table class="timetable-table">
+				<tbody>
+				<tr class="clean-row row">
+					<td colspan="7">
+						<div class="cell week">Неделя 1</div>
+					</td>
+				</tr>
+				<tr class="clean-row row">
+					<td colspan="7">
+						<div class="cell day">Понедельник</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td rowspan="2">
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-lesson-add" data-col="4">(л.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ИВТ-91</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-cabinet" data-col="6">209 ПК</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ИВТ-92</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ПС-91</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">310 Д</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row">
+					<td colspan="7">
+						<div class="cell day">Вторник</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td rowspan="4">
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td rowspan="4">
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td rowspan="4">
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ПС-92</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">120 ПК</div>
+					</td>
+					<td rowspan="4">
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td rowspan="3">
+						<div class="cell gr-1 col-lesson-add" data-col="4">(л.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-02</div>
+					</td>
+					<td rowspan="3">
+						<div class="cell gr-1 col-cabinet" data-col="6">516 Н</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-01</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-05</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row">
+					<td colspan="7">
+						<div class="cell day">Среда</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td rowspan="2">
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-lesson-add" data-col="4">(л.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-03</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-cabinet" data-col="6">516 Н</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-04</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row">
+					<td colspan="7">
+						<div class="cell day">Четверг</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row">
+					<td colspan="7">
+						<div class="cell day">Пятница</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row">
+					<td colspan="7">
+						<div class="cell day">Суббота</div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ИВТ-91</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">322 ГК</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row curr-week-row">
+					<td colspan="7">
+						<div class="cell week">Неделя 2</div>
+					</td>
+				</tr>
+				<tr class="clean-row row curr-week-row">
+					<td colspan="7">
+						<div class="cell day">Понедельник</div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">701 Н</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-01</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">701 Н</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ПИЭ-91</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">120 ПК</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row curr-week-row">
+					<td colspan="7">
+						<div class="cell day">Вторник</div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(л.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ПИЭ-91</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">330а ГК</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row curr-week-row">
+					<td colspan="7">
+						<div class="cell day">Среда</div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row curr-week-row">
+					<td colspan="7">
+						<div class="cell day">Четверг</div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td rowspan="3">
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td rowspan="3">
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td rowspan="3">
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-lesson-add" data-col="4">(л.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ПС-91</div>
+					</td>
+					<td rowspan="2">
+						<div class="cell gr-1 col-cabinet" data-col="6">519 ГК</div>
+					</td>
+					<td rowspan="3">
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ПС-92</div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-02</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">701 Н</div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-03</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">507 Н</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">С-04</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">507 Н</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row today-row">
+					<td colspan="7">
+						<div class="cell day">Пятница</div>
+					</td>
+				</tr>
+				<tr class="default-row row today-row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row today-row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row today-row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-lesson-row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row today-row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row today-row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row today-row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row today-row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="clean-row row curr-week-row">
+					<td colspan="7">
+						<div class="cell day">Суббота</div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">1</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">08:15-09:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3">КУЛЬТУРА РЕЧИ И ДЕЛОВАЯ КОММУНИКАЦИЯ</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4">(пр.)</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5">ИВТ-92</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6">322 ГК</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio">Московкина Е.а.</span> <span class="teacher_add">доцент</span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">2</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">09:55-11:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">3</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">11:35-13:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">4</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">13:35-15:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">5</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">15:15-16:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">6</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">16:55-18:25</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">7</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">18:35-20:05</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				<tr class="default-row row curr-week-row">
+					<td>
+						<div class="cell col-number" data-col="1">8</div>
+					</td>
+					<td>
+						<div class="cell col-time" data-col="2">20:15-21:45</div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson" data-col="3"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-lesson-add" data-col="4"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-group" data-col="5"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-cabinet" data-col="6"></div>
+					</td>
+					<td>
+						<div class="cell gr-1 col-teacher" data-col="7"><span class="teacher_fio"></span><span class="teacher_add"></span></div>
+					</td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="main-modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title" id="main-modal-title"></h4>
+				<button type="button" class="close" data-dismiss="modal">
+					<span aria-hidden="true">×</span>
+				</button>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" id="main-modal-submit" class="btn btn-primary"></button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<!-- Additor modal -->
+<script src="/scripts/script.js"></script>
+<script src="/scripts/table_script.js"></script>
+
+
+<!--
+	memory_peak: 4 Mb;
+	exec_time: 1.4980609416962 sec
+	disk_space: 446.9 Gb/781.5 Gb
+-->
+</body>
+</html>
