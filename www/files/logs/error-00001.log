@@ -1,0 +1,1 @@
+[2021-Aug-14 13:03:22] [EXCEPTION] Call to undefined method rad_cookie::timetable_validation(); File: Z:\home\parcer.rad\www\includes\functions\timetable-functions.php, line: 20

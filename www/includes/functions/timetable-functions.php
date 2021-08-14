@@ -426,6 +426,18 @@ function gen_timetable_body_html($table, $elems_len, $cell_rowspan = 1){
 	return $html_table;
 }
 
+function get_timetable_cols_min_sizes(){
+	return array(
+		'number' => 25,
+		'time' => 55,
+		'lesson' => 100,
+		'type' => 35,
+		'group' => 50,
+		'cabinet' => 35,
+		'teacher' => 50
+	);
+}
+
 function get_table_size_html($width){
 	$max_width = array(
 		0,
@@ -447,7 +459,7 @@ function get_table_size_html($width){
 			$col = absint($key);
 			$value = absint($value);
 			unset($width[$key]);
-			if($col < 1 || $col > MAX_ELEMENTS_TIMETABLE * 5 + 2)
+			if($col < 1 || $col > MAX_PARTS_TIMETABLE * 5 + 2)
 				continue;
 			$key = $col <= 2 ? $col : ($col - 3) % 5 + 3;
 			if($value < $max_width[$key] || $value > 500)

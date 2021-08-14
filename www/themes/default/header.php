@@ -36,7 +36,7 @@ function view_header($PAGE_DATA){
 				50
 			],
 			"table_min_height": 150,
-			"max_elements_timetable": <?php echo MAX_ELEMENTS_TIMETABLE; ?>
+			"max_elements_timetable": <?php echo MAX_PARTS_TIMETABLE; ?>
 		};
 		/* ]]> */
 	</script>

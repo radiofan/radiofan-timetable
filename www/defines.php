@@ -32,8 +32,9 @@ define('MAIL_VERIFY_TOKEN_LIVE_DAYS', 7);
 /** int MAIL_PASS_RECOVERY_LIVE_HORS - время жизни токена смены пароля в часах */
 define('MAIL_PASS_RECOVERY_LIVE_HORS', 6);
 
-define('MAX_ELEMENTS_TIMETABLE', 50);
-define('MAX_SECTION_NAME_LEN', 30);
+define('MAX_PARTS_TIMETABLE', 3);
+define('MAX_PART_NAME_LEN', 50);
+define('TIMETABLE_PARTS_LIVE_DAYS', 365);
 
 define('MAIN_DBHOST', 'localhost');
 define('MAIN_DBUSER', 'root');
