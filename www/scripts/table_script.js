@@ -11,7 +11,7 @@ jQuery(document).ready(function($){
 		$body = $('body');
 
 	$table_body = $table.children('.timetable-body');
-	$table_head = $table.children('.timetable-head');
+	$table_head = $table.children('.timetable-head').children('.timetable-head-cont').children('.timetable-head-wrap');
 	$table_sticks = $table.children('.sticks');
 	$table_extender = $table.children('.timetable-extender');
 
@@ -72,7 +72,8 @@ jQuery(document).ready(function($){
 
 	//прокручивание заголовка
 	$table_body.on('scroll.table', function(e){
-		$table_head.scrollLeft($table_body.scrollLeft());
+		//console.log($table_body.scrollLeft());
+		$table_head.css('left', (-$table_body.scrollLeft())+'px');
 		set_sticks();
 		//$table_sticks.css('left', -$table_body.scrollLeft()+'px');
 	});

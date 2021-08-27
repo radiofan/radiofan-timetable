@@ -1,0 +1,166 @@
+@media (max-width: 575.98px){
+	.timetable-block{
+		/*100% - nav height(body padding-top) - .settings height - body padding-bottom*/
+		height:calc(100vh - 150px - 40px - 30px);
+	}
+}
+
+@media (min-width: 576px) and (max-width: 805.98px){
+	.timetable-block{
+		/*100% - nav height(body padding-top) - .settings height - body padding-bottom*/
+		height:calc(100vh - 100px - 40px - 30px);
+	}
+}
+
+@media(min-width: 806px){
+	.timetable-block{
+		/*100% - nav height(body padding-top) - .settings height - body padding-bottom*/
+		height:calc(100vh - 70px - 40px - 30px);
+	}
+}
+
+.timetable-block{
+	position:relative;
+	border:1px solid #909090;
+	padding:10px 10px 0 10px;
+	margin:0;
+	overflow-x:hidden;
+}
+
+.sticks{
+	position:absolute;
+	z-index:2;
+	height:calc(100% - 16px);
+}
+
+.timetable-head{
+	position:relative;
+	max-width:100%;
+	overflow:hidden;
+	display:flex;
+	flex-flow: row nowrap;
+	justify-content: flex-start;
+	align-content:stretch;
+	align-items:stretch;
+}
+
+.timetable-head-static{
+	display:flex;
+	flex-flow:row nowrap;
+	z-index:1;
+}
+
+.timetable-head-cont{
+	position:relative;
+	margin-left:-1px;
+	height:63px;/*костыль*/
+}
+
+.timetable-head-wrap{
+	position:absolute;
+	top:0;
+	left:0;
+	bottom:0;
+}
+
+.timetable-head table{
+	border-collapse:collapse;
+}
+
+.timetable-head th{
+	text-align:center;
+	border:1px solid #909090;
+}
+
+.timetable-head .th{
+	text-align:center;
+	border:1px solid #909090;
+	display: flex;
+	align-items: center;
+}
+
+.timetable-head .th:not(:first-child){
+	margin-left:-1px;
+}
+
+.timetable-body{
+	overflow:auto;
+	position:relative;
+	display:inline-block;
+	height:400px !important;
+	max-width:100%;
+}
+
+.timetable-block .cell{
+	padding:5px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+
+.timetable-body .default-row td{
+	border:1px solid #909090;
+}
+
+.timetable-body .today-row{
+	background-color:#ddd;
+}
+
+.timetable-body .curr-week-row{
+	background-color:#eee;
+}
+
+.timetable-body .curr-lesson-row{
+	background-color:#ccc;
+}
+
+.timetable-body .row .cell{
+	min-height:30px;
+}
+
+.timetable-table .col-number{
+	width:50px;
+	text-align:center;
+}
+
+.timetable-table th,.timetable-table .th{
+	font-weight:bold;
+}
+
+.timetable-table .col-time{
+	width:90px;
+	text-align:center;
+}
+
+.timetable-table .col-lesson{
+	width:250px;
+}
+
+.timetable-table .col-lesson-add{
+	width:100px;
+}
+
+.timetable-table .col-group{
+	width:80px;
+	text-align:center;
+}
+
+.timetable-table .col-cabinet{
+	width:80px;
+	text-align:center;
+}
+
+.timetable-table .col-teacher{
+	width:100px;
+}
+
+.stick{
+	height:100%;
+	width:5px;
+	position:absolute;
+}
+
+.stick:hover, .stick.hover{
+	background-color:black;
+	background:linear-gradient(90deg, transparent 0px, transparent 2px, #000 2px, #000 3px, transparent 3px, transparent 100%);
+	cursor:col-resize;
+}
