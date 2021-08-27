@@ -152,6 +152,7 @@ class rad_pages_viewer{
 		$this->pages['main_page']->file_name = 'index.php';
 		$this->pages['main_page']->add_scripts('table_script.js');
 		$this->pages['main_page']->add_libs('jquery-ui-1.12.1.sortable.min.js');
+		$this->pages['main_page']->add_styles('table_style.css');
 		
 		//404
 		$this->pages['404'] = new rad_page();
@@ -334,7 +335,7 @@ class rad_pages_viewer{
 		$len = sizeof($this->pages[$page_id]->styles);
 		for($i=0; $i<$len; $i++){
 			$tmp = $this->pages[$page_id]->styles[$i];
-			$ret['addition_styles'][] = '<link rel="stylesheet" href="/'.$tmp.'?ver='.filemtime(MAIN_DIR.$tmp).'"/>';
+			$ret['addition_styles'][] = '<link rel="stylesheet" href="/styles/'.$tmp.'?ver='.filemtime(MAIN_DIR.'styles/'.$tmp).'"/>';
 		}
 		
 		$ret['tmp_styles'] = array();
