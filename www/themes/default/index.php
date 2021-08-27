@@ -255,7 +255,7 @@ function view_timetable_block(){
 			</div>
 		</div>
 		<div class="timetable-body">
-			<!--<table class="timetable-table"><?php view_timetable_body($table, $parts, $options['lesson_unite']); ?></table>-->
+			<?php view_timetable_body($table, $parts, $options['lesson_unite']); ?>
 		</div>
 	</div>
 <?php
@@ -337,7 +337,7 @@ function view_timetable_body($table, $parts, $lesson_unite){
 			
 			//производим вывод уроков
 			for($less=0; $less<$times_len; $less++){
-				$less_class = $curr_less == $less && $curr_day == $day && $curr_week == $week ? ' curr-lesson-row' : $today_class;
+				$less_class = $curr_less == $less && $curr_day == $day && $curr_week == $week ? ($type_curr_less ? ' curr-lesson-row' : ' next-lesson-row') : $today_class;
 				$len = isset($table[$week][$day][$less]) ? sizeof($table[$week][$day][$less]) : 1;
 				$all_rowspan = array_fill(0, $parts_len, array(
 					'row_l' => 0,
@@ -442,6 +442,8 @@ function view_timetable_body($table, $parts, $lesson_unite){
 		}
 	}
 	
+	//вывод
+	echo '<div class="timetable-body-static"><table class="timetable-table">'.$html_body_static.'</table></div><div class="timetable-body-cont"><table class="timetable-table">'.$html_body_cont.'</table></div>';
 }
 
 /*
@@ -729,5 +731,142 @@ function footer_header_data_main_page($data){
 	
 	return $data;
 }
+
+
+
+
+/**
+ * TODO del_me
+ * see footer.php
+ * @return string
+ */
+function gen_additor_modal_html(){
+	global $DB;
+	$opt_fac_html = '';
+	$opt_gr_html = '';
+	$opt_cab_html = '';
+	$opt_tch_html = '';
+
+	$elems = $_COOKIE['timetable']['elements'];
+	$except = array('group' => array(), 'teacher' => array(), 'cabinet' => array());
+	$len = sizeof($elems);
+	for($i=0; $i<$len; $i++){
+		if(isset($except[$elems[$i]['type']])){
+			$except[$elems[$i]['type']][] = $elems[$i]['id'];
+		}
+	}
+
+	$res = $DB->getAll('SELECT `id`, `name`, `abbr` FROM `stud_faculties` ORDER BY `name`');
+	$len = sizeof($res);
+	for($i=0; $i<$len; $i++){
+		$opt_fac_html .= '<option value="'.$res[$i]['id'].'">'.esc_html($res[$i]['name']).(empty($res[$i]['abbr']) ? '' : ' ('.$res[$i]['abbr'].')').'</option>';
+	}
+	$tmp = '';
+
+	$res = $DB->getAll('SELECT `id`, `name`, `faculty_id` FROM `stud_groups` ORDER BY `name`');
+	$len = sizeof($res);
+	for($i=0; $i<$len; $i++){
+		if(($tmp = array_search($res[$i]['id'], $except['group'])) !== false){
+			unset($except['group'][$tmp]);
+			continue;
+		}
+		$opt_gr_html .= '<option value="'.$res[$i]['id'].'" data-faculty_id="'.$res[$i]['faculty_id'].'">'.esc_html($res[$i]['name']).'</option>';
+	}
+	unset($except['group']);
+
+	$res = $DB->getAll('SELECT `id`, `cabinet`, `additive`, `building` FROM `stud_cabinets` ORDER BY `building`, `cabinet`');
+	$len = sizeof($res);
+	for($i=0; $i<$len; $i++){
+		if(($tmp = array_search($res[$i]['id'], $except['cabinet'])) !== false){
+			unset($except['cabinet'][$tmp]);
+			continue;
+		}
+		$opt_cab_html .= '<option value="'.$res[$i]['id'].'">'.$res[$i]['cabinet'].$res[$i]['additive'].' ' .$res[$i]['building'].'</option>';
+	}
+	unset($except['cabinet']);
+
+	$res = $DB->getAll('SELECT `id`, `fio` FROM `stud_teachers` ORDER BY `fio`');
+	$len = sizeof($res);
+	for($i=0; $i<$len; $i++){
+		if(($tmp = array_search($res[$i]['id'], $except['teacher'])) !== false){
+			unset($except['teacher'][$tmp]);
+			continue;
+		}
+		$opt_tch_html .= '<option value="'.$res[$i]['id'].'">'.$res[$i]['fio'].'</option>';
+	}
+	unset($except['teacher']);
+
+	return '
+<!-- Additor modal -->
+<div class="modal fade" id="additor-modal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title" id="main-modal-title">Добавить раздел</h4>
+				<button type="button" class="close" data-dismiss="modal">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<div id="additor-carousel" class="carousel slide" data-ride="carousel" data-interval="false" data-keyboard="false">
+					<div class="carousel-inner">
+						<div class="item active">
+							<div class="additior-item additor-buttons">
+								<div class="child-center text-center">
+									<h3>Добавить</h3>
+									<button class="btn btn-info" type="button" data-additor="group">
+										Группу
+									</button>
+									<button class="btn btn-info" type="button" data-additor="cabinet">
+										Кабинет
+									</button>
+									<button class="btn btn-info" type="button" data-additor="teacher">
+										Препода
+									</button>
+								</div>
+							</div>
+						</div>
+						<div class="item">
+							<div class="additior-item additor-block">
+								<div class="group-additor-block display-none child-center text-center">
+									<h3>Добавить группу</h3>
+									<select name="faculty_id" data-placehorder="Факультет">
+										<option value="">---</option>'.$opt_fac_html.'
+									</select>
+									<select name="group_id" data-placehorder="Группа">'.$opt_gr_html.'
+									</select>
+								</div>
+								<div class="cabinet-additor-block display-none child-center text-center">
+									<h3>Добавить кабинет</h3>
+									<select name="cabinet_id" data-placehorder="Кабинет">'.$opt_cab_html.'
+									</select>
+								</div>
+								<div class="teacher-additor-block display-none child-center text-center">
+									<h3>Добавить препода</h3>
+									<select name="teacher_id" data-placehorder="Препод">'.$opt_tch_html.'
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="item">
+							<div class="additior-item">
+								<div class="child-center text-center">
+									<h3>Название раздела</h3>
+									<input type="text" class="form-control" id="additor-gr-name" maxlength="'.MAX_SECTION_NAME_LEN.'">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-link" data-dismiss="modal">Отмена</button>
+				<button type="button" id="additor-modal-submit" class="btn btn-primary disabled" disabled="disabled">Добавить</button>
+			</div>
+		</div>
+	</div>
+</div>';
+}
+
 
 ?>
