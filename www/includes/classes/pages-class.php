@@ -308,6 +308,7 @@ class rad_pages_viewer{
 	 * а именно скрипты либы стили и титл
 	 * в файле страницы может располагаться функция 'footer_header_data_'.$page_id($data)
 	 * которая должна возвращать обработанный массив с данными для футера и хэдара
+	 * ['title','addition_scripts','addition_libs','addition_styles','tmp_styles','js_data']
 	 * @param $page_id
 	 * @return array
 	 */
@@ -335,7 +336,11 @@ class rad_pages_viewer{
 			$tmp = $this->pages[$page_id]->styles[$i];
 			$ret['addition_styles'][] = '<link rel="stylesheet" href="/'.$tmp.'?ver='.filemtime(MAIN_DIR.$tmp).'"/>';
 		}
-
+		
+		$ret['tmp_styles'] = array();
+		$ret['js_data'] = array(
+			'ignoreForms' => '.login'
+		);
 		$this->load_page_files($page_id);
 
 		//Проверка на редиректы страницы

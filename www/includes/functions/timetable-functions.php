@@ -138,115 +138,8 @@ ORDER BY
 			</div>';
 }
 
-function prepare_data_to_timetable_html($gr_c, &$table){
-	foreach($table as &$week){
-		foreach($week as &$day){
-			foreach($day as &$time){
-				$line_c = sizeof($time);
-				for($gr_n=1; $gr_n<=$gr_c; $gr_n++){
-					//$time[$gr_n] = array_pad($time[$gr_n], $line_c, array());
-					$row_la = 0;
-					$row_l = 0;
-					$row_g = 0;
-					$row_c = 0;
-					$row_t = 0;
-					for($i=1; $i<$line_c; $i++){
-						//проверка урока
-						if(!isset($time[$i][$gr_n]['lesson']) || $time[$i][$gr_n]['lesson'] === $time[$row_l][$gr_n]['lesson']){
-							unset($time[$i][$gr_n]['lesson']);
-							if(!isset($time[$row_l][$gr_n]['row_l'])){
-								$time[$row_l][$gr_n]['row_l'] = 1;
-							}
-							$time[$row_l][$gr_n]['row_l']++;
-						}else{
-							$row_l = $i;
-						}
-						
-						//проверка типа урока
-						if(!isset($time[$i][$gr_n]['lesson_type']) || $time[$i][$gr_n]['lesson_type'] === $time[$row_la][$gr_n]['lesson_type']){
-							unset($time[$i][$gr_n]['lesson_type']);
-							if(!isset($time[$row_la][$gr_n]['row_la'])){
-								$time[$row_la][$gr_n]['row_la'] = 1;
-							}
-							$time[$row_la][$gr_n]['row_la']++;
-						}else{
-							$row_la = $i;
-						}
-						
-						//проверка группы
-						if(!isset($time[$i][$gr_n]['group_id']) || $time[$i][$gr_n]['group_id'] === $time[$row_g][$gr_n]['group_id']){
-							unset($time[$i][$gr_n]['group_id'], $time[$i][$gr_n]['group_name']);
-							if(!isset($time[$row_g][$gr_n]['row_g'])){
-								$time[$row_g][$gr_n]['row_g'] = 1;
-							}
-							$time[$row_g][$gr_n]['row_g']++;
-						}else{
-							$row_g = $i;
-						}
-						
-						//проверка кабинета
-						if(!isset($time[$i][$gr_n]['cabinet_id']) || $time[$i][$gr_n]['cabinet_id'] === $time[$row_c][$gr_n]['cabinet_id']){
-							unset($time[$i][$gr_n]['cabinet_id'], $time[$i][$gr_n]['cabinet'], $time[$i][$gr_n]['cabinet_additive'], $time[$i][$gr_n]['building']);
-							if(!isset($time[$row_c][$gr_n]['row_c'])){
-								$time[$row_c][$gr_n]['row_c'] = 1;
-							}
-							$time[$row_c][$gr_n]['row_c']++;
-						}else{
-							$row_c = $i;
-						}
-						
-						//проверка препода
-						if(!isset($time[$i][$gr_n]['teacher_id']) || $time[$i][$gr_n]['teacher_id'] === $time[$row_t][$gr_n]['teacher_id']){
-							unset($time[$i][$gr_n]['teacher_id'], $time[$i][$gr_n]['fio'], $time[$i][$gr_n]['teacher_additive']);
-							if(!isset($time[$row_t][$gr_n]['row_t'])){
-								$time[$row_t][$gr_n]['row_t'] = 1;
-							}
-							$time[$row_t][$gr_n]['row_t']++;
-						}else{
-							$row_t = $i;
-						}
-					}
-				}
-			}
-		}
-	}
-}
 
-function add_data_to_timetable($tm_t, $gr_n, &$table){
-	$len = sizeof($tm_t);
-	for($i=0; $i<$len; $i++){
-		$week = $tm_t[$i]['week'];
-		$day = $tm_t[$i]['day'];
-		$time = $tm_t[$i]['time'];
-		$tm_t[$i]['group_id'] = isset($tm_t[$i]['group_id']) ? $tm_t[$i]['group_id'] : '';
-		$tm_t[$i]['teacher_id'] = isset($tm_t[$i]['teacher_id']) ? $tm_t[$i]['teacher_id'] : '';
-		$tm_t[$i]['cabinet_id'] = isset($tm_t[$i]['cabinet_id']) ? $tm_t[$i]['cabinet_id'] : '';
-		unset($tm_t[$i]['week'], $tm_t[$i]['day'], $tm_t[$i]['time']);
-		
-		if(!isset($table[$week]))
-			$table[$week] = array();
-		if(!isset($table[$week][$day]))
-			$table[$week][$day] = array();
-		if(!isset($table[$week][$day][$time]))
-			$table[$week][$day][$time] = array();
-		
-		$line_c = sizeof($table[$week][$day][$time]);
-		$f = 0;
-		for($i1=0; $i1<$line_c; $i1++){
-			if(empty($table[$week][$day][$time][$i1][$gr_n])){
-				$table[$week][$day][$time][$i1][$gr_n] = $tm_t[$i];
-				$f = 1;
-				break;
-			}
-		}
-		
-		if(!$f){
-			$table[$week][$day][$time][] = array(
-				$gr_n => $tm_t[$i]
-			);
-		}
-	}
-}
+
 
 function gen_timetable_body_html($table, $elems_len, $cell_rowspan = 1){
 	global $DATA;
@@ -337,7 +230,7 @@ function gen_timetable_body_html($table, $elems_len, $cell_rowspan = 1){
 				$len = isset($table[$week][$day][$less]) ? sizeof($table[$week][$day][$less]) : 1;
 				$all_rowspan = array_fill(1, $elems_len, array(
 					'row_l' => 0,
-					'row_la' => 0,
+					'row_t' => 0,
 					'row_g' => 0,
 					'row_c' => 0,
 					'row_t' => 0
@@ -371,12 +264,12 @@ function gen_timetable_body_html($table, $elems_len, $cell_rowspan = 1){
 						}
 						
 						$lesson_add = isset($tmp['lesson_type']) ? $tmp['lesson_type'] : '';
-						if(isset($tmp['row_la'])){
-							$all_rowspan[$i]['row_la'] = $tmp['row_la'];
+						if(isset($tmp['row_t'])){
+							$all_rowspan[$i]['row_t'] = $tmp['row_t'];
 							$lesson_add = '
-							<td rowspan="'.$tmp['row_la'].'"><div class="cell gr-'.$i.' col-lesson-add" data-col="'.(4+($i-1)*5).'">'.$lesson_add.'</div></td>';
+							<td rowspan="'.$tmp['row_t'].'"><div class="cell gr-'.$i.' col-lesson-add" data-col="'.(4+($i-1)*5).'">'.$lesson_add.'</div></td>';
 						}else{
-							$lesson_add = !$all_rowspan[$i]['row_la'] ? '
+							$lesson_add = !$all_rowspan[$i]['row_t'] ? '
 							<td><div class="cell gr-'.$i.' col-lesson-add" data-col="'.(4+($i-1)*5).'">'.$lesson_add.'</div></td>' : '';
 						}
 						
@@ -483,8 +376,6 @@ function gen_additor_modal_html(){
 	$opt_gr_html = '';
 	$opt_cab_html = '';
 	$opt_tch_html = '';
-	
-	//TODO добавить нулевки
 	
 	$elems = $_COOKIE['timetable']['elements'];
 	$except = array('group' => array(), 'teacher' => array(), 'cabinet' => array());

@@ -3,6 +3,12 @@
 /**
  * Class rad_cookie - производит валидацию куки
  * проверяет их на правильност, заполняет их дефолтными значениями
+ * @property-read array timetable_parts
+ * @see rad_cookie::get_timetable_parts
+ * @property-read array timetable_cols_size
+ * @see rad_cookie::get_timetable_cols_size
+ * @property-read array timetable_options
+ * @see rad_cookie::get_timetable_options
  */
 class rad_cookie{
 	/** @var array $validated - массив методов которые выполнены, хранит доп. данные оставшиеся после обработки*/
@@ -178,14 +184,17 @@ class rad_cookie{
 		for($i=0; $i<sizeof($tmp); $i++){
 			$ret[mb_strtolower($tmp[$i])] = mb_strtolower($tmp[$i]) != $tmp[$i];
 		}
+		if(sizeof($ret) != 5){
+			return array(//TODO херня
+				'l' => true,
+				't' => true,
+				'g' => true,
+				'c' => true,
+				'p' => true
+			);
+		}
 		
-		return array_intersect_key($ret, array(
-			'l' => false,
-			't' => false,
-			'g' => false,
-			'c' => false,
-			'p' => false
-		));
+		return $ret;
 	}
 
 	/**

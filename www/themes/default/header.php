@@ -12,35 +12,17 @@ function view_header($PAGE_DATA){
 	<link rel="stylesheet" href="/styles/bootstrap-3.3.2.css">
 	<?= implode(PHP_EOL, $PAGE_DATA['addition_styles']); ?>
 	<link rel="stylesheet" href="/styles/style.css?ver=<?= filemtime(MAIN_DIR. 'styles/style.css'); ?>">
-	<?php
-	if($USER->get_user_level() >= rad_user_roles::NEDOADMIN){
-		echo '<link rel="stylesheet" href="/styles/admin_style.css?ver='.filemtime(MAIN_DIR. 'styles/admin_style.css').'">';
-	}
-	?>
-	<script src="/libs/jquery-3.4.1.min.js"></script>
+		<script src="/libs/jquery-3.4.1.min.js"></script>
 	<script src="/libs/jquery.cookie.js"></script>
 	<script src="/libs/jquery.searchSelect.js"></script>
 	<script src="/scripts/bootstrap-3.3.2.min.js"></script>
 	<script type="text/javascript">
 		/* <![CDATA[ */
-		var DATA = {
-			"ignoreForms":".login",
-			"cols_min_width": [
-				0,
-				25,
-				55,
-				100,
-				35,
-				50,
-				35,
-				50
-			],
-			"table_min_height": 150,
-			"max_elements_timetable": <?php echo MAX_PARTS_TIMETABLE; ?>
-		};
+		var DATA = <?= json_encode($PAGE_DATA['js_data']) ?>;
 		/* ]]> */
 	</script>
 	<?= implode(PHP_EOL, $PAGE_DATA['addition_libs']); ?>
+	<?= ($PAGE_DATA['tmp_styles'] ? '<style>'.implode(PHP_EOL, $PAGE_DATA['tmp_styles']).'</style>' : ''); ?>
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
