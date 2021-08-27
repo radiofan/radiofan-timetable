@@ -101,12 +101,16 @@
 	border:1px solid #909090;
 }
 
-.timetable-body .today-row{
-	background-color:#ddd;
-}
-
 .timetable-body .curr-week-row{
 	background-color:#eee;
+}
+
+.timetable-body span.week{
+	font-size: 10px;
+}
+
+.timetable-body .today-row{
+	background-color:#ddd;
 }
 
 .timetable-body .curr-lesson-row{
@@ -117,13 +121,13 @@
 	min-height:30px;
 }
 
+.timetable-table th,.timetable-table .th{
+	font-weight:bold;
+}
+
 .timetable-table .col-number{
 	width:50px;
 	text-align:center;
-}
-
-.timetable-table th,.timetable-table .th{
-	font-weight:bold;
 }
 
 .timetable-table .col-time{
@@ -131,25 +135,25 @@
 	text-align:center;
 }
 
-.timetable-table .col-lesson{
+.timetable-table .col-l{
 	width:250px;
 }
 
-.timetable-table .col-lesson-add{
+.timetable-table .col-t{
 	width:100px;
 }
 
-.timetable-table .col-group{
+.timetable-table .col-g{
 	width:80px;
 	text-align:center;
 }
 
-.timetable-table .col-cabinet{
+.timetable-table .col-c{
 	width:80px;
 	text-align:center;
 }
 
-.timetable-table .col-teacher{
+.timetable-table .col-p{
 	width:100px;
 }
 
