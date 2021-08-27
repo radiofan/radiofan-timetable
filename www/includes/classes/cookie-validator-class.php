@@ -51,7 +51,7 @@ class rad_cookie{
 		$this->validated['timetable_parts'] = array();
 		
 		$parts = array();
-		if(is_array($_COOKIE['tmt']) && is_array($_COOKIE['tmt']['p'])){
+		if(isset($_COOKIE['tmt']) && is_array($_COOKIE['tmt']) && isset($_COOKIE['tmt']['p']) && is_array($_COOKIE['tmt']['p'])){
 			$parts = array_values($_COOKIE['tmt']['p']);
 			self::delcookie_array(array('tmt', 'p'));
 			unset($_COOKIE['tmt']['p']);
@@ -212,7 +212,7 @@ class rad_cookie{
 		$this->validated['timetable_cols_size'] = array();
 		
 		$sizes = array();
-		if(is_array($_COOKIE['tmt']) && is_array($_COOKIE['tmt']['s'])){
+		if(isset($_COOKIE['tmt']) && is_array($_COOKIE['tmt']) && isset($_COOKIE['tmt']['s']) && is_array($_COOKIE['tmt']['s'])){
 			$sizes = array_intersect_key($_COOKIE['tmt']['s'], array('nsz' => false, 'tsz' => false, 'p' => false));
 			self::delcookie_array(array('tmt', 's'));
 			unset($_COOKIE['tmt']['s']);
@@ -308,7 +308,7 @@ class rad_cookie{
 		$this->validated['timetable_options'] = array();
 
 		$opts = array();
-		if(is_array($_COOKIE['tmt']) && is_array($_COOKIE['tmt']['o'])){
+		if(isset($_COOKIE['tmt']) && is_array($_COOKIE['tmt']) && isset($_COOKIE['tmt']['o']) && is_array($_COOKIE['tmt']['o'])){
 			$opts = array_intersect_key($_COOKIE['tmt']['o'], array(
 				'tah' => 0,
 				'wwr' => 0,

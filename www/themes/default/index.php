@@ -715,10 +715,10 @@ function footer_header_data_main_page($data){
 	}
 	
 	$sizes = $COOKIE_V->timetable_cols_size;
-	if($sizes['number'])
+	if(!empty($sizes['number']))
 		$data['tmp_styles'][] = '.timetable-block .cell.col-number{width:'.$sizes['number'].'px}';
 
-	if($sizes['time'])
+	if(!empty($sizes['time']))
 		$data['tmp_styles'][] = '.timetable-block .cell.col-time{width:'.$sizes['time'].'px}';
 	
 	if(isset($sizes['parts'])){
@@ -852,7 +852,7 @@ function gen_additor_modal_html(){
 							<div class="additior-item">
 								<div class="child-center text-center">
 									<h3>Название раздела</h3>
-									<input type="text" class="form-control" id="additor-gr-name" maxlength="'.MAX_SECTION_NAME_LEN.'">
+									<input type="text" class="form-control" id="additor-gr-name" maxlength="'.MAX_PART_NAME_LEN.'">
 								</div>
 							</div>
 						</div>
