@@ -186,7 +186,7 @@ function view_timetable_block(){
 
 	$table_head_1 = '';
 	$table_head_2 = '';
-	$sticks = '<div class="stick" data-col="0"></div><div class="stick" data-col="1"></div>';
+	$sticks = '<div class="stick" data-col="0" data-col-type="number" data-col-part="-1"></div><div class="stick" data-col="1" data-col-type="time" data-col-part="-1"></div>';
 
 	$table = array();
 	for($i=0; $i<$parts_len; $i++){
@@ -195,14 +195,17 @@ function view_timetable_block(){
 		//$parts[$i]['table_name'] = 'stud_'.$parts[$i]['type'].'s';
 
 		//генерация html
+		/*
 		for($i1 = 2; $i1 <= 6; $i1++){
-			$sticks .= '<div class="stick" data-col="'.($i1+$i*5).'"></div>';
+			$sticks .= '<div class="stick" data-col="'.($i1+$i*5).'" data-col-type="time" data-col-part="-1"></div>';
 		}
+		*/
 		$table_head_1 .= '<th colspan="5"><div class="cell part-'.$i.' part-header">'.esc_html($parts[$i]['part_name']).'</div></th>';
 		$i1 = 2 + $i*5;
 		$cols_headers = array('l' => 'Урок', 't' => 'Тип', 'g' => 'Группа', 'c' => 'Кабинет', 'p' => 'Препод');
 		foreach($parts[$i]['cols_order'] as $col => $view){
 			$table_head_2 .= '<th><div class="cell part-'.$i.' col-'.$col.'" data-col="'.$i1.'">'.$cols_headers[$col].'</div></th>';
+			$sticks .= '<div class="stick" data-col="'.$i1.'" data-col-type="'.$col.'" data-col-part="'.$i.'"></div>';
 			$i1++;
 		}
 
@@ -266,8 +269,10 @@ function view_timetable_body($table, $parts, $lesson_unite){
 
 	$parts_len = sizeof($parts);
 	$cols_order = array();
+	$cols_implode = array();
 	for($i=0; $i<$parts_len; $i++){
 		$cols_order[] = array_flip(array_keys($parts[$i]['cols_order']));
+		$cols_implode[] = $parts[$i]['cols_order'];
 	}
 	/** 
 	 * @var $times - массив массивов времени старта и времени конца уроков
@@ -331,9 +336,9 @@ function view_timetable_body($table, $parts, $lesson_unite){
 		for($day=0; $day<6; $day++){
 			//добаляем строку дня и недели
 			$today_class = $week_class.($curr_day == $day && $curr_week == $week ? ' today-row' : '');
-			$html_body_static .= '<tr class="clean-row row'.$today_class.'"><td colspan="2"><div class="cell day">'.$week_days[$day].' <span class="week">(нед. '.$week.')</span></div></td></tr>';
+			$html_body_static .= '<tr class="clean-row row'.$today_class.'"><td colspan="2"><div class="cell day"><div class="day-cont">'.$week_days[$day].' <span class="week">(нед. '.$week.')</span></div></div></td></tr>';
 			//if($parts_len)
-			$html_body_cont .= '<tr class="clean-row row'.$today_class.'"><td colspan="'.($parts_len*5).'"><div class="cell day"></div></td></tr>';
+			$html_body_cont .= '<tr class="clean-row row'.$today_class.'"><td colspan="'.($parts_len*5).'"><div class="cell"></div></td></tr>';
 			
 			//производим вывод уроков
 			for($less=0; $less<$times_len; $less++){
@@ -347,6 +352,7 @@ function view_timetable_body($table, $parts, $lesson_unite){
 					'row_p' => 0
 				));
 				
+				/*
 				//вывод времени
 				if($lesson_unite){
 					$html_body_static .= '
@@ -355,11 +361,22 @@ function view_timetable_body($table, $parts, $lesson_unite){
 						<td rowspan="'.$len.'"><div class="cell col-time" data-col="1">'.$time_list[$less].'</div></td>
 					</tr>';
 				}
+				*/
 				
 				//производим вывод строк
 				for($line=0; $line<$len; $line++){
 					//вывод времени
-					if(!$lesson_unite){
+					if($lesson_unite){
+						if($line){
+							$html_body_static .= '<tr class="default-row row'.$less_class.'" data-ind="'.$week.'-'.$day.'-'.$less.'"></tr>';
+						}else{
+							$html_body_static .= '
+								<tr class="default-row row'.$less_class.'" data-ind="'.$week.'-'.$day.'-'.$less.'">
+									<td rowspan="'.$len.'"><div class="cell col-number" data-col="0">'.($less+1).'</div></td>
+									<td rowspan="'.$len.'"><div class="cell col-time" data-col="1">'.$time_list[$less].'</div></td>
+								</tr>';
+						}
+					}else{
 						$html_body_static .= '
 							<tr class="default-row row'.$less_class.'" data-ind="'.$week.'-'.$day.'-'.$less.'">
 								<td><div class="cell col-number" data-col="0">'.($less+1).'</div></td>
@@ -376,9 +393,9 @@ function view_timetable_body($table, $parts, $lesson_unite){
 						$lesson = isset($tmp['lesson']) ? esc_html(mb_strtoupper($tmp['lesson'])) : '';
 						if(isset($tmp['row_l'])){
 							$all_rowspan[$i]['row_l'] = $tmp['row_l'];
-							$cols_order[$i]['l'] = '<td rowspan="'.$tmp['row_l'].'"><div class="cell part-'.$i.' col-l" data-col="'.(2+$cols_order[$i]['l']+$i*5).'">'.$lesson.'</div></td>';
+							$cols_implode[$i]['l'] = '<td rowspan="'.$tmp['row_l'].'"><div class="cell part-'.$i.' col-l" data-col="'.(2+$cols_order[$i]['l']+$i*5).'">'.$lesson.'</div></td>';
 						}else{
-							$cols_order[$i]['l'] = !$all_rowspan[$i]['row_l']
+							$cols_implode[$i]['l'] = !$all_rowspan[$i]['row_l']
 								? '<td><div class="cell part-'.$i.' col-l" data-col="'.(2+$cols_order[$i]['l']+$i*5).'">'.esc_html($lesson).'</div></td>'
 								: '';
 						}
@@ -387,9 +404,9 @@ function view_timetable_body($table, $parts, $lesson_unite){
 						$lesson_add = isset($tmp['lesson_type']) ? $tmp['lesson_type'] : '';
 						if(isset($tmp['row_t'])){
 							$all_rowspan[$i]['row_t'] = $tmp['row_t'];
-							$cols_order[$i]['t'] = '<td rowspan="'.$tmp['row_t'].'"><div class="cell part-'.$i.' col-t" data-col="'.(2+$cols_order[$i]['t']+$i*5).'">'.$lesson_add.'</div></td>';
+							$cols_implode[$i]['t'] = '<td rowspan="'.$tmp['row_t'].'"><div class="cell part-'.$i.' col-t" data-col="'.(2+$cols_order[$i]['t']+$i*5).'">'.$lesson_add.'</div></td>';
 						}else{
-							$cols_order[$i]['t'] = !$all_rowspan[$i]['row_t']
+							$cols_implode[$i]['t'] = !$all_rowspan[$i]['row_t']
 								? '<td><div class="cell part-'.$i.' col-t" data-col="'.(2+$cols_order[$i]['t']+$i*5).'">'.$lesson_add.'</div></td>'
 								: '';
 						}
@@ -398,9 +415,9 @@ function view_timetable_body($table, $parts, $lesson_unite){
 						$group_name = isset($tmp['group_name']) ? esc_html($tmp['group_name']) : '';
 						if(isset($tmp['row_g'])){
 							$all_rowspan[$i]['row_g'] = $tmp['row_g'];
-							$cols_order[$i]['g'] = '<td rowspan="'.$tmp['row_g'].'"><div class="cell part-'.$i.' col-g" data-col="'.(2+$cols_order[$i]['g']+$i*5).'">'.$group_name.'</div></td>';
+							$cols_implode[$i]['g'] = '<td rowspan="'.$tmp['row_g'].'"><div class="cell part-'.$i.' col-g" data-col="'.(2+$cols_order[$i]['g']+$i*5).'">'.$group_name.'</div></td>';
 						}else{
-							$cols_order[$i]['g'] = !$all_rowspan[$i]['row_g']
+							$cols_implode[$i]['g'] = !$all_rowspan[$i]['row_g']
 								? '<td><div class="cell part-'.$i.' col-g" data-col="'.(2+$cols_order[$i]['g']+$i*5).'">'.$group_name.'</div></td>'
 								: '';
 						}
@@ -409,9 +426,9 @@ function view_timetable_body($table, $parts, $lesson_unite){
 						$cabinet = isset($tmp['cabinet_id']) ? esc_html($tmp['cabinet'].$tmp['cabinet_additive'].' '.$tmp['building']) : '';
 						if(isset($tmp['row_c'])){
 							$all_rowspan[$i]['row_c'] = $tmp['row_c'];
-							$cols_order[$i]['c'] = '<td rowspan="'.$tmp['row_c'].'"><div class="cell part-'.$i.' col-c" data-col="'.(2+$cols_order[$i]['c']+$i*5).'">'.$cabinet.'</div></td>';
+							$cols_implode[$i]['c'] = '<td rowspan="'.$tmp['row_c'].'"><div class="cell part-'.$i.' col-c" data-col="'.(2+$cols_order[$i]['c']+$i*5).'">'.$cabinet.'</div></td>';
 						}else{
-							$cols_order[$i]['c'] = !$all_rowspan[$i]['row_c']
+							$cols_implode[$i]['c'] = !$all_rowspan[$i]['row_c']
 								? '<td><div class="cell part-'.$i.' col-c" data-col="'.(2+$cols_order[$i]['c']+$i*5).'">'.$cabinet.'</div></td>'
 								: '';
 						}
@@ -420,13 +437,13 @@ function view_timetable_body($table, $parts, $lesson_unite){
 						$teacher = isset($tmp['teacher_id']) ? '<span class="teacher_fio">'.esc_html(mb_convert_case($tmp['fio'], MB_CASE_TITLE)).'</span> <span class="teacher_add">'.esc_html($tmp['teacher_additive']).'</span>' : '<span class="teacher_fio"></span><span class="teacher_add"></span>';
 						if(isset($tmp['row_p'])){
 							$all_rowspan[$i]['row_p'] = $tmp['row_p'];
-							$cols_order[$i]['p'] = '<td rowspan="'.$tmp['row_p'].'"><div class="cell part-'.$i.' col-p" data-col="'.(2+$cols_order[$i]['p']+$i*5).'">'.$teacher.'</div></td>';
+							$cols_implode[$i]['p'] = '<td rowspan="'.$tmp['row_p'].'"><div class="cell part-'.$i.' col-p" data-col="'.(2+$cols_order[$i]['p']+$i*5).'">'.$teacher.'</div></td>';
 						}else{
-							$cols_order[$i]['p'] = !$all_rowspan[$i]['row_p']
+							$cols_implode[$i]['p'] = !$all_rowspan[$i]['row_p']
 								? '<td><div class="cell part-'.$i.' col-p" data-col="'.(2+$cols_order[$i]['p']+$i*5).'">'.$teacher.'</div></td>' : '';
 						}
 
-						$html_body_cont .= implode(PHP_EOL, $cols_order[$i]);
+						$html_body_cont .= implode(PHP_EOL, $cols_implode[$i]);
 						
 						//уменшение счетчиков объединения
 						if($lesson_unite){
@@ -701,8 +718,17 @@ function test_view_main_page(){
 }
 
 function footer_header_data_main_page($data){
-	$data['js_data']['cols_min_width'] = array(0,25,55,100,35,50,35,50);
-	$data['js_data']['max_elements_timetable'] = MAX_PARTS_TIMETABLE;
+	$data['js_data']['cols_min_width'] = array(
+		'number' => 25,
+		'time'   => 55,
+		'l' => 100,
+		't' => 35,
+		'g' => 50,
+		'c' => 35,
+		'p' => 50
+	);
+	$data['js_data']['max_parts_timetable'] = MAX_PARTS_TIMETABLE;
+	$data['js_data']['timetable_parts_live_days'] = TIMETABLE_PARTS_LIVE_DAYS;
 	
 	global $COOKIE_V;
 	$options = $COOKIE_V->timetable_options;
@@ -802,7 +828,7 @@ function gen_additor_modal_html(){
 	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h4 class="modal-title" id="main-modal-title">Добавить раздел</h4>
+				<h4 class="modal-title" id="additor-modal-title">Добавить раздел</h4>
 				<button type="button" class="close" data-dismiss="modal">
 					<span aria-hidden="true">&times;</span>
 				</button>

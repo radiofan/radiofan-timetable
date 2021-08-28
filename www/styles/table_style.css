@@ -19,6 +19,109 @@
 	}
 }
 
+/*насройки*/
+
+
+.ui-sortable-handle{
+	-ms-touch-action:none;
+	touch-action:none;
+}
+
+.section-wrap{
+	width:500px;
+	border:1px solid #eee;
+	border-radius:2px;
+	margin:5px;
+}
+
+.section-header{
+	position:relative;
+	height:34px;
+	margin-top:2px;
+}
+
+.input-part-name{
+	display:inline-block;
+	width:auto;
+}
+
+.section-col{
+	position:relative;
+	height:34px;
+	background-color:#f8f8f8;
+	margin:2px 2px 2px 20px;
+	border-radius:2px;
+}
+
+.section-draggable{
+	position:absolute;
+	left:0;
+	font-size:18px;
+	line-height:34px;
+	width:34px;
+	text-align:center;
+	cursor:move;
+	-ms-user-select:none;
+	-moz-user-select:none;
+	user-select:none;
+	-webkit-user-select:none;
+}
+
+.section-type{
+	cursor:pointer;
+}
+
+.section-data{
+	max-width:430px;
+	white-space:nowrap;
+	position:absolute;
+	right:34px;
+}
+
+.section-delete{
+	position:absolute;
+	right:0;
+	font-size:18px;
+	line-height:34px;
+	width:34px;
+	text-align:center;
+	cursor:pointer;
+	-ms-user-select:none;
+	-moz-user-select:none;
+	user-select:none;
+	-webkit-user-select:none;
+}
+
+.section-delete:hover{
+	color:#d9534f;
+}
+
+.section-delete:active{
+	color:#9c2b29;
+}
+
+.section-showhide{
+	position:absolute;
+	right:0;
+	font-size:18px;
+	line-height:34px;
+	width:34px;
+	text-align:center;
+}
+
+.settings label{
+	font-weight:normal;
+	cursor:pointer;
+}
+
+.additior-item{
+	height:400px;
+	width:100%;
+}
+
+/*таблица*/
+
+
 .timetable-block{
 	position:relative;
 	border:1px solid #909090;
@@ -84,11 +187,21 @@
 }
 
 .timetable-body{
-	overflow:auto;
 	position:relative;
-	display:inline-block;
+	overflow:auto;
+	/*display:inline-block;*/
 	height:400px !important;
 	max-width:100%;
+
+	display: inline-flex;
+	flex-flow: row nowrap;
+	justify-content: flex-start;
+	align-content: stretch;
+	align-items: stretch;
+}
+
+.timetable-body-cont{
+	margin-left:-1px;
 }
 
 .timetable-block .cell{
@@ -123,6 +236,16 @@
 
 .timetable-table th,.timetable-table .th{
 	font-weight:bold;
+}
+
+.timetable-table .cell.day{
+	position:relative;
+	overflow:initial;
+}
+
+.timetable-table .cell.day .day-cont{
+	position:absolute;
+	white-space: nowrap;
 }
 
 .timetable-table .col-number{

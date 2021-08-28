@@ -105,14 +105,14 @@ class rad_cookie{
 			//получение id
 			$parts[$i]['i'] = int_clear($parts[$i]['i']);
 			//проверка на уникальность раздела
-			if(isset($uniq[$parts[$i]['t'].$parts[$i]['i']])){
+			if(isset($uniq[$parts[$i]['t'].'-'.$parts[$i]['i']])){
 				unset($parts[$i]);
 				continue;
 			}
 
 			//проверяем существование id и загружаем данные о разделе
 			$dat = '';
-			if($parts[$i]['i'] && !($dat = $DB->getRow('SELECT * FROM ?n WHERE `id` = ?s', $table_name, $parts[$i]['id']))){
+			if($parts[$i]['i'] && !($dat = $DB->getRow('SELECT * FROM ?n WHERE `id` = ?s', $table_name, $parts[$i]['i']))){
 				unset($parts[$i]);
 			}
 
@@ -152,7 +152,7 @@ class rad_cookie{
 			}
 			
 			//запись в юник
-			$uniq[$parts[$i]['t'].$parts[$i]['i']] = false;
+			$uniq[$parts[$i]['t'].'-'.$parts[$i]['i']] = false;
 		}
 		
 		
