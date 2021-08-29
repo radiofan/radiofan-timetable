@@ -125,7 +125,7 @@
 .timetable-block{
 	position:relative;
 	border:1px solid #909090;
-	padding:10px 10px 0 10px;
+	padding:10px;
 	margin:0;
 	overflow-x:hidden;
 }
@@ -151,6 +151,7 @@
 	display:flex;
 	flex-flow:row nowrap;
 	z-index:1;
+	background-color:#fff;
 }
 
 .timetable-head-cont{
@@ -188,11 +189,8 @@
 
 .timetable-body{
 	position:relative;
-	overflow:auto;
-	/*display:inline-block;*/
-	height:400px !important;
+	height: calc(100% - 63px);
 	max-width:100%;
-
 	display: inline-flex;
 	flex-flow: row nowrap;
 	justify-content: flex-start;
@@ -200,8 +198,19 @@
 	align-items: stretch;
 }
 
+.timetable-body-static{
+	overflow: hidden;
+	min-width: min-content;
+	z-index:1;
+}
+
+.timetable-body-static-indent{
+	height:50px
+}
+
 .timetable-body-cont{
 	margin-left:-1px;
+	overflow: auto;
 }
 
 .timetable-block .cell{

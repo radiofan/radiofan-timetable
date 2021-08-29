@@ -7,18 +7,18 @@ jQuery(document).ready(function($){
 		},
 		table_rows = {'static':[], 'cont':[]},
 		sticks = [],
-		$table_body,
+		$table_body_static,
+		$table_body_cont,
 		$table_head,
 		$table_sticks,
 		$sections = $('#parts_collapse').children(),
 		cookie_parts = [],
 		$body = $('body');
 
-	$table_body = $table.children('.timetable-body');
+	$table_body_static = $table.children('.timetable-body').children('.timetable-body-static');
+	$table_body_cont = $table.children('.timetable-body').children('.timetable-body-cont');
 	$table_head = $table.children('.timetable-head').children('.timetable-head-cont').children('.timetable-head-wrap');
 	$table_sticks = $table.children('.sticks');
-	//table_rows.$static = $table_body.children('.timetable-body-static').find('tr[data-ind]');
-	//table_rows.$cont = $table_body.children('.timetable-body-cont').find('tr[data-ind]');
 
 	//считывает данные из куки для каждого раздела
 	let tmp;
@@ -71,13 +71,13 @@ jQuery(document).ready(function($){
 	}
 	
 	//генерирование массива строк
-	tmp = $table_body.children('.timetable-body-static').find('tr[data-ind]');
+	tmp = $table_body_static.find('tr[data-ind]');
 	len = tmp.length;
 	for(let i=0; i<len; i++){
 		table_rows.static.push($(tmp[i]));
 		delete tmp[i];
 	}
-	tmp = $table_body.children('.timetable-body-cont').find('tr[data-ind]');
+	tmp = $table_body_cont.find('tr[data-ind]');
 	len = tmp.length;
 	for(let i=0; i<len; i++){
 		table_rows.cont.push($(tmp[i]));
@@ -108,11 +108,11 @@ jQuery(document).ready(function($){
 	//TODO добавить скролл при наведении на палку
 
 	//прокручивание заголовка
-	$table_body.on('scroll.table', function(e){
+	$table_body_cont.on('scroll.table', function(e){
 		//console.log($table_body.scrollLeft());
-		$table_head.css('left', (-$table_body.scrollLeft())+'px');
+		$table_head.css('left', (-$table_body_cont.scrollLeft())+'px');
 		set_sticks();
-		//$table_sticks.css('left', -$table_body.scrollLeft()+'px');
+		$table_body_static.scrollTop($table_body_cont.scrollTop());
 	});
 
 	//начало и продолжение изменения размеров таблицы
@@ -196,14 +196,14 @@ jQuery(document).ready(function($){
 	//передвижение к текущему дню/неделе
 	tmp = $.cookie('tmt[o][gcd]');
 	if(tmp == 1){//week
-		tmp = $table_body.find('tr.curr-week-row').first();
+		tmp = $table_body_cont.find('tr.curr-week-row').first();
 	}else if(tmp == 2){//day
-		tmp = $table_body.find('tr.today-row').first();
+		tmp = $table_body_cont.find('tr.today-row').first();
 	}else{
 		tmp = [];
 	}
 	if(tmp.length){
-		$table_body.scrollTop(tmp.position().top);
+		$table_body_cont.scrollTop(tmp.position().top);
 	}
 
 	//инициализация окна добавки

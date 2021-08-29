@@ -460,7 +460,7 @@ function view_timetable_body($table, $parts, $lesson_unite){
 	}
 	
 	//вывод
-	echo '<div class="timetable-body-static"><table class="timetable-table">'.$html_body_static.'</table></div><div class="timetable-body-cont"><table class="timetable-table">'.$html_body_cont.'</table></div>';
+	echo '<div class="timetable-body-static"><table class="timetable-table">'.$html_body_static.'</table><div class="timetable-body-static-indent"></div></div><div class="timetable-body-cont"><table class="timetable-table">'.$html_body_cont.'</table></div>';
 }
 
 /*

@@ -98,7 +98,7 @@ class rad_cookie{
 				default:
 					$parts[$i]['t'] = false;
 			}
-			if(!$parts[$i]['t']){
+			if($parts[$i]['t'] === false){
 				unset($parts[$i]);
 				continue;
 			}
@@ -114,6 +114,7 @@ class rad_cookie{
 			$dat = '';
 			if($parts[$i]['i'] && !($dat = $DB->getRow('SELECT * FROM ?n WHERE `id` = ?s', $table_name, $parts[$i]['i']))){
 				unset($parts[$i]);
+				continue;
 			}
 
 			//установка htmlтипа раздела
