@@ -5,6 +5,7 @@ jQuery(document).ready(function($){
 			'time'  :[],
 			'parts' :{}
 		},
+		table_rows = {'static':[], 'cont':[]},
 		sticks = [],
 		$table_body,
 		$table_head,
@@ -16,6 +17,8 @@ jQuery(document).ready(function($){
 	$table_body = $table.children('.timetable-body');
 	$table_head = $table.children('.timetable-head').children('.timetable-head-cont').children('.timetable-head-wrap');
 	$table_sticks = $table.children('.sticks');
+	//table_rows.$static = $table_body.children('.timetable-body-static').find('tr[data-ind]');
+	//table_rows.$cont = $table_body.children('.timetable-body-cont').find('tr[data-ind]');
 
 	//считывает данные из куки для каждого раздела
 	let tmp;
@@ -64,6 +67,20 @@ jQuery(document).ready(function($){
 				cols.parts[part_n][col_t] = [tmp[i]]
 			}
 		}
+		delete tmp[i];
+	}
+	
+	//генерирование массива строк
+	tmp = $table_body.children('.timetable-body-static').find('tr[data-ind]');
+	len = tmp.length;
+	for(let i=0; i<len; i++){
+		table_rows.static.push($(tmp[i]));
+		delete tmp[i];
+	}
+	tmp = $table_body.children('.timetable-body-cont').find('tr[data-ind]');
+	len = tmp.length;
+	for(let i=0; i<len; i++){
+		table_rows.cont.push($(tmp[i]));
 		delete tmp[i];
 	}
 
@@ -126,6 +143,7 @@ jQuery(document).ready(function($){
 				for(let i in tmp){
 					tmp[i].css('width', width);
 				}
+				set_rows_height();
 				set_sticks(curr_stick + 1);
 				sticks[curr_stick].removeClass('hover');
 				$table.css('cursor', '');
@@ -174,6 +192,7 @@ jQuery(document).ready(function($){
 	//инициализация
 
 	set_sticks();
+	set_rows_height();
 	//передвижение к текущему дню/неделе
 	tmp = $.cookie('tmt[o][gcd]');
 	if(tmp == 1){//week
@@ -311,7 +330,25 @@ jQuery(document).ready(function($){
 			sticks[i].css('left', (pos-start+width-2)+'px');
 		}
 	}
-
+	
+	//синхронизирует высоты строк таблиц
+	function set_rows_height(){
+		let len, cont_height, static_height;
+		len = table_rows.cont.length;
+		for(let i=0; i<len; i++){
+			table_rows.cont[i].css('height', '');
+			table_rows.static[i].css('height', '');
+			cont_height = table_rows.cont[i].outerHeight();
+			static_height = table_rows.static[i].outerHeight();
+			if(static_height < cont_height){
+				table_rows.static[i].outerHeight(cont_height);
+			}else if(static_height > cont_height){
+				table_rows.cont[i].outerHeight(static_height);
+			}
+		}
+	}
+	
+	//настройка скрытия плюшки препода
 	function teacher_add_hide(){
 		let f = !this.prop('checked');
 		for(let i in cols.parts){
@@ -325,13 +362,15 @@ jQuery(document).ready(function($){
 				}
 			}
 		}
+		set_rows_height();
 		
 		$.cookie('tmt[o][tah]', +this.prop('checked'), {raw:1, expires:DATA.timetable_parts_live_days});
 	}
-
+	
+	//настройка переноса слов
 	function cell_word_wrap(){
 		let f = !this.prop('checked');
-		for(let i in ['number', 'time']){
+		for(let i of ['number', 'time']){
 			for(let j in cols[i]){
 				if(f){
 					cols[i][j].css('white-space', 'nowrap');
@@ -352,13 +391,16 @@ jQuery(document).ready(function($){
 				}
 			}
 		}
+		set_rows_height();
 		$.cookie('tmt[o][wwr]', +this.prop('checked'), {raw:1, expires:DATA.timetable_parts_live_days});
 	}
-
+	
+	//настройка идти к ...
 	function go2curr_day(){
 		$.cookie('tmt[o][gcd]', this.val(), {raw:1, expires:DATA.timetable_parts_live_days});
 	}
 	
+	//настройка объединения уроков
 	function lesson_unite(){
 		$.cookie('tmt[o][lun]', +this.prop('checked'), {raw:1, expires:DATA.timetable_parts_live_days});
 		location.reload();
