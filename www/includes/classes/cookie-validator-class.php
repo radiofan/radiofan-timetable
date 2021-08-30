@@ -125,8 +125,8 @@ class rad_cookie{
 					$this->validated['timetable_parts'][$i] = array('html_type' => 'Группа: '.$tmp, 'type' => 'group');
 					break;
 				case 1://препод
-					$tmp = $parts[$i]['i'] ? mb_convert_case($dat['fio'], MB_CASE_TITLE) : 'Без учителя';
-					$this->validated['timetable_parts'][$i] = array('html_type' => 'Учитель: '.$tmp, 'type' => 'teacher');
+					$tmp = $parts[$i]['i'] ? mb_convert_case($dat['fio'], MB_CASE_TITLE) : 'Без препода';
+					$this->validated['timetable_parts'][$i] = array('html_type' => 'Препод: '.$tmp, 'type' => 'teacher');
 					break;
 				case 2://кабинет
 					$tmp = $parts[$i]['i'] ? $dat['cabinet'].$dat['cabinet_additive'].' '.$dat['building'] : 'Без кабинета';

@@ -772,30 +772,30 @@ function footer_header_data_main_page($data){
 
 
 /**
- * TODO del_me
+ * TODO переделать
  * see footer.php
  * @return string
  */
 function gen_additor_modal_html(){
-	global $DB;
+	global $DB, $COOKIE_V;
 	$opt_fac_html = '';
 	$opt_gr_html = '';
 	$opt_cab_html = '';
 	$opt_tch_html = '';
 
-	$elems = $_COOKIE['timetable']['elements'];
+	$parts = $COOKIE_V->timetable_parts;
 	$except = array('group' => array(), 'teacher' => array(), 'cabinet' => array());
-	$len = sizeof($elems);
+	$len = sizeof($parts);
 	for($i=0; $i<$len; $i++){
-		if(isset($except[$elems[$i]['type']])){
-			$except[$elems[$i]['type']][] = $elems[$i]['id'];
+		if(isset($except[$parts[$i]['type']])){
+			$except[$parts[$i]['type']][] = $parts[$i]['id'];
 		}
 	}
 
 	$res = $DB->getAll('SELECT `id`, `name`, `abbr` FROM `stud_faculties` ORDER BY `name`');
 	$len = sizeof($res);
 	for($i=0; $i<$len; $i++){
-		$opt_fac_html .= '<option value="'.$res[$i]['id'].'">'.esc_html($res[$i]['name']).(empty($res[$i]['abbr']) ? '' : ' ('.$res[$i]['abbr'].')').'</option>';
+		$opt_fac_html .= '<option value="'.$res[$i]['id'].'">'.esc_html($res[$i]['name'].(empty($res[$i]['abbr']) ? '' : ' ('.$res[$i]['abbr'].')')).'</option>';
 	}
 	$tmp = '';
 
