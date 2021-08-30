@@ -105,9 +105,8 @@ function view_parts_manage_block(){
 					<div class="section-header">
 						<span class="section-draggable part-drag" title="Сортировать">&#8645;</span>
 						<span class="section-data">
-							<span class="section-type" data-toggle="collapse" data-target="#section-part-<?= $i; ?>" aria-expanded="false" aria-controls="section-part-<?= $i; ?>">
-								<?= $parts[$i]['html_type']; ?>
-							</span> - <input
+							<button class="btn btn-link" data-toggle="collapse" data-target="#section-part-<?= $i; ?>" aria-expanded="false" aria-controls="section-part-<?= $i; ?>"><?= $parts[$i]['html_type']; ?></button>
+							- <input
 								class="input-part-name form-control edit-section-name"
 								type="text"
 								maxlength="<?= MAX_PART_NAME_LEN; ?>"

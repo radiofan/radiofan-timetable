@@ -395,6 +395,13 @@ jQuery(document).ready(function($){
 		}
 		set_sticks();
 		set_rows_height();
+	//сохранение имени раздела
+	}).on('change.section_name_edit', '.input-part-name', function(e){
+		let val = $(this).val();
+		let $sec_wrap = $(e.delegateTarget);
+		let part_n = $sec_wrap.data('part');
+		$.cookie('tmt[p]['+part_n+'][n]', val, {'raw':1});
+		$table_head.find('.part-header.part-'+part_n).text(val);
 	});
 
 
