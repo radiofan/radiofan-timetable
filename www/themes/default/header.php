@@ -12,10 +12,10 @@ function view_header($PAGE_DATA){
 	<link rel="stylesheet" href="/styles/bootstrap-3.3.2.css">
 	<?= implode(PHP_EOL, $PAGE_DATA['addition_styles']); ?>
 	<link rel="stylesheet" href="/styles/style.css?ver=<?= filemtime(MAIN_DIR. 'styles/style.css'); ?>">
-		<script src="/libs/jquery-3.4.1.min.js"></script>
+	<script src="/libs/jquery-3.4.1.min.js"></script>
 	<script src="/libs/jquery.cookie.js"></script>
 	<script src="/libs/jquery.searchSelect.js"></script>
-	<script src="/scripts/bootstrap-3.3.2.min.js"></script>
+	<script src="/libs/bootstrap-3.3.2.min.js"></script>
 	<script type="text/javascript">
 		/* <![CDATA[ */
 		var DATA = <?= json_encode($PAGE_DATA['js_data']) ?>;

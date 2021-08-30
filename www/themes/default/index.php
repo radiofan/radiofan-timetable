@@ -94,6 +94,9 @@ function view_parts_manage_block(){
 ?>
 	<!--управление разделами-->
 	<div id="parts_collapse" class="collapse parts-collapse">
+		<div id="section-edited">
+			<p>Изменения сохранены <button class="btn btn-link" onclick="location.reload();return false;">Обновить страницу</button></p>
+		</div>
 		<div class="card-body">
 			<?php
 			for($i=0; $i<$parts_len; $i++):
@@ -102,65 +105,65 @@ function view_parts_manage_block(){
 					<div class="section-header">
 						<span class="section-draggable part-drag" title="Сортировать">&#8645;</span>
 						<span class="section-data">
-									<span class="section-type" data-toggle="collapse" data-target="#section-part-<?= $i; ?>" aria-expanded="false" aria-controls="section-part-<?= $i; ?>">
-										<?= $parts[$i]['html_type']; ?>
-									</span> - <input
+							<span class="section-type" data-toggle="collapse" data-target="#section-part-<?= $i; ?>" aria-expanded="false" aria-controls="section-part-<?= $i; ?>">
+								<?= $parts[$i]['html_type']; ?>
+							</span> - <input
 								class="input-part-name form-control edit-section-name"
 								type="text"
 								maxlength="<?= MAX_PART_NAME_LEN; ?>"
 								value="<?= htmlspecialchars($parts[$i]['part_name']); ?>"
 								data-part="<?= $i; ?>"
 							>
-								</span>
+						</span>
 						<span class="section-delete" title="Удалить">&#10007;</span>
 					</div>
-					<div class="section-cols-wrap collapse" id="section-part-<?= $i; ?>">
+					<div class="section-cols-wrap collapse" data-part="<?= $i; ?>" id="section-part-<?= $i; ?>">
 						<?php
 						$col_pos = 0;
 						foreach($parts[$i]['cols_order'] as $col => $view){
 							switch($col){
 								case 'l':
 									?>
-									<div class="section-col col-lesson" data-pos="<?= $col_pos; ?>" data-col-type="lesson" data-col-short="l">
+									<div class="section-col col-lesson" data-pos="<?= $col_pos; ?>" data-col-type="l">
 										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
 										<span class="child-center">Урок</span>
-										<span class="section-showhide" title="Видимость"><input type="checkbox"<?= $checked[$view]; ?>></span>
+										<span class="section-showhide" title="Видимость"><input class="cb-col-view" type="checkbox"<?= $checked[$view]; ?>></span>
 									</div>
 									<?php
 									break;
 								case 't':
 									?>
-									<div class="section-col col-lesson-add" data-pos="<?= $col_pos; ?>" data-col-type="lesson-add" data-col-short="t">
+									<div class="section-col col-lesson-add" data-pos="<?= $col_pos; ?>" data-col-type="t">
 										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
 										<span class="child-center">Тип</span>
-										<span class="section-showhide" title="Видимость"><input type="checkbox"<?= $checked[$view]; ?>></span>
+										<span class="section-showhide" title="Видимость"><input class="cb-col-view" type="checkbox"<?= $checked[$view]; ?>></span>
 									</div>
 									<?php
 									break;
 								case 'g':
 									?>
-									<div class="section-col col-group" data-pos="<?= $col_pos; ?>" data-col-type="group" data-col-short="g">
+									<div class="section-col col-group" data-pos="<?= $col_pos; ?>" data-col-type="g">
 										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
 										<span class="child-center">Группа</span>
-										<span class="section-showhide" title="Видимость"><input type="checkbox"<?= $checked[$view]; ?>></span>
+										<span class="section-showhide" title="Видимость"><input class="cb-col-view" type="checkbox"<?= $checked[$view]; ?>></span>
 									</div>
 									<?php
 									break;
 								case 'c':
 									?>
-									<div class="section-col col-cabinet" data-pos="<?= $col_pos; ?>" data-col-type="cabinet" data-col-short="c">
+									<div class="section-col col-cabinet" data-pos="<?= $col_pos; ?>" data-col-type="c">
 										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
 										<span class="child-center">Кабинет</span>
-										<span class="section-showhide" title="Видимость"><input type="checkbox"<?= $checked[$view]; ?>></span>
+										<span class="section-showhide" title="Видимость"><input class="cb-col-view" type="checkbox"<?= $checked[$view]; ?>></span>
 									</div>
 									<?php
 									break;
 								case 'p':
 									?>
-									<div class="section-col col-teacher" data-pos="<?= $col_pos; ?>" data-col-type="teacher" data-col-short="p">
+									<div class="section-col col-teacher" data-pos="<?= $col_pos; ?>" data-col-type="p">
 										<span class="section-draggable col-drag" title="Сортировать">&#8645;</span>
 										<span class="child-center">Препод</span>
-										<span class="section-showhide" title="Видимость"><input type="checkbox"<?= $checked[$view]; ?>></span>
+										<span class="section-showhide" title="Видимость"><input class="cb-col-view" type="checkbox"<?= $checked[$view]; ?>></span>
 									</div>
 									<?php
 									break;
@@ -200,12 +203,13 @@ function view_timetable_block(){
 			$sticks .= '<div class="stick" data-col="'.($i1+$i*5).'" data-col-type="time" data-col-part="-1"></div>';
 		}
 		*/
-		$table_head_1 .= '<th colspan="5"><div class="cell part-'.$i.' part-header">'.esc_html($parts[$i]['part_name']).'</div></th>';
+		$table_head_1 .= '<th colspan="'.array_sum($parts[$i]['cols_order']).'"><div class="cell part-'.$i.' part-header">'.esc_html($parts[$i]['part_name']).'</div></th>';
 		$i1 = 2 + $i*5;
 		$cols_headers = array('l' => 'Урок', 't' => 'Тип', 'g' => 'Группа', 'c' => 'Кабинет', 'p' => 'Препод');
 		foreach($parts[$i]['cols_order'] as $col => $view){
-			$table_head_2 .= '<th><div class="cell part-'.$i.' col-'.$col.'" data-col="'.$i1.'">'.$cols_headers[$col].'</div></th>';
-			$sticks .= '<div class="stick" data-col="'.$i1.'" data-col-type="'.$col.'" data-col-part="'.$i.'"></div>';
+			$view_str = $view ? '' : ' h';
+			$table_head_2 .= '<th class="'.$view_str.'"><div class="cell part-'.$i.' col-'.$col.'" data-col="'.$i1.'">'.$cols_headers[$col].'</div></th>';
+			$sticks .= '<div class="stick'.$view_str.'" data-col="'.$i1.'" data-col-type="'.$col.'" data-col-part="'.$i.'"></div>';
 			$i1++;
 		}
 
@@ -336,6 +340,8 @@ function view_timetable_body($table, $parts, $lesson_unite){
 		for($day=0; $day<6; $day++){
 			//добаляем строку дня и недели
 			$today_class = $week_class.($curr_day == $day && $curr_week == $week ? ' today-row' : '');
+			//TODO если ширина дня больше ширины статического столбца, то день обрезается
+			//TODO доббавить возможность кастомизации
 			$html_body_static .= '<tr class="clean-row row'.$today_class.'"><td colspan="2"><div class="cell day"><div class="day-cont">'.$week_days[$day].' <span class="week">(нед. '.$week.')</span></div></div></td></tr>';
 			//if($parts_len)
 			$html_body_cont .= '<tr class="clean-row row'.$today_class.'"><td colspan="'.($parts_len*5).'"><div class="cell"></div></td></tr>';
@@ -351,17 +357,6 @@ function view_timetable_body($table, $parts, $lesson_unite){
 					'row_c' => 0,
 					'row_p' => 0
 				));
-				
-				/*
-				//вывод времени
-				if($lesson_unite){
-					$html_body_static .= '
-					<tr class="default-row row'.$less_class.'" data-ind="'.$week.'-'.$day.'-'.$less.'">
-						<td rowspan="'.$len.'"><div class="cell col-number" data-col="0">'.($less+1).'</div></td>
-						<td rowspan="'.$len.'"><div class="cell col-time" data-col="1">'.$time_list[$less].'</div></td>
-					</tr>';
-				}
-				*/
 				
 				//производим вывод строк
 				for($line=0; $line<$len; $line++){
@@ -390,57 +385,62 @@ function view_timetable_body($table, $parts, $lesson_unite){
 						//$cols = $parts[$i]['cols_order'];
 						
 						//урок
+						$view_str = $parts[$i]['cols_order']['l'] ? '' : ' class="h"';
 						$lesson = isset($tmp['lesson']) ? esc_html(mb_strtoupper($tmp['lesson'])) : '';
 						if(isset($tmp['row_l'])){
 							$all_rowspan[$i]['row_l'] = $tmp['row_l'];
-							$cols_implode[$i]['l'] = '<td rowspan="'.$tmp['row_l'].'"><div class="cell part-'.$i.' col-l" data-col="'.(2+$cols_order[$i]['l']+$i*5).'">'.$lesson.'</div></td>';
+							$cols_implode[$i]['l'] = '<td rowspan="'.$tmp['row_l'].'"'.$view_str.'><div class="cell part-'.$i.' col-l" data-col="'.(2+$cols_order[$i]['l']+$i*5).'">'.$lesson.'</div></td>';
 						}else{
 							$cols_implode[$i]['l'] = !$all_rowspan[$i]['row_l']
-								? '<td><div class="cell part-'.$i.' col-l" data-col="'.(2+$cols_order[$i]['l']+$i*5).'">'.esc_html($lesson).'</div></td>'
+								? '<td'.$view_str.'><div class="cell part-'.$i.' col-l" data-col="'.(2+$cols_order[$i]['l']+$i*5).'">'.esc_html($lesson).'</div></td>'
 								: '';
 						}
 						
 						//тип урока
+						$view_str = $parts[$i]['cols_order']['t'] ? '' : ' class="h"';
 						$lesson_add = isset($tmp['lesson_type']) ? $tmp['lesson_type'] : '';
 						if(isset($tmp['row_t'])){
 							$all_rowspan[$i]['row_t'] = $tmp['row_t'];
-							$cols_implode[$i]['t'] = '<td rowspan="'.$tmp['row_t'].'"><div class="cell part-'.$i.' col-t" data-col="'.(2+$cols_order[$i]['t']+$i*5).'">'.$lesson_add.'</div></td>';
+							$cols_implode[$i]['t'] = '<td rowspan="'.$tmp['row_t'].'"'.$view_str.'><div class="cell part-'.$i.' col-t" data-col="'.(2+$cols_order[$i]['t']+$i*5).'">'.$lesson_add.'</div></td>';
 						}else{
 							$cols_implode[$i]['t'] = !$all_rowspan[$i]['row_t']
-								? '<td><div class="cell part-'.$i.' col-t" data-col="'.(2+$cols_order[$i]['t']+$i*5).'">'.$lesson_add.'</div></td>'
+								? '<td'.$view_str.'><div class="cell part-'.$i.' col-t" data-col="'.(2+$cols_order[$i]['t']+$i*5).'">'.$lesson_add.'</div></td>'
 								: '';
 						}
 						
 						//группа
+						$view_str = $parts[$i]['cols_order']['g'] ? '' : ' class="h"';
 						$group_name = isset($tmp['group_name']) ? esc_html($tmp['group_name']) : '';
 						if(isset($tmp['row_g'])){
 							$all_rowspan[$i]['row_g'] = $tmp['row_g'];
-							$cols_implode[$i]['g'] = '<td rowspan="'.$tmp['row_g'].'"><div class="cell part-'.$i.' col-g" data-col="'.(2+$cols_order[$i]['g']+$i*5).'">'.$group_name.'</div></td>';
+							$cols_implode[$i]['g'] = '<td rowspan="'.$tmp['row_g'].'"'.$view_str.'><div class="cell part-'.$i.' col-g" data-col="'.(2+$cols_order[$i]['g']+$i*5).'">'.$group_name.'</div></td>';
 						}else{
 							$cols_implode[$i]['g'] = !$all_rowspan[$i]['row_g']
-								? '<td><div class="cell part-'.$i.' col-g" data-col="'.(2+$cols_order[$i]['g']+$i*5).'">'.$group_name.'</div></td>'
+								? '<td'.$view_str.'><div class="cell part-'.$i.' col-g" data-col="'.(2+$cols_order[$i]['g']+$i*5).'">'.$group_name.'</div></td>'
 								: '';
 						}
 
 						//кабинет
+						$view_str = $parts[$i]['cols_order']['c'] ? '' : ' class="h"';
 						$cabinet = isset($tmp['cabinet_id']) ? esc_html($tmp['cabinet'].$tmp['cabinet_additive'].' '.$tmp['building']) : '';
 						if(isset($tmp['row_c'])){
 							$all_rowspan[$i]['row_c'] = $tmp['row_c'];
-							$cols_implode[$i]['c'] = '<td rowspan="'.$tmp['row_c'].'"><div class="cell part-'.$i.' col-c" data-col="'.(2+$cols_order[$i]['c']+$i*5).'">'.$cabinet.'</div></td>';
+							$cols_implode[$i]['c'] = '<td rowspan="'.$tmp['row_c'].'"'.$view_str.'><div class="cell part-'.$i.' col-c" data-col="'.(2+$cols_order[$i]['c']+$i*5).'">'.$cabinet.'</div></td>';
 						}else{
 							$cols_implode[$i]['c'] = !$all_rowspan[$i]['row_c']
-								? '<td><div class="cell part-'.$i.' col-c" data-col="'.(2+$cols_order[$i]['c']+$i*5).'">'.$cabinet.'</div></td>'
+								? '<td'.$view_str.'><div class="cell part-'.$i.' col-c" data-col="'.(2+$cols_order[$i]['c']+$i*5).'">'.$cabinet.'</div></td>'
 								: '';
 						}
 
 						//препод
+						$view_str = $parts[$i]['cols_order']['p'] ? '' : ' class="h"';
 						$teacher = isset($tmp['teacher_id']) ? '<span class="teacher_fio">'.esc_html(mb_convert_case($tmp['fio'], MB_CASE_TITLE)).'</span> <span class="teacher_add">'.esc_html($tmp['teacher_additive']).'</span>' : '<span class="teacher_fio"></span><span class="teacher_add"></span>';
 						if(isset($tmp['row_p'])){
 							$all_rowspan[$i]['row_p'] = $tmp['row_p'];
-							$cols_implode[$i]['p'] = '<td rowspan="'.$tmp['row_p'].'"><div class="cell part-'.$i.' col-p" data-col="'.(2+$cols_order[$i]['p']+$i*5).'">'.$teacher.'</div></td>';
+							$cols_implode[$i]['p'] = '<td rowspan="'.$tmp['row_p'].'"'.$view_str.'><div class="cell part-'.$i.' col-p" data-col="'.(2+$cols_order[$i]['p']+$i*5).'">'.$teacher.'</div></td>';
 						}else{
 							$cols_implode[$i]['p'] = !$all_rowspan[$i]['row_p']
-								? '<td><div class="cell part-'.$i.' col-p" data-col="'.(2+$cols_order[$i]['p']+$i*5).'">'.$teacher.'</div></td>' : '';
+								? '<td'.$view_str.'><div class="cell part-'.$i.' col-p" data-col="'.(2+$cols_order[$i]['p']+$i*5).'">'.$teacher.'</div></td>' : '';
 						}
 
 						$html_body_cont .= implode(PHP_EOL, $cols_implode[$i]);
@@ -732,6 +732,7 @@ function footer_header_data_main_page($data){
 	
 	global $COOKIE_V;
 	$options = $COOKIE_V->timetable_options;
+	//$parts = $COOKIE_V->timetable_parts;
 	if($options['teacher_add_hide']){
 		$data['tmp_styles'][] = '.timetable-body .teacher_add{display:none;}';
 	}
@@ -739,6 +740,16 @@ function footer_header_data_main_page($data){
 	if(!$options['cell_word_wrap']){
 		$data['tmp_styles'][] = '.timetable-body .cell{white-space:nowrap;}';
 	}
+	/*
+	for($i=0; $i<sizeof($parts); $i++){
+		foreach($parts[$i]['cols_order'] as $col_t => $view){
+			if(!$view){
+				$data['tmp_styles'][] = '.timetable-block .cell.part-'.$i.'.col-'.$col_t.'{display:none}';
+				$data['tmp_styles'][] = '.stick[data-col-part='.$i.'][data-col-type='.$col_t.']{display:none}';
+			}
+		}
+	}
+	*/
 	
 	$sizes = $COOKIE_V->timetable_cols_size;
 	if(!empty($sizes['number']))

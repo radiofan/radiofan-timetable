@@ -11,7 +11,7 @@ jQuery(document).ready(function($){
 		$table_body_cont,
 		$table_head,
 		$table_sticks,
-		$sections = $('#parts_collapse').children(),
+		$sections = $('#parts_collapse').children('.card-body'),
 		cookie_parts = [],
 		$body = $('body');
 
@@ -93,18 +93,6 @@ jQuery(document).ready(function($){
 		delete tmp[i];
 	}
 
-	//флаги работы с размерами таблицы
-	var curr_stick = false;
-	//установка размера столбца
-	$table_sticks.on('mousedown.table', '.stick', function(e){
-		if(curr_stick === false){
-			e.preventDefault();
-			curr_stick = $(this).data('col');
-			sticks[curr_stick].addClass('hover').data('old-pos', sticks[curr_stick].offset().left);
-			$table.css('cursor', 'col-resize');
-		}
-	});
-
 	//TODO добавить скролл при наведении на палку
 
 	//прокручивание заголовка
@@ -115,7 +103,19 @@ jQuery(document).ready(function($){
 		$table_body_static.scrollTop($table_body_cont.scrollTop());
 	});
 
-	//начало и продолжение изменения размеров таблицы
+	//флаги работы с размерами таблицы
+	var curr_stick = false;
+	//начало изменения ширины столбца
+	$table_sticks.on('mousedown.table', '.stick', function(e){
+		if(curr_stick === false){
+			e.preventDefault();
+			curr_stick = $(this).data('col');
+			sticks[curr_stick].addClass('hover').data('old-pos', sticks[curr_stick].offset().left);
+			$table.css('cursor', 'col-resize');
+		}
+	});
+	
+	//конец и продолжение изменения размера столбца
 	$body.on({
 		'mouseup.table': function(e){
 			if(curr_stick !== false){
@@ -129,15 +129,15 @@ jQuery(document).ready(function($){
 					width = cols[col_t][0].outerWidth() + diff_w;
 					width += 'px';
 					if(col_t === 'number'){
-						$.cookie('tmt[s][nsz]', width, {raw: 1, expires: DATA.timetable_parts_live_days});
+						$.cookie('tmt[s][nsz]', width, {'raw':1, 'expires':DATA.timetable_parts_live_days});
 					}else if(col_t === 'time'){
-						$.cookie('tmt[s][tsz]', width, {raw: 1, expires: DATA.timetable_parts_live_days});
+						$.cookie('tmt[s][tsz]', width, {'raw':1, 'expires':DATA.timetable_parts_live_days});
 					}
 					tmp = cols[col_t];
 				}else{
 					width = cols.parts[part_n][col_t][0].outerWidth() + diff_w;
 					width += 'px';
-					$.cookie('tmt[s][p]['+part_n+']['+col_t+']', width, {raw: 1, expires: DATA.timetable_parts_live_days});
+					$.cookie('tmt[s][p]['+part_n+']['+col_t+']', width, {'raw':1, 'expires':DATA.timetable_parts_live_days});
 					tmp = cols.parts[part_n][col_t];
 				}
 				for(let i in tmp){
@@ -221,7 +221,7 @@ jQuery(document).ready(function($){
 		let tmp = $('#additor-gr-name').val(),
 			end = cookie_parts.length - 1;
 		cookie_parts[end].gr_name = tmp;
-		$.cookie('timetable[elements]['+end+']', cookie_parts[end], {raw:1, expires:DATA.timetable_parts_live_days, array:1});
+		$.cookie('timetable[elements]['+end+']', cookie_parts[end], {'raw':1, 'expires':DATA.timetable_parts_live_days, 'array':1});
 		carousel_step++;
 		location.reload();
 		//$('#additor-modal').modal('hide');
@@ -294,20 +294,107 @@ jQuery(document).ready(function($){
 	});
 
 
-	//перетаскивание, настройка столбцов
-	$sections.sortable({'handle':'.part-drag'});
-	$sections.find('.section-cols-wrap').sortable({'handle':'.col-drag'});
+	//перетаскивание разделов, настройка разделов
+	$sections.sortable({'handle':'.part-drag'}).on('sortupdate.part_sort', function(e, ui){
+		let new_cookie_parts = [], new_cookie_cols_size = [];
+		$sections.children().each(function(ind, el){
+			let $el = $(el);
+			let old_ind = $el.data('part');
+			new_cookie_parts.push(cookie_parts[old_ind]);
+			new_cookie_cols_size.push($.cookie('tmt[s][p]['+old_ind+']', undefined, {'array':1}));
+			$el.data('part', ind);
+			$el.children('.section-cols-wrap').data('part', ind);
+		});
+
+		cookie_parts = new_cookie_parts;
+		$.removeCookie('tmt[p]', {'array':1});
+		$.removeCookie('tmt[s][p]', {'array':1});
+		$.cookie('tmt[p]', cookie_parts, {'raw':1, 'array':1, 'expires':DATA.timetable_parts_live_days});
+		$.cookie('tmt[s][p]', new_cookie_cols_size, {'raw':1, 'array':1, 'expires':DATA.timetable_parts_live_days});
+		$('#section-edited').show();
+	});
+	//перетаскивание столбцов, настройка разделов
+	$sections.find('.section-cols-wrap').sortable({'handle':'.col-drag'}).on('sortupdate.col_sort', function(e, ui){
+		let str_col_sort = '', $this = $(this), part_n;
+		$this.children().each(function(ind, el){
+			let $el = $(el);
+			$el.data('pos', ind);
+			str_col_sort += $el.find('.cb-col-view').prop('checked') ? $el.data('colType').toUpperCase() : $el.data('colType').toLowerCase();
+		});
+		part_n = $this.data('part');
+		cookie_parts[part_n].o = str_col_sort;
+		$.cookie('tmt[p]['+part_n+'][o]', str_col_sort, {'raw':1, 'expires':DATA.timetable_parts_live_days});
+		e.stopPropagation();
+		$('#section-edited').show();
+	});
 
 	//удаление разделов
 	$sections.children('.section-wrap').on('click.section_del', '.section-delete', function(e){
 		let $sec_wrap = $(e.delegateTarget);
-		let ind = $sec_wrap.data('gr');
-		//удаляем из куки элментс
-		cookie_parts.splice(ind-1, 1);
-		$.removeCookie('timetable[elements]', {array:1});
-		$.cookie('timetable[elements]', cookie_parts, {raw:1, array:1, expires:DATA.timetable_parts_live_days});
-
-		//удаляем куки палок TODO
+		let part_n = $sec_wrap.data('part');
+		cookie_parts.splice(part_n, 1);
+		$.removeCookie('tmt[p]', {'array':1});
+		$.cookie('tmt[p]', cookie_parts, {'raw':1, 'array':1, 'expires':DATA.timetable_parts_live_days});
+		$.removeCookie('tmt[s][p]['+part_n+']', {'array':1});
+		let tmp = $.cookie('tmt[s][p]', undefined, {'array':1});
+		for(let i in tmp){
+			if(i>part_n){
+				tmp[i-1] = tmp[i];
+				delete tmp[i];
+			}
+		}
+		$.removeCookie('tmt[s][p]', {'array':1});
+		$.cookie('tmt[s][p]', tmp, {'raw':1, 'array':1, 'expires':DATA.timetable_parts_live_days});
+		
+		$sec_wrap.fadeOut(300, function(){
+			$sec_wrap.remove();
+			$sections.children().each(function(ind, el){
+				let $el = $(el);
+				$el.data('part', ind);
+				$el.children('.section-cols-wrap').data('part', ind);
+			});
+		});
+		$('#section-edited').show();
+	//скрытие отображение столбцов
+	}).on('click.section_col_view', '.cb-col-view', function(e){
+		let $this = $(this);
+		let is_view = $this.prop('checked'),
+			$section_col = $this.closest('.section-col');
+		//проверка на последнюю колнку
+		let view_c = +is_view;
+		$section_col.siblings().find('.cb-col-view').each(function(ind, el){
+			if($(el).prop('checked'))
+				view_c++;
+		});
+		if(!view_c){
+			$this.prop('checked', true);
+			return;
+		}
+		let col_t = $section_col.data('colType'),
+			part_n = $section_col.parent().data('part'),
+			str_col_sort = $.cookie('tmt[p]['+part_n+'][o]'),
+			pos_n;
+		pos_n = 2 + $section_col.data('pos') + part_n*5
+		str_col_sort = str_col_sort.replace(new RegExp(col_t, 'i'), (is_view ? col_t.toUpperCase() : col_t.toLowerCase()));
+		$.cookie('tmt[p]['+part_n+'][o]', str_col_sort, {'raw':1});
+		//починим colspan
+		$table_head.find('.part-header.part-'+part_n).parent().attr('colspan', view_c);
+		//скроем столбцы
+		for(let i in cols.parts[part_n][col_t]){
+			if(is_view){
+				cols.parts[part_n][col_t][i].parent().show();
+			}else{
+				cols.parts[part_n][col_t][i].parent().hide();
+			}
+		}
+		//скроем палку
+		if(is_view){
+			sticks[pos_n].show();
+		}else{
+			sticks[pos_n].hide();
+		}
+		set_sticks();
+		set_rows_height();
 	});
 
 
@@ -364,7 +451,7 @@ jQuery(document).ready(function($){
 		}
 		set_rows_height();
 		
-		$.cookie('tmt[o][tah]', +this.prop('checked'), {raw:1, expires:DATA.timetable_parts_live_days});
+		$.cookie('tmt[o][tah]', +this.prop('checked'), {'raw':1, 'expires':DATA.timetable_parts_live_days});
 	}
 	
 	//настройка переноса слов
@@ -392,17 +479,17 @@ jQuery(document).ready(function($){
 			}
 		}
 		set_rows_height();
-		$.cookie('tmt[o][wwr]', +this.prop('checked'), {raw:1, expires:DATA.timetable_parts_live_days});
+		$.cookie('tmt[o][wwr]', +this.prop('checked'), {'raw':1, 'expires':DATA.timetable_parts_live_days});
 	}
 	
 	//настройка идти к ...
 	function go2curr_day(){
-		$.cookie('tmt[o][gcd]', this.val(), {raw:1, expires:DATA.timetable_parts_live_days});
+		$.cookie('tmt[o][gcd]', this.val(), {'raw':1, 'expires':DATA.timetable_parts_live_days});
 	}
 	
 	//настройка объединения уроков
 	function lesson_unite(){
-		$.cookie('tmt[o][lun]', +this.prop('checked'), {raw:1, expires:DATA.timetable_parts_live_days});
+		$.cookie('tmt[o][lun]', +this.prop('checked'), {'raw':1, 'expires':DATA.timetable_parts_live_days});
 		location.reload();
 	}
 });

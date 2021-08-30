@@ -328,7 +328,7 @@ class rad_pages_viewer{
 		$len = sizeof($this->pages[$page_id]->libs);
 		for($i=0; $i<$len; $i++){
 			$tmp = $this->pages[$page_id]->libs[$i];
-			$ret['addition_libs'][] = '<script src="/libs/'.$tmp.'?ver='.filemtime(MAIN_DIR. 'libs/'.$tmp).'"></script>';
+			$ret['addition_libs'][] = '<script src="/libs/'.$tmp.'"></script>';
 		}
 		
 		$ret['addition_styles'] = array();

@@ -186,13 +186,10 @@ class rad_cookie{
 			$ret[mb_strtolower($tmp[$i])] = mb_strtolower($tmp[$i]) != $tmp[$i];
 		}
 		if(sizeof($ret) != 5){
-			return array(//TODO херня
-				'l' => true,
-				't' => true,
-				'g' => true,
-				'c' => true,
-				'p' => true
-			);
+			return array_merge($ret, array_diff_key(array('l' => true, 't' => true, 'g' => true, 'c' => true, 'p' => true), $ret));
+		}else{
+			if(array_sum($ret) < 1)
+				$ret['l'] = true;
 		}
 		
 		return $ret;
@@ -260,6 +257,7 @@ class rad_cookie{
 	 * @param $cols - массив массивов
 	 * ['l' => null|int,'t' => null|int,'g' => null|int,'c' => null|int,'p' => null|int]
 	 * @return array|false
+	 * TODO оставить размеры для других столбцов
 	 */
 	private function clear_timetable_part_cols_size($cols){
 		if(!is_array($cols))

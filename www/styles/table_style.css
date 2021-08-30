@@ -21,6 +21,9 @@
 
 /*насройки*/
 
+#section-edited{
+	display:none;
+}
 
 .ui-sortable-handle{
 	-ms-touch-action:none;
@@ -133,7 +136,12 @@
 .sticks{
 	position:absolute;
 	z-index:2;
-	height:calc(100% - 16px);
+	/*100% - padding-bottom - padding-top - scrollbar-width*/
+	height:calc(100% - 10px - 10px - 20px);
+}
+
+.stick.h{
+	display:none;
 }
 
 .timetable-head{
@@ -219,6 +227,10 @@
 	text-overflow:ellipsis;
 }
 
+.timetable-block td.h, .timetable-block th.h{
+	display:none;
+}
+
 .timetable-body .default-row td{
 	border:1px solid #909090;
 }
@@ -236,7 +248,11 @@
 }
 
 .timetable-body .curr-lesson-row{
-	background-color:#ccc;
+	background-color:#ccb4b4;
+}
+
+.timetable-body .next-lesson-row{
+	background-color:#b4b4cc;
 }
 
 .timetable-body .row .cell{
