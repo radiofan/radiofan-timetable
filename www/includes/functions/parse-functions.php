@@ -1,101 +1,10 @@
 <?php
-/**
- * Обновляет расписание алтгту
- * @return bool
- */
-function reload_timetable(){
-	global $DB, $DATA;
-	//получение факультетов
-	$faculties = array();
-	$tmp = $DB->getOne('SELECT COUNT(`id`) FROM `stud_faculties`');
-	if(!$tmp){
-		//если нет факультетов то парсим их
-		$ret = rad_parser::get_page_content('https://www.altstu.ru/main/schedule/');
-		if(!empty($ret['status'])){
-			trigger_error('CURL error['.$ret['status'].'] (can\'t load faculties): '.$ret['status_text'].', info('.print_r($ret['info'], 1).')', E_USER_WARNING);
-			return false;
-		}
-		
-		$faculties = parse_faculties($ret['content']);
-		if(!$faculties)
-			return false;
-		
-		if(!$DB->query('INSERT INTO `stud_faculties` ?d', $faculties)){
-			return false;
-		}
-		
-		$faculties = array_column($faculties, 'name', 'id');
-	}else{
-		//иначе берем не обновленные факультеты
-		$faculties = $DB->getIndCol('id', 'SELECT * FROM `stud_faculties` WHERE `last_reload` + INTERVAL ?p <= NOW()', $DATA->get('update_interval_groups'));
-	}
-	
-	if($faculties){
-		//парсим группы необновленных факультетов
-		$curl_data = array();
-		foreach($faculties as $fac_id => $name){
-			$curl_data[] = array(
-				'url' => 'https://www.altstu.ru/main/schedule/ws/group/?f='.urlencode($fac_id),
-				'options' => array(
-					'useragent' => rad_parser::get_rand_user_agent(MAIN_DIR.'files/user_agents.txt'),
-					'referer'   => 'https://www.altstu.ru/main/schedule/',
-					'headers'   => array(
-						'x-requested-with: XMLHttpRequest',
-						'accept: application/json, text/javascript, */*; q=0.01',
-						'accept-language:ru,en;q=0.8'
-					)
-				)
-			);
-		}
-		
-		rad_parser::get_pages_content($curl_data, 'parse_groups');
-		unset($curl_data, $faculties);
-	}
-	//массив преподов и кабинетов
-	$GLOBALS['TEACHS'] = $DB->getAll('SELECT `id`, `fio`, `additive` FROM `stud_teachers`');
-	$GLOBALS['CABS'] = $DB->getAll('SELECT * FROM `stud_cabinets`');
-	
-	//получим список всех факультетов
-	$faculties = $DB->getCol('SELECT `id` FROM `stud_faculties`');
-	$fac_len = sizeof($faculties);
-	for($i=0; $i<$fac_len; $i++){
-		//и будим искать в нем необновленные группы
-		$groups = $DB->getCol('SELECT `id` FROM `stud_groups` WHERE `last_reload` + INTERVAL ?p <= NOW() AND `faculty_id` = ?s', $DATA->get('update_interval_timetable'), $faculties[$i]);
-		if($groups === false)
-			continue;
-		$len = sizeof($groups);
-		if($len){
-			//если такие группы есть то парсим их с небольшим промежутком по времени
-			for($i1=0; $i1<$len; $i1++){
-				$groups[$i1] = array(
-					'url'     => 'https://www.altstu.ru/main/schedule/?group_id='.$groups[$i1],
-					'options' => array(
-						'post_data' => array(
-							'faculty' => $faculties[$i],
-							'group'   => $groups[$i1]
-						),
-						'useragent' => rad_parser::get_rand_user_agent(MAIN_DIR.'files/user_agents.txt'),
-						'referer'   => 'https://www.altstu.ru/main/schedule/',
-						'headers'   => array(
-							'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-							'accept-language: ru,en;q=0.8',
-							'dnt: 1',
-							'origin: https://www.altstu.ru',
-							'upgrade-insecure-requests: 1'
-						)
-					)
-				);
-			}
-			rad_parser::get_pages_content($groups, 'parse_timetable');
-			usleep((rand()%375+125)*1000);
-		}
-	}
-	
-	$f_week_day = $DATA->get('first_week_day');
-	if(!$f_week_day || (time() - $f_week_day->getTimestamp()) / 86400.0 >= (int)$DATA->get('update_interval_first_week_day'))
-		update_first_week_day();
-	
-	return true;
+
+function log_parse_event($text, $data = ''){
+	global $DB;
+	if(is_array($data) || is_object($data))
+		$data = print_r($data, 1);
+	$DB->query('INSERT INTO `log_events` (`time`, `type`, `message`, `addition`) VALUES (NOW(), 1, ?s, ?s)', (string)$text, (string)$data);
 }
 
 function update_first_week_day(){
@@ -166,18 +75,18 @@ function parse_faculties($html){
 	$ret = array();
 	preg_match('#<select[^>]*?id=["\']?id_faculty[\'"]?[^>]*?>.*?</select>#isu', $html, $matches);
 	if(empty($matches[0])){
-		trigger_error('Can\'t find select#id_faculty', E_USER_WARNING);
+		log_parse_event('Can\'t find select#id_faculty', $html);
 		return false;
 	}
 	$html = $matches[0];
 	preg_match_all('#<option[^>]*?value=["\']([^\'"]*?)[\'"][^>]*>(.*?)</option>#isu', $html, $matches);
 	if(empty($matches[1])){
-		trigger_error('Can\'t find option in select#id_faculty', E_USER_WARNING);
+		log_parse_event('Can\'t find option in select#id_faculty', $html);
 		return false;
 	}
 	$len = sizeof($matches[1]);
 	for($i=0; $i<$len; $i++){
-		$ret[] = array('id' => $matches[1][$i], 'name' => !empty($matches[2][$i]) ? $matches[2][$i] : '%noname%');
+		$ret[] = array('id' => $matches[1][$i], 'name' => !empty($matches[2][$i]) ? $matches[2][$i] : '%noname%', 'abbr' => '');
 	}
 	return $ret;
 }
@@ -194,12 +103,12 @@ function parse_groups($content, $info, $status, $status_text){
 	global $DB;
 	if($status){
 		//error
-		trigger_error('CURL error['.$status.'](can\'t load groups): '.$status_text.', info('.print_r($info, 1).')', E_USER_WARNING);
+		log_parse_event('CURL error['.$status.'](can\'t load groups): '.$status_text, $info);
 		return false;
 	}
 	$dat = json_decode($content, 1);
 	if(json_last_error() != JSON_ERROR_NONE){
-		trigger_error('JSON decode error['.json_last_error().']: '.json_last_error_msg().', request('.$info['url'].')', E_USER_WARNING);
+		log_parse_event('JSON decode error['.json_last_error().'](can\'t parse groups): '.json_last_error_msg(), $info);
 		return false;
 	}
 	
@@ -207,21 +116,29 @@ function parse_groups($content, $info, $status, $status_text){
 	if($len == 0)
 		return false;
 	$fac_id = '';
+	$all_id = array();
+	
+	$DB->query('LOCK TABLES `stud_groups` WRITE');
 	for($i=0; $i<$len; $i++){
-		$fac_id = $dat[$i]['faculty_id'];
-		$tmp = array('faculty_id' => $dat[$i]['faculty_id'], 'id' => $dat[$i]['id'], 'name' => $dat[$i]['name'], 'last_reload' => '1980-01-01 00:00:00');
+		$fac_id = (string)$dat[$i]['faculty_id'];
+		$id = (string)$dat[$i]['id'];
+		$all_id[] = $id;
+		
+		if($DB->getOne('SELECT COUNT(*) FROM `stud_groups` WHERE `id` = ?s', $id)){
+			unset($dat[$i]);
+			continue;
+		}
+		
+		$tmp = array('faculty_id' => $fac_id, 'id' => $id, 'name' => $dat[$i]['name'], 'last_reload' => '1980-01-01 00:00:00', 'status' => 1);
 		unset($dat[$i]['faculty_id'], $dat[$i]['id'], $dat[$i]['name']);
 		if($dat[$i])
 			$tmp['data'] = serialize($dat[$i]);
-		$dat[$i] = $tmp;
+		
+		$DB->query('INSERT INTO `stud_groups` ?d', array($tmp));
+		unset($dat[$i]);
 	}
-	
-	$DB->query('DELETE FROM `stud_groups` WHERE `faculty_id` = ?s', $fac_id);
-	
-	if(!$DB->query('INSERT INTO `stud_groups` ?d', $dat))
-		return false;
-	
-	$DB->query('UPDATE `stud_faculties` SET `last_reload` = NOW() WHERE `id` = ?s ', $fac_id);
+	$DB->query('UPDATE `stud_groups` SET `status` = 0 WHERE `faculty_id` = ?s AND `id` NOT IN (?a)', $fac_id, $all_id);
+	$DB->query('UNLOCK TABLES');
 	
 	return true;
 }
@@ -237,7 +154,7 @@ function parse_groups($content, $info, $status, $status_text){
 function parse_timetable($content, $info, $status, $status_text){
 	if($status){
 		//error
-		trigger_error('CURL error['.$status.'](can\'t load timetable): '.$status_text.', info('.print_r($info, 1).')', E_USER_WARNING);
+		log_parse_event('CURL error['.$status.'](can\'t load timetable): '.$status_text, $info);
 		return false;
 	}
 	$matches = array();

@@ -799,7 +799,7 @@ function gen_additor_modal_html(){
 	}
 	$tmp = '';
 
-	$res = $DB->getAll('SELECT `id`, `name`, `faculty_id` FROM `stud_groups` ORDER BY `name`');
+	$res = $DB->getAll('SELECT `id`, `name`, `faculty_id` FROM `stud_groups` WHERE `status` != 0 ORDER BY `name`');
 	$len = sizeof($res);
 	for($i=0; $i<$len; $i++){
 		if(($tmp = array_search($res[$i]['id'], $except['group'])) !== false){

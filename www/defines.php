@@ -35,6 +35,7 @@ define('MAIL_PASS_RECOVERY_LIVE_HORS', 6);
 define('MAX_PARTS_TIMETABLE', 10);
 define('MAX_PART_NAME_LEN', 50);
 define('TIMETABLE_PARTS_LIVE_DAYS', 365);
+define('UPDATE_INTERVAL_TIMETABLE', '12 HOUR');
 
 define('MAIN_DBHOST', 'localhost');
 define('MAIN_DBUSER', 'root');
