@@ -71,7 +71,7 @@ abstract class rad_user_base{
 		$this->login = $tmp['login'];
 		$this->pass_hash = $tmp['password'];
 		$this->email = $tmp['email'];
-		$this->date = DateTime::createFromFormat(DB_DATE_FORMAT, $tmp['date']);
+		$this->date = DateTime::createFromFormat(DB_DATETIME_FORMAT, $tmp['date']);
 		try{
 			$this->roles = new rad_user_roles($this->id);
 		}catch(Exception $e){

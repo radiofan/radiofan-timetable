@@ -19,7 +19,7 @@ function view_activation_page(){
 		return;
 	}
 
-	$time_end = DateTime::createFromFormat(DB_DATE_FORMAT, $token_data['data']['time_end']);
+	$time_end = DateTime::createFromFormat(DB_DATETIME_FORMAT, $token_data['data']['time_end']);
 	if($time_end < (new DateTime())){
 		$curr_user->options->set_option('mail_verified_token', null);
 		$curr_user->options->update_options('mail_verified_token');
@@ -136,7 +136,7 @@ function view_pass_recovery_page(){
 		return;
 	}
 
-	$time_end = DateTime::createFromFormat(DB_DATE_FORMAT, $token_data['data']['time_end']);
+	$time_end = DateTime::createFromFormat(DB_DATETIME_FORMAT, $token_data['data']['time_end']);
 	if($time_end < (new DateTime())){
 		$curr_user->options->set_option('pass_recovery_token', null);
 		$curr_user->options->update_options('pass_recovery_token');

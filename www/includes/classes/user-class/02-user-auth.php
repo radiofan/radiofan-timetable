@@ -63,14 +63,14 @@ abstract class rad_user_auth extends rad_user_base{
 					$check_token_data = $DB->getRow('SELECT `time_end`, `user_agent`, `time_work` FROM `our_u_tokens` WHERE `user_id` = ?i AND `token` = ?p', $user_id, '0x'.$hash);
 					if($check_token_data){
 						$sha_user_agent = sha1($OPTIONS['user_agent']);
-						$check_token_data['time_end'] = DateTime::createFromFormat(DB_DATE_FORMAT, $check_token_data['time_end']);
+						$check_token_data['time_end'] = DateTime::createFromFormat(DB_DATETIME_FORMAT, $check_token_data['time_end']);
 						$now_time = new DateTime();
 						if(strcmp($sha_user_agent, bin2hex($check_token_data['user_agent'])) === 0 && $check_token_data['time_end'] > $now_time){
 							//токен подошел
 							//обновим время жизни
 							$type = $check_token_data['time_work'] === 'PT'.SESSION_TOKEN_LIVE_SECONDS.'S' ? 'session' : 'remember';
 							$time_end = $now_time->add(new DateInterval($check_token_data['time_work']));
-							$DB->query('UPDATE `our_u_tokens` SET `time_end` = ?s WHERE `user_id` = ?i AND `token` = ?p', $time_end->format(DB_DATE_FORMAT), $user_id, '0x'.$hash);
+							$DB->query('UPDATE `our_u_tokens` SET `time_end` = ?s WHERE `user_id` = ?i AND `token` = ?p', $time_end->format(DB_DATETIME_FORMAT), $user_id, '0x'.$hash);
 							if($type == 'remember')
 								setcookie('sid', $token, $time_end->getTimestamp(), '/', null, USE_SSL, 1);
 							//вход
@@ -204,8 +204,8 @@ abstract class rad_user_auth extends rad_user_base{
 			$this->id,
 			'0x'.$token,
 			'0x'.$sha_user_agent,
-			$time_start->format(DB_DATE_FORMAT),
-			$ret['date_end_token']->format(DB_DATE_FORMAT),
+			$time_start->format(DB_DATETIME_FORMAT),
+			$ret['date_end_token']->format(DB_DATETIME_FORMAT),
 			$date_interval
 		);
 		$DB->query('UNLOCK TABLES');

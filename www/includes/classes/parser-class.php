@@ -105,6 +105,12 @@ class rad_parser{
 		return $str[array_rand($str)];
 	}
 	
+	/**
+	 * @param string[]|array $pages - массив строк url или [['url' => string, 'options' => array],...]
+	 * @param null|callable $callback - функция обрабатывающая ответ curl'а, function($content, $info, $status, $status_text)
+	 * @param array $callback_data - дополнительные переменные передаваемые callback'у
+	 * @return array - если callback указан, то массив результатов обработки callback'ом; иначе ответы curl'а
+	 */
 	public static function get_pages_content($pages, $callback=null, $callback_data=array()){
 		//собираем каналы запросов
 		if(!is_array($pages))
@@ -145,15 +151,17 @@ class rad_parser{
 				$option[CURLOPT_POST] = 1;//Отправка пост запроса
 				$option[CURLOPT_POSTFIELDS] = $pages[$i]['options']['post_data'];//данные для пост запроса
 			}
-			$chanels[] = ($ch = curl_init());
+			$chanels[] = array('option' => $option, 'ch' => curl_init());
+			$ind = sizeof($chanels)-1;
 			//print_r($option);
-			curl_setopt_array($ch, $option);
-			curl_multi_add_handle($mh, $ch);
+			curl_setopt_array($chanels[$ind]['ch'], $option);
+			curl_multi_add_handle($mh, $chanels[$ind]['ch']);
 		}
 		
 		unset($option, $pages);
 		
 		//выполняем запросы
+		$len = sizeof($chanels);
 		$output = array();
 		$run = null;
 		do{
@@ -161,9 +169,17 @@ class rad_parser{
 				// получаю информацию о текущих соединениях
 			while($info = curl_multi_info_read($mh)){
 				if(is_array($info) && ($ch = $info['handle'])){
+					$ind = -1;
+					for($i=0; $i<$len; $i++){
+						if($ch == $chanels[$i]['ch']){
+							$ind = $i;
+							break;
+						}
+					}
 					// получаю содержимое загруженной страницы
 					$content = curl_multi_getcontent($ch);
 					$ch_info = curl_getinfo($ch);
+					$ch_info['options'] = $chanels[$ind]['option'];
 					if(!is_null($callback)){
 						// вызов callback-обработчика
 						$output[] = call_user_func($callback, $content, $ch_info, $info['result'], curl_error($ch), ...$callback_data);

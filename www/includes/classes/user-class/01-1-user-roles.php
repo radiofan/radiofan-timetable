@@ -187,7 +187,7 @@ class rad_user_roles{
 		if($work_start === 'now'){
 			$work_start = 'NOW()';
 		}else{
-			$work_start = '\''.$work_start->format(DB_DATE_FORMAT).'\'';
+			$work_start = '\''.$work_start->format(DB_DATETIME_FORMAT).'\'';
 		}
 		$len = sizeof($add);
 		global $DB;

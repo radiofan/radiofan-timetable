@@ -12,6 +12,10 @@ class rad_db{
 	protected $emode;
 	protected $exname;
 	
+	protected $is_transaction = false;
+	
+	//protected $autocommit;
+	
 	protected $defaults = array(
 		'host'      => 'localhost',
 		'user'      => 'root',
@@ -85,6 +89,30 @@ class rad_db{
 	
 	public function numRows($result){
 		return mysqli_num_rows($result);
+	}
+	
+	public function startTransaction($flag = MYSQLI_TRANS_START_READ_WRITE){
+		if($this->is_transaction)
+			$this->error('start second transaction');
+		$this->is_transaction = true;
+		mysqli_autocommit($this->conn, 0);
+		return mysqli_begin_transaction($this->conn, $flag);
+	}
+
+	public function commit(){
+		if(!$this->is_transaction)
+			return true;
+		$this->is_transaction = false;
+		mysqli_autocommit($this->conn, 1);
+		return mysqli_commit($this->conn);
+	}
+
+	public function rollback(){
+		if(!$this->is_transaction)
+			return true;
+		$this->is_transaction = false;
+		mysqli_autocommit($this->conn, 1);
+		return mysqli_rollback($this->conn);
 	}
 
 	public function free($result){

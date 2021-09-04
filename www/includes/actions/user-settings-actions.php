@@ -42,7 +42,7 @@ function action_pass_recovery(){
 	$curr_user->options->set_option('pass_recovery_token', null);
 	$curr_user->options->update_options('pass_recovery_token');
 
-	$time_end = DateTime::createFromFormat(DB_DATE_FORMAT, $token_data['data']['time_end']);
+	$time_end = DateTime::createFromFormat(DB_DATETIME_FORMAT, $token_data['data']['time_end']);
 	if($time_end < (new DateTime())){
 		if(!AJAX){
 			$ALERTS->add_alert(STR_ACTION_SEND_PASS_RECOVERY_2, 'warning');

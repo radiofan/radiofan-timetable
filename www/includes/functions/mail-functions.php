@@ -76,7 +76,7 @@ function send_verified_mail($user_id){
 	$now_time = new DateTime();
 	$token_hash = hash('sha256', $user_id.$new_user->get_login().$new_user->get_email().$now_time->getTimestamp().mt_rand());
 	$end_time = $now_time->add(new DateInterval('P'.MAIL_VERIFY_TOKEN_LIVE_DAYS.'D')); 
-	$token = $new_user::encode_cookie_token(array('user_id' => $new_user->get_id(), 'time_end' => $end_time->format(DB_DATE_FORMAT)), $token_hash);
+	$token = $new_user::encode_cookie_token(array('user_id' => $new_user->get_id(), 'time_end' => $end_time->format(DB_DATETIME_FORMAT)), $token_hash);
 	$new_user->options->set_option('mail_verified_token', $token);
 	$new_user->options->update_options('mail_verified_token');
 
@@ -119,7 +119,7 @@ function send_pass_recovery_mail($user_id){
 	if($old_token){
 		$data = $user::decode_cookie_token($old_token);
 		$end_time = $data['data']['time_end'];
-		$end_time = DateTime::createFromFormat(DB_DATE_FORMAT, $end_time);
+		$end_time = DateTime::createFromFormat(DB_DATETIME_FORMAT, $end_time);
 		if($now_time < $end_time){
 			return -4;
 		}
@@ -128,7 +128,7 @@ function send_pass_recovery_mail($user_id){
 	
 	$token_hash = hash('sha256', $user_id.$user->get_login().$user->get_email().$now_time->getTimestamp().mt_rand());
 	$end_time = $now_time->add(new DateInterval('PT'.MAIL_PASS_RECOVERY_LIVE_HORS.'H'));
-	$token = $user::encode_cookie_token(array('user_id' => $user->get_id(), 'time_end' => $end_time->format(DB_DATE_FORMAT)), $token_hash);
+	$token = $user::encode_cookie_token(array('user_id' => $user->get_id(), 'time_end' => $end_time->format(DB_DATETIME_FORMAT)), $token_hash);
 	$user->options->set_option('pass_recovery_token', $token);
 	$user->options->update_options('pass_recovery_token');
 

@@ -689,16 +689,7 @@ function get_time_list($arr){
 	$ret = array();
 	$len = sizeof($arr);
 	for($i=0; $i<$len; $i++){
-		$tmp = '';
-		//час старта
-		$tmp .= str_pad(intdiv($arr[$i]['time_start'], SECONDS_PER_HOUR), 2, '0', STR_PAD_LEFT).':';
-		//минуты старта
-		$tmp .= str_pad(intdiv($arr[$i]['time_start'] % SECONDS_PER_HOUR, SECONDS_PER_MINUTE), 2, '0', STR_PAD_LEFT).'-';
-		//час конца
-		$tmp .= str_pad(intdiv($arr[$i]['time_end'], SECONDS_PER_HOUR), 2, '0', STR_PAD_LEFT).':';
-		//минуты конца
-		$tmp .= str_pad(intdiv($arr[$i]['time_end'] % SECONDS_PER_HOUR, SECONDS_PER_MINUTE), 2, '0', STR_PAD_LEFT);
-		$ret[] = $tmp;
+		$ret[] = seconds_to_time($arr[$i]['time_start']).'-'.seconds_to_time($arr[$i]['time_end']);
 	}
 	return $ret;
 }
