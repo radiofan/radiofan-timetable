@@ -157,7 +157,10 @@ function parse_timetable($content, $info, $status, $status_text){
 		log_parse_event('CURL error['.$status.'](can\'t load timetable): '.$status_text, $info);
 		return false;
 	}
-	//todo 502?
+	if(intdiv($info['http_code'], 100) != 2){
+		log_parse_event('CURL error['.$status.'](can\'t load timetable): '.$status_text, $info);
+		return false;
+	}
 	//проверка
 	preg_match('#<select[^>]*?id=["\']?id_group[\'"]?[^>]*?>.*?</select>#isu', $content, $matches);
 	if(empty($matches[0])){
@@ -259,8 +262,7 @@ function parse_timetable($content, $info, $status, $status_text){
 					return false;
 				//найдена строчка с данными но день уже прошел
 				}else if($date_obj < $today){
-					//todo
-					//continue;
+					continue;
 				}
 				preg_match_all('#<td[^>]*>(.*?)</td>#isu', $tr[$tr_n], $matches);
 				$td = $matches[1];
@@ -334,8 +336,6 @@ function parse_timetable($content, $info, $status, $status_text){
 		//получили данные для одной недели
 		if($week_start_day === '' || !sizeof($insert))
 			continue;
-		$delete_rows = '';
-		$insert_rows = '';
 		$week_start_day_str = $week_start_day->format(DB_DATE_FORMAT);
 		$DB->startTransaction();
 		$DB->query(
@@ -349,14 +349,11 @@ function parse_timetable($content, $info, $status, $status_text){
 		$DB->query('INSERT INTO `stud_timetable` ?d', $insert);
 		$insert_rows = $DB->affectedRows();
 		$DB->commit();
-		/*
-		 //TODO
 		if($delete_rows == 0){
 			log_parse_event('Add new week('.$week.'; '.$week_start_day_str.' - '.$week_start_day->add(new DateInterval('P6D')).') for group('.$group_id.'); added '.$insert_rows.' rows');
 		}else if($delete_rows != $insert_rows){
 			log_parse_event('Update week('.$week.'; '.$week_start_day_str.' - '.$week_start_day->add(new DateInterval('P6D')).') for group('.$group_id.'); added '.$insert_rows.' rows, delete '.$delete_rows.' rows');
 		}
-		*/
 	}
 	
 	return true;

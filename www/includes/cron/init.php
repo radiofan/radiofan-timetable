@@ -30,6 +30,8 @@ $DB = new rad_db(array('host' => MAIN_DBHOST, 'user' => MAIN_DBUSER, 'pass' => M
 require_once MAIN_DIR.'includes/classes/data-class.php';
 $DATA = new rad_data();//TODO
 
+$OPTIONS['time_start'] = microtime(1);
+
 set_time_limit(0);
 
 ?>

@@ -1,6 +1,6 @@
 <?php
 require_once './init.php';
-global $DB;
+global $DB, $OPTIONS;
 
 //сгенерируем строку для парсинга времени пар
 $tmp = $DB->getCol('SELECT `time_start` FROM `stud_lesson_times` WHERE `type` = 1 ORDER BY `time_start`');
@@ -13,7 +13,7 @@ for($i=0; $i<sizeof($tmp); $i++){
 	$TIME_REGEXP .= '('.seconds_to_time($tmp[$i], 0).')|';
 }
 $TIME_REGEXP = mb_substr($TIME_REGEXP, 0, mb_strlen($TIME_REGEXP)-1);
-$TIME_REGEXP = '#'.$TIME_REGEXP.'#isu';//TODO test
+$TIME_REGEXP = '#'.$TIME_REGEXP.'#isu';
 
 //сгенерируем массив уроков
 $LESSONS_SHA_ID = $DB->getIndCol('key', 'SELECT SHA1(`parse_text`) AS `key`, `id` FROM `stud_lessons`');
@@ -74,5 +74,7 @@ for($fac_n=0; $fac_n<$fac_len; $fac_n++){
 		usleep((rand()%375+125)*1000);
 	}
 }
+
+log_parse_event('Parse timetable complete. Time start: '.$OPTIONS['time_start'].' sec, execute time: '.(microtime(1) - $OPTIONS['time_start']).' sec, memory_peak: '.round_memsize(memory_get_peak_usage(1)));
 
 ?>

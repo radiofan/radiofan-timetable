@@ -193,8 +193,8 @@ class rad_parser{
 		
 		$len = sizeof($chanels);
 		for($i=0; $i<$len; $i++){
-			curl_multi_remove_handle($mh, $chanels[$i]);
-			curl_close($chanels[$i]);
+			curl_multi_remove_handle($mh, $chanels[$i]['ch']);
+			curl_close($chanels[$i]['ch']);
 		}
 		curl_multi_close($mh);
 		
