@@ -189,6 +189,9 @@ function view_timetable_block(){
 	$table_head_1 = '';
 	$table_head_2 = '';
 	$sticks = '<div class="stick" data-col="0" data-col-type="number" data-col-part="-1"></div><div class="stick" data-col="1" data-col-type="time" data-col-part="-1"></div>';
+	
+	$today = new DateTime();
+	$first_week_day = (clone $today)->sub(new DateInterval('P'.($today->format('N') - 1).'D'))->format(DB_DATE_FORMAT);
 
 	$table = array();
 	for($i=0; $i<$parts_len; $i++){
@@ -213,10 +216,10 @@ function view_timetable_block(){
 		}
 
 		//генерация данных
-
 		$res = $DB->getAll('
 			SELECT 
 				`tm_t`.*,
+				`les_t`.`parse_text` AS `lesson`,
 				`gr_t`.`name` AS `group_name`, `gr_t`.`faculty_id`,
 				`cb_t`.`cabinet`, `cb_t`.`additive` AS `cabinet_additive`, `cb_t`.`building`,
 				`th_t`.`fio`, `th_t`.`additive` AS `teacher_additive`
@@ -224,17 +227,23 @@ function view_timetable_block(){
 				`stud_timetable` AS `tm_t`
 			LEFT JOIN `stud_groups` AS `gr_t`
 				ON `tm_t`.`group_id` = `gr_t`.`id`
+			LEFT JOIN `stud_lessons` AS `les_t`
+				ON `tm_t`.`lesson_id` = `les_t`.`id`
 			LEFT JOIN `stud_cabinets` AS `cb_t`
 				ON `tm_t`.`cabinet_id` = `cb_t`.`id`
 			LEFT JOIN `stud_teachers` AS `th_t`
 				ON `tm_t`.`teacher_id` = `th_t`.`id`
 			WHERE
-				`tm_t`.?n = ?s
+				`tm_t`.?n = ?s AND
+				`tm_t`.`date` >= ?s - INTERVAL 7 DAY AND
+				`tm_t`.`date` <= ?s + INTERVAL 13 DAY
 			ORDER BY
-				`tm_t`.`week`, `tm_t`.`day`, `tm_t`.`time`',
+				`tm_t`.`date`, `tm_t`.`week`, `tm_t`.`time`',
 			//------------------------------------------------
 			$col_name,
-			$parts[$i]['id']
+			$parts[$i]['id'],
+			$first_week_day,
+			$first_week_day
 		);
 		add_data_to_timetable($res, $i, $table);
 	}
@@ -286,9 +295,11 @@ function view_timetable_body($table, $parts, $lesson_unite){
 	$time_list = get_time_list($times);
 	
 	$today = new DateTime();
-	$f_week_day = $DATA->get('first_week_day');
-	
-	/** @var $curr_week - номер текущей недели [1,2] */
+	$f_week_day = (clone $today)->sub(new DateInterval('P'.($today->format('N') - 1).'D'))->format(DB_DATE_FORMAT);
+	$curr_week = $DB->getOne('SELECT `week` FROM `stud_timetable` WHERE `date` >= ?s AND `date` <= ?s + INTERVAL 6 DAY LIMIT 1', $f_week_day, $f_week_day);
+	if(!$curr_week)
+		$curr_week = 0;
+	/*
 	$curr_week = 0;
 	if($f_week_day){
 		//разница между таймстампами текущего дня и дня первой недели
@@ -298,6 +309,7 @@ function view_timetable_body($table, $parts, $lesson_unite){
 		//номер текущей недели (1-ая или 2-ая)
 		$curr_week = intdiv($curr_week, 7) + 1;
 	}
+	*/
 
 	//получаем количество секунд с начала текущего дня
 	$curr_less = (int)$today->format('G')*SECONDS_PER_HOUR + (int)$today->format('i')*SECONDS_PER_MINUTE + (int)$today->format('s');
@@ -476,7 +488,8 @@ function view_timetable_body($table, $parts, $lesson_unite){
  *  				],
  *  				...
  *  			],
- *  			...
+ *  			...,
+ * 				'date' => DateTime - дата данного дня
  *  		],
  *  		...
  *  	],
@@ -507,19 +520,46 @@ function view_timetable_body($table, $parts, $lesson_unite){
  */
 function add_data_to_timetable($tm_t, $part_n, &$table){
 	$len = sizeof($tm_t);
+	$f_week = -1;
 	for($i=0; $i<$len; $i++){
-		$week = $tm_t[$i]['week'];
-		$day = $tm_t[$i]['day'];
-		$time = $tm_t[$i]['time'];
-		//$tm_t[$i]['group_id'] = isset($tm_t[$i]['group_id']) ? $tm_t[$i]['group_id'] : '';
-		//$tm_t[$i]['teacher_id'] = isset($tm_t[$i]['teacher_id']) ? $tm_t[$i]['teacher_id'] : '';
-		//$tm_t[$i]['cabinet_id'] = isset($tm_t[$i]['cabinet_id']) ? $tm_t[$i]['cabinet_id'] : '';
-		unset($tm_t[$i]['week'], $tm_t[$i]['day'], $tm_t[$i]['time']);
+		$tmp = $tm_t[$i];
+		$week = $tmp['week'];
+		//если первая неделя 2-ая, то пропускаем
+		if($f_week == -1 && $week == 2){
+			continue;
+		//первая неделя должна быть 1-ой
+		}else if($f_week == -1 && $week == 1){
+			$f_week = 1;
+		//за первой неделей должна следовать 2-ая неделя 
+		}else if($f_week == 1 && $week == 2){
+			$f_week = 2;
+		//если за второй неделей следует 1-ая, то выходим из цикла
+		}else if($f_week == 2 && $week == 1){
+			break;
+		}
+		/*
+		//если отсутствует 1-ая неделя, но пытается добавиться 2-ая
+		if($week == 2 && !isset($table[1])){
+			//пропускаем
+			continue;
+		//если имеется 2-ая неделя, но пытается добавиться 1-ая
+		}else if($week == 1 && isset($table[2])){
+			//пропускаем
+			continue;
+		}
+		*/
+		$date = DateTime::createFromFormat(DB_DATE_FORMAT, $tmp['date']);
+		$day = $date->format('N') - 1;
+		$time = $tmp['time'];
+		//$tmp['group_id'] = isset($tmp['group_id']) ? $tmp['group_id'] : '';
+		$tmp['teacher_id'] = isset($tmp['teacher_id']) ? $tmp['teacher_id'] : '';
+		$tmp['cabinet_id'] = isset($tmp['cabinet_id']) ? $tmp['cabinet_id'] : '';
+		unset($tmp['week'], $tmp['date'], $tmp['time']);
 
 		if(!isset($table[$week]))
 			$table[$week] = array();
 		if(!isset($table[$week][$day]))
-			$table[$week][$day] = array();
+			$table[$week][$day] = array('date' => $date);
 		if(!isset($table[$week][$day][$time]))
 			$table[$week][$day][$time] = array();
 
@@ -527,7 +567,7 @@ function add_data_to_timetable($tm_t, $part_n, &$table){
 		$f = 0;
 		for($curr_line=0; $curr_line<$line_c; $curr_line++){
 			if(empty($table[$week][$day][$time][$curr_line][$part_n])){
-				$table[$week][$day][$time][$curr_line][$part_n] = $tm_t[$i];
+				$table[$week][$day][$time][$curr_line][$part_n] = $tmp;
 				$f = 1;
 				break;
 			}
@@ -535,7 +575,7 @@ function add_data_to_timetable($tm_t, $part_n, &$table){
 
 		if(!$f){
 			$table[$week][$day][$time][] = array(
-				$part_n => $tm_t[$i]
+				$part_n => $tmp
 			);
 		}
 	}
@@ -594,6 +634,9 @@ function prepare_data_to_timetable_html($part_c, &$table){
 	foreach($table as &$week){
 		foreach($week as &$day){
 			foreach($day as &$time){
+				//пропуск даты 
+				if(is_object($time))
+					continue;
 				$line_c = sizeof($time);
 				//перебор разделов
 				for($part_n=0; $part_n<$part_c; $part_n++){
@@ -620,8 +663,8 @@ function prepare_data_to_timetable_html($part_c, &$table){
 						 */
 						
 						//проверка урока
-						if(!isset($time[$i][$part_n]['lesson']) || $time[$i][$part_n]['lesson'] === $time[$row_l][$part_n]['lesson']){
-							unset($time[$i][$part_n]['lesson']);
+						if(!isset($time[$i][$part_n]['lesson_id']) || $time[$i][$part_n]['lesson_id'] === $time[$row_l][$part_n]['lesson_id']){
+							unset($time[$i][$part_n]['lesson_id'], $time[$i][$part_n]['lesson']);
 							if(!isset($time[$row_l][$part_n]['row_l'])){
 								$time[$row_l][$part_n]['row_l'] = 1;
 							}

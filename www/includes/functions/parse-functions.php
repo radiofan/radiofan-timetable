@@ -7,64 +7,6 @@ function log_parse_event($text, $data = ''){
 	$DB->query('INSERT INTO `log_events` (`time`, `type`, `message`, `addition`) VALUES (NOW(), 1, ?s, ?s)', (string)$text, (string)$data);
 }
 
-function update_first_week_day(){
-	global $DB, $DATA;
-	$gr_id = $DB->getOne('SELECT `group_id` FROM `stud_timetable` LIMIT 1');
-	if($gr_id === false){
-		$DATA->set('first_week_day', null);
-		$DATA->update('first_week_day');
-		trigger_error('stud_timetable is empty', E_USER_WARNING);
-		return false;
-	}
-	
-	$week_n = false;
-	$matches = array();
-	for($i=0; $i<10;$i++){
-		$ret = rad_parser::get_page_content(
-			'https://www.altstu.ru/main/schedule/?group_id='.$gr_id,
-			array(
-				'post_data' => array(
-					'group'   => $gr_id
-			),
-			'useragent' => rad_parser::get_rand_user_agent(MAIN_DIR.'files/user_agents.txt'),
-			'referer'   => 'https://www.altstu.ru/main/schedule/',
-			'headers'   => array(
-				'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-				'accept-language: ru,en;q=0.8',
-				'dnt: 1',
-				'origin: https://www.altstu.ru',
-				'upgrade-insecure-requests: 1'
-			)
-		));
-		if(!$ret['status']){
-			preg_match('#<h3[^>]*?class=["\']?current[\'"]?[^>]*?>(.*?)</h3>#isu', $ret['content'], $matches);
-			if(isset($matches[1])){
-				$week_n = $matches[1];
-				break;
-			}
-		}
-		usleep((rand()%375+125)*1000);
-	}
-	if(!$week_n){
-		$DATA->set('first_week_day', null);
-		$DATA->update('first_week_day');
-		trigger_error('can\'t load current week gr_id='.$gr_id, E_USER_WARNING);
-		return false;
-	}
-	
-	preg_match('#[0-9]+#isu',$week_n, $matches);
-	$week_n = (int)$matches[0];
-	$today = new DateTime();
-	$tmp = (int)$today->format('N')-1;
-	$tmp += ($week_n-1)*7;
-	$today->sub(new DateInterval('P'.$tmp.'D'));
-	$today->setTime(0, 0);
-	$DATA->set('first_week_day', $today);
-	$DATA->update('first_week_day');
-	
-	return true;
-}
-
 /**
  * Парсит факультеты со странички расписания
  * @param $html
@@ -253,7 +195,7 @@ function parse_timetable($content, $info, $status, $status_text){
 				$date_obj = DateTime::createFromFormat('d.m.Y|', $matches[0]);
 				$date = $date_obj->format(DB_DATE_FORMAT);
 				if($week_start_day === ''){
-					$week_start_day = $date_obj->sub(new DateInterval('P'.($date_obj->format('N') - 1).'D'));
+					$week_start_day = (clone $date_obj)->sub(new DateInterval('P'.($date_obj->format('N') - 1).'D'));
 				}
 			}else{
 				//найдена строчка с данными расписания, но строчка с днем еще не найдена
@@ -350,9 +292,9 @@ function parse_timetable($content, $info, $status, $status_text){
 		$insert_rows = $DB->affectedRows();
 		$DB->commit();
 		if($delete_rows == 0){
-			log_parse_event('Add new week('.$week.'; '.$week_start_day_str.' - '.$week_start_day->add(new DateInterval('P6D')).') for group('.$group_id.'); added '.$insert_rows.' rows');
+			log_parse_event('Add new week('.$week.'; '.$week_start_day_str.' - '.$week_start_day->add(new DateInterval('P6D'))->format(DB_DATETIME_FORMAT).') for group('.$group_id.'); added '.$insert_rows.' rows');
 		}else if($delete_rows != $insert_rows){
-			log_parse_event('Update week('.$week.'; '.$week_start_day_str.' - '.$week_start_day->add(new DateInterval('P6D')).') for group('.$group_id.'); added '.$insert_rows.' rows, delete '.$delete_rows.' rows');
+			log_parse_event('Update week('.$week.'; '.$week_start_day_str.' - '.$week_start_day->add(new DateInterval('P6D'))->format(DB_DATETIME_FORMAT).') for group('.$group_id.'); added '.$insert_rows.' rows, delete '.$delete_rows.' rows');
 		}
 	}
 	
@@ -418,60 +360,4 @@ function find_teacher($fio, $additive=''){
 	$TEACHERS_SHA_ID[$key] = $id;
 	return (int)$id;
 }
-
-/*
-function insert_or_update_timetable($week_start_day, $week, $insert){
-	global $DB;
-
-	$today = new DateTime();
-	$today->setTime(0, 0);
-	
-	$len = sizeof($insert);
-	for($i=0; $i<$len; $i++){
-		if($insert[$i]['date'] < $today)
-			continue;
-		
-	}
-	
-	
-	
-	$tmp = $week_start_day->format(DB_DATETIME_FORMAT);
-	$tmp = $DB->getAll(
-		'SELECT `date`,`time`,`group_id`,`lesson_id`,`lesson_type`,`cabinet_id`,`teacher_id` FROM `stud_timetable` WHERE `week` = ?s AND `date` >= ?s AND `date` <= ?s + INTERVAL 6 DAY ORDER BY `date`, `time`',
-		$week,
-		$tmp,
-		$tmp
-	);
-	
-	//сделаем удобный массив c данными
-	$data = array();
-	$len = sizeof($tmp);
-	for($i=0; $i<$len; $i++){
-		$date = $tmp[$i]['date'];
-		$time = $tmp[$i]['time'];
-		unset($tmp[$i]['date'], $tmp[$i]['time']);
-		if(!isset($data[$date]))
-			$data[$date] = array();
-		if(!isset($data[$date][$time]))
-			$data[$date][$time] = array();
-		$data[$date][$time][] = $tmp[$i];
-	}
-
-	$today = new DateTime();
-	$today->setTime(0, 0);
-	
-	$len = sizeof($insert);
-	for($i=0; $i<$len; $i++){
-		$date = $insert[$i]['date']->format(DB_DATETIME_FORMAT);
-		$time = $insert[$i]['time'];
-		//проверим, установлены
-		if(isset($data[$date], $data[$date][$time]) && sizeof($data[$date][$time])){
-			if($insert[$i]['date'] < $today)
-				continue;
-			
-		}
-	}
-	
-}
-*/
 ?>

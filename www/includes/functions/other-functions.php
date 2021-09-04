@@ -120,7 +120,7 @@ function seconds_to_time($sec, $hour_zero = true){
 	$sec = absint($sec);
 	$tmp = intdiv($sec, SECONDS_PER_HOUR);
 	if($hour_zero){
-		$tmp .= str_pad($tmp, 2, '0', STR_PAD_LEFT);
+		$tmp = str_pad($tmp, 2, '0', STR_PAD_LEFT);
 	}
 	$tmp .= ':'.str_pad(intdiv($sec % SECONDS_PER_HOUR, SECONDS_PER_MINUTE), 2, '0', STR_PAD_LEFT);
 	return $tmp;

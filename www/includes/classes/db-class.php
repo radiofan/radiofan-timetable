@@ -401,9 +401,9 @@ class rad_db{
 
 	protected function error($err){
 		$err  = __CLASS__ .': '.$err;
+		$err .= '. Error initiated in '.$this->caller();
 
 		if($this->emode == 'error'){
-			$err .= '. Error initiated in '.$this->caller().', thrown';
 			trigger_error($err,E_USER_ERROR);
 		}else{
 			throw new $this->exname($err);

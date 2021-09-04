@@ -69,7 +69,7 @@ abstract class rad_user_auth extends rad_user_base{
 							//токен подошел
 							//обновим время жизни
 							$type = $check_token_data['time_work'] === 'PT'.SESSION_TOKEN_LIVE_SECONDS.'S' ? 'session' : 'remember';
-							$time_end = $now_time->add(new DateInterval($check_token_data['time_work']));
+							$time_end = (clone $now_time)->add(new DateInterval($check_token_data['time_work']));
 							$DB->query('UPDATE `our_u_tokens` SET `time_end` = ?s WHERE `user_id` = ?i AND `token` = ?p', $time_end->format(DB_DATETIME_FORMAT), $user_id, '0x'.$hash);
 							if($type == 'remember')
 								setcookie('sid', $token, $time_end->getTimestamp(), '/', null, USE_SSL, 1);
@@ -198,7 +198,7 @@ abstract class rad_user_auth extends rad_user_base{
 		$sha_user_agent = sha1($OPTIONS['user_agent']);
 		$time_start = new DateTime();
 		$token = hash('sha256', mt_rand().$this->pass_hash.$sha_user_agent.$time_start->getTimestamp().$this->id);
-		$ret['date_end_token'] = $time_start->add(new DateInterval($date_interval));
+		$ret['date_end_token'] = (clone $time_start)->add(new DateInterval($date_interval));
 		$DB->query(
 			'INSERT INTO `our_u_tokens` (`user_id`, `token`, `user_agent`, `time_start`, `time_end`, `time_work`) VALUES (?i, ?p, ?p, ?s, ?s, ?s)',
 			$this->id,
