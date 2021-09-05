@@ -1,5 +1,5 @@
 <?php
-require_once './init.php';
+require_once 'init.php';
 global $DB, $OPTIONS;
 
 $faculties = $DB->getIndCol('id', 'SELECT * FROM `stud_faculties`');

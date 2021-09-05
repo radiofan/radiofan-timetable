@@ -227,7 +227,7 @@ abstract class rad_user_auth extends rad_user_base{
 	 */
 	static final public function delete_old_tokens($user_id){
 		global $DB;
-		$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `time_end` < NOW()', $user_id);
+		$DB->query('DELETE FROM `our_u_tokens` WHERE `user_id` = ?i AND `time_end` < MY_NOW()', $user_id);
 	}
 
 	/**

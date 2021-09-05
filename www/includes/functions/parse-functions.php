@@ -4,7 +4,7 @@ function log_parse_event($text, $data = ''){
 	global $DB;
 	if(is_array($data) || is_object($data))
 		$data = print_r($data, 1);
-	$DB->query('INSERT INTO `log_events` (`time`, `type`, `message`, `addition`) VALUES (NOW(), 1, ?s, ?s)', (string)$text, (string)$data);
+	$DB->query('INSERT INTO `log_events` (`time`, `type`, `message`, `addition`) VALUES (MY_NOW(), 1, ?s, ?s)', (string)$text, (string)$data);
 }
 
 /**
@@ -118,7 +118,7 @@ function parse_timetable($content, $info, $status, $status_text){
 	//получим блок с таблицами расписания
 	preg_match_all('#(<div[^>]*?class=["\']schedule[\'"][^>]*>)(.*)$#ismu', $content, $matches);
 
-	$DB->query('UPDATE `stud_groups` SET `last_reload` = NOW() WHERE `id` = ?s', $group_id);
+	$DB->query('UPDATE `stud_groups` SET `last_reload` = MY_NOW() WHERE `id` = ?s', $group_id);
 	
 	if(!isset($matches[0][0])){
 		return false;

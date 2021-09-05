@@ -13,6 +13,7 @@ define('STR_ACTION_SIGNIN_4', 'Логин имеет недопустимые с
 define('STR_ACTION_SIGNIN_5', 'Логин неуникален');
 define('STR_ACTION_SIGNIN_6', 'Email пуст');
 define('STR_ACTION_SIGNIN_7', 'Email неверен');
+define('STR_ACTION_SIGNIN_71', 'Email неуникален');
 define('STR_ACTION_SIGNIN_8', 'Ошибка уровня пользователя');
 define('STR_ACTION_SIGNIN_9', 'Не удалось зарегистрироваться. Попробуйте позже');
 define('STR_ACTION_SIGNIN_10', 'Вы успешно зарегистрировались');

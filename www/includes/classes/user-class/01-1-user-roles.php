@@ -185,7 +185,7 @@ class rad_user_roles{
 		}
 		$work_time = sql_time_interval_clear($work_time);
 		if($work_start === 'now'){
-			$work_start = 'NOW()';
+			$work_start = 'MY_NOW()';
 		}else{
 			$work_start = '\''.$work_start->format(DB_DATETIME_FORMAT).'\'';
 		}
@@ -327,8 +327,8 @@ class rad_user_roles{
 				'role_id',
 				'SELECT `end_time` FROM `our_u_users_roles`
 					WHERE `user_id` = ?i
-					AND `end_time` >= NOW()
-					AND `start_time` <= NOW()
+					AND `end_time` >= MY_NOW()
+					AND `start_time` <= MY_NOW()
 					AND `work_time` != \'INF\'
 					AND `role_id` IN(?a)',
 				$this->user_id,

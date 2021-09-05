@@ -89,6 +89,10 @@ function action_signin(){
 			$ret = STR_ACTION_SIGNIN_7;
 			$status = 3;
 			break;
+		case -10:
+			$ret = STR_ACTION_SIGNIN_71;
+			$status = 3;
+			break;
 		case -8:
 			throw new Exception(STR_ACTION_SIGNIN_8);
 			break;

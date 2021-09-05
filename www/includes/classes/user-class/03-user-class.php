@@ -42,6 +42,7 @@ final class rad_user extends rad_user_auth{
 	 * -5: логин неуникален;
 	 * -6: почтовый ящик пуст;
 	 * -7: почтовый ящик не валиден;
+	 * -10: почтовый ящик не уникален;
 	 * -8: уровень пользователя не лежит в интервале;
 	 * -9: ползователь не добавлен;
 	 */
@@ -74,6 +75,9 @@ final class rad_user extends rad_user_auth{
 		if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 			return -7;
 		}
+		if($DB->getOne('SELECT `id` FROM `our_u_users` WHERE `email` = ?s', $email)){
+			return -10;
+		}
 		
 		if($level < rad_user_roles::USER || $level > rad_user_roles::ADMIN){
 			return -8;
@@ -84,7 +88,7 @@ final class rad_user extends rad_user_auth{
 			$login_clear,
 			$pass_hash,
 			$email,
-			'NOW()',
+			'MY_NOW()',
 			$level
 		)){
 			return -9;
