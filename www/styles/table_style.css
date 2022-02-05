@@ -1,21 +1,42 @@
-@media (max-width: 575.98px){
+@media(max-width: 575.98px) and (min-height: 500px){
 	.timetable-block{
 		/*100% - nav height(body padding-top) - .settings height - body padding-bottom*/
 		height:calc(100vh - 150px - 40px - 30px);
 	}
 }
 
-@media (min-width: 576px) and (max-width: 805.98px){
+@media(min-width: 576px) and (max-width: 805.98px) and (min-height: 500px){
 	.timetable-block{
 		/*100% - nav height(body padding-top) - .settings height - body padding-bottom*/
 		height:calc(100vh - 100px - 40px - 30px);
 	}
 }
 
-@media(min-width: 806px){
+@media(min-width: 806px) and (min-height: 500px){
 	.timetable-block{
 		/*100% - nav height(body padding-top) - .settings height - body padding-bottom*/
 		height:calc(100vh - 70px - 40px - 30px);
+	}
+}
+
+@media(max-width: 575.98px) and (max-height: 499.98px){
+	.timetable-block{
+		/*100% - nav height(body padding-top)*/
+		height:calc(100vh - 70px);
+	}
+}
+
+@media(min-width: 576px) and (max-width: 805.98px) and (max-height: 499.98px){
+	.timetable-block{
+		/*100% - nav height(body padding-top)*/
+		height:calc(100vh - 70px);
+	}
+}
+
+@media(min-width: 806px) and (max-height: 499.98px){
+	.timetable-block{
+		/*100% - nav height(body padding-top)*/
+		height:calc(100vh - 70px);
 	}
 }
 

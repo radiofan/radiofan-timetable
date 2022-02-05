@@ -103,12 +103,6 @@ function parse_timetable($content, $info, $status, $status_text){
 		log_parse_event('CURL error['.$status.'](can\'t load timetable): '.$status_text, $info);
 		return false;
 	}
-	//проверка
-	preg_match('#<select[^>]*?id=["\']?id_group[\'"]?[^>]*?>.*?</select>#isu', $content, $matches);
-	if(empty($matches[0])){
-		log_parse_event('Can\'t find select#id_group', $info);
-		return false;
-	}
 	
 	
 	global $DB, $TIME_REGEXP;

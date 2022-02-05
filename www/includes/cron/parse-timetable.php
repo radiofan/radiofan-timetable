@@ -52,7 +52,7 @@ for($fac_n=0; $fac_n<$fac_len; $fac_n++){
 		//если такие группы есть то парсим их с небольшим промежутком по времени
 		for($gr_n=0; $gr_n<$len; $gr_n++){
 			$groups[$gr_n] = array(
-				'url'     => 'https://www.altstu.ru/main/schedule/?group_id='.$groups[$gr_n],
+				'url'     => 'https://www.altstu.ru/main/schedule/'.$groups[$gr_n].'/',
 				'options' => array(
 					'post_data' => array(
 						'faculty' => $faculties[$fac_n],
