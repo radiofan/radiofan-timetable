@@ -226,13 +226,36 @@ class rad_pages_viewer{
 		
 		//страницы сайта
 		
-		//сттраница настроек пользователя
+		//страница настроек пользователя
 		$this->pages['user_settings'] = new rad_page();
 		$this->pages['user_settings']->title = 'Настройки';
 		$this->pages['user_settings']->type = rad_page::TYPE_PAGE;
 		$this->pages['user_settings']->file_name = 'settings.php';
 		$this->pages['user_settings']->user_level = rad_user_roles::USER;
 		$URL->add_page('user_settings', 'settings');
+		
+		//Инфо страница
+		$this->pages['info'] = new rad_page();
+		$this->pages['info']->file_name = 'info.php';
+		$URL->add_page('info', 'info');
+
+		//новости
+		$this->pages['info_news'] = new rad_page();
+		$this->pages['info_news']->title = 'Новости';
+		$this->pages['info_news']->file_name = 'info_news.php';
+		$URL->add_page('info_news', 'news', 'info');
+
+		//ЧаВо
+		$this->pages['info_faq'] = new rad_page();
+		$this->pages['info_faq']->title = 'Частозадаваемые Вопросы';
+		$this->pages['info_faq']->file_name = 'info_faq.php';
+		$URL->add_page('info_faq', 'faq', 'info');
+
+		//О сайте
+		$this->pages['info_about'] = new rad_page();
+		$this->pages['info_about']->title = 'О сайте';
+		$this->pages['info_about']->file_name = 'info_about.php';
+		$URL->add_page('info_about', 'about', 'info');
 	}
 
 	/**

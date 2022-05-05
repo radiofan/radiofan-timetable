@@ -1,0 +1,6 @@
+/create_bundle.cmd
+/*.zip
+/*.bundle
+/сайты.txt
+*.log
+/.idea/
