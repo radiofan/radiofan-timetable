@@ -222,14 +222,15 @@
 }
 
 .timetable-body{
-	position:relative;
-	height: calc(100% - 63px);
-	max-width:100%;
+	position: relative;
+	height: calc(100% - 78px);
+	max-width: 100%;
 	display: inline-flex;
 	flex-flow: row nowrap;
 	justify-content: flex-start;
 	align-content: stretch;
 	align-items: stretch;
+	top: -15px;
 }
 
 .timetable-body-static{

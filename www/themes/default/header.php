@@ -92,16 +92,16 @@ function view_header($PAGE_DATA){
 				}
 				echo '
 					<li class="nav-item">
-						<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Инфо</a>
+						<a class="nav-link dropdown-toggle'.(isset($URL->get_breadcrumbs()['info']) ? ' active' : '').'" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Инфо</a>
 						<ul class="dropdown-menu">
 							<li class="nav-item">
-								<a class="nav-link dropdown-item" href="#">Новости</a>
+								<a class="nav-link dropdown-item'.($URL->get_current_page() == 'info_news' ? ' active' : '').'" href="/info/news">Новости</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link dropdown-item" href="#" title="Часто задоваемые Вопросы">ЧаВо</a>
+								<a class="nav-link dropdown-item'.($URL->get_current_page() == 'info_faq' ? ' active' : '').'" href="/info/faq" title="Часто задоваемые Вопросы">ЧаВо</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link dropdown-item" href="#">О сайте</a>
+								<a class="nav-link dropdown-item'.($URL->get_current_page() == 'info_about' ? ' active' : '').'" href="/info/about">О сайте</a>
 							</li>
 						</ul>
 					</li>';

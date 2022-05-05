@@ -295,7 +295,7 @@ class rad_cookie{
 	}
 
 	/**
-	 * производит валидацию куки tmt['o'] - размеры столбцов
+	 * производит валидацию куки tmt['o'] - опции
 	 * в validated['timetable_options'] помещает массив
 	 * ['teacher_add_hide','cell_word_wrap','go2curr_day','lesson_unite']
 	 * teacher_add_hide - bool - скрывать звание препода;
