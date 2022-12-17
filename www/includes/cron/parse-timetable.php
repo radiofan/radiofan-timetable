@@ -44,7 +44,7 @@ $faculties = $DB->getCol('SELECT `id` FROM `stud_faculties`');
 $fac_len = sizeof($faculties);
 for($fac_n=0; $fac_n<$fac_len; $fac_n++){
 	//и будим искать в нем необновленные группы
-	$groups = $DB->getCol('SELECT `id` FROM `stud_groups` WHERE `faculty_id` = ?s AND `status` = 1 AND `last_reload` + INTERVAL ?p <= MY_NOW()', $faculties[$fac_n], UPDATE_INTERVAL_TIMETABLE);
+	$groups = $DB->getCol('SELECT `id` FROM `stud_groups` WHERE `faculty_id` = ?s AND `status` < '.PARSE_LIMIT_404.' AND `last_reload` + INTERVAL ?p <= MY_NOW()', $faculties[$fac_n], UPDATE_INTERVAL_TIMETABLE);
 	if($groups == false)
 		continue;
 	$len = sizeof($groups);

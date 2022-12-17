@@ -43,11 +43,18 @@ function parse_faculties($html){
  */
 function parse_groups($content, $info, $status, $status_text){
 	global $DB;
+	
 	if($status){
 		//error
 		log_parse_event('CURL error['.$status.'](can\'t load groups): '.$status_text, $info);
 		return false;
 	}
+
+	if(intdiv($info['http_code'], 100) != 2){
+		log_parse_event('CURL error['.$status.'](can\'t load groups): '.$status_text, $info);
+		return false;
+	}
+
 	$dat = json_decode($content, 1);
 	if(json_last_error() != JSON_ERROR_NONE){
 		log_parse_event('JSON decode error['.json_last_error().'](can\'t parse groups): '.json_last_error_msg(), $info);
@@ -57,30 +64,35 @@ function parse_groups($content, $info, $status, $status_text){
 	$len = is_array($dat) ? sizeof($dat) : 0;
 	if($len == 0)
 		return false;
-	$fac_id = '';
-	$all_id = array();
 	
 	$DB->query('LOCK TABLES `stud_groups` WRITE');
+	$tmp = array(); 
+	parse_str(parse_url($info['url'], PHP_URL_QUERY), $tmp);
+	$fac_id = $tmp['faculty'];
+	$inserts = array();
+	
 	for($i=0; $i<$len; $i++){
-		$fac_id = (string)$dat[$i]['faculty_id'];
 		$id = (string)$dat[$i]['id'];
-		$all_id[] = $id;
 		
 		if($DB->getOne('SELECT COUNT(*) FROM `stud_groups` WHERE `id` = ?s', $id)){
 			unset($dat[$i]);
 			continue;
 		}
 		
-		$tmp = array('faculty_id' => $fac_id, 'id' => $id, 'name' => $dat[$i]['name'], 'last_reload' => '1980-01-01 00:00:00', 'status' => 1);
-		unset($dat[$i]['faculty_id'], $dat[$i]['id'], $dat[$i]['name']);
-		if($dat[$i])
-			$tmp['data'] = serialize($dat[$i]);
-		
-		$DB->query('INSERT INTO `stud_groups` ?d', array($tmp));
+		$tmp = array('faculty_id' => $fac_id, 'id' => $id, 'name' => $dat[$i]['value'], 'last_reload' => '1980-01-01 00:00:00', 'status' => 0);
+		unset($dat[$i]['id'], $dat[$i]['value']);
+		$tmp['data'] = serialize($dat[$i]);
+
+		$inserts[] = $tmp;
 		unset($dat[$i]);
 	}
-	$DB->query('UPDATE `stud_groups` SET `status` = 0 WHERE `faculty_id` = ?s AND `id` NOT IN (?a)', $fac_id, $all_id);
+	if(!sizeof($inserts)){
+		$DB->query('UNLOCK TABLES');
+		return true;
+	}
+	$DB->query('INSERT INTO `stud_groups` ?d', $inserts);
 	$DB->query('UNLOCK TABLES');
+	//$DB->query('UPDATE `stud_groups` SET `status` = '.PARSE_LIMIT_404.' WHERE `faculty_id` = ?s AND `id` NOT IN (?a)', $fac_id, $all_id);
 	
 	return true;
 }
@@ -99,15 +111,21 @@ function parse_timetable($content, $info, $status, $status_text){
 		log_parse_event('CURL error['.$status.'](can\'t load timetable): '.$status_text, $info);
 		return false;
 	}
+
+	global $DB, $TIME_REGEXP;
+	
+	$group_id = $info['options'][CURLOPT_POSTFIELDS]['group'];
+	if($info['http_code'] == 404){
+		$DB->query('UPDATE `stud_groups` SET `last_reload` = MY_NOW(), `status` = `status`+1 WHERE `id` = ?s', $group_id);
+		return false;
+	}
+	
 	if(intdiv($info['http_code'], 100) != 2){
 		log_parse_event('CURL error['.$status.'](can\'t load timetable): '.$status_text, $info);
 		return false;
 	}
 	
-	
-	global $DB, $TIME_REGEXP;
 	$matches = array();
-	$group_id = $info['options'][CURLOPT_POSTFIELDS]['group'];
 	
 	//получим блок с таблицами расписания
 	preg_match_all('#(<div[^>]*?class=["\']schedule[\'"][^>]*>)(.*)$#ismu', $content, $matches);

@@ -833,7 +833,7 @@ function gen_additor_modal_html(){
 	}
 	$tmp = '';
 
-	$res = $DB->getAll('SELECT `id`, `name`, `faculty_id` FROM `stud_groups` WHERE `status` != 0 ORDER BY `name`');
+	$res = $DB->getAll('SELECT `id`, `name`, `faculty_id` FROM `stud_groups` WHERE `status` < '.PARSE_LIMIT_404.' ORDER BY `name`');
 	$len = sizeof($res);
 	for($i=0; $i<$len; $i++){
 		if(($tmp = array_search($res[$i]['id'], $except['group'])) !== false){
@@ -855,14 +855,14 @@ function gen_additor_modal_html(){
 	}
 	unset($except['cabinet']);
 
-	$res = $DB->getAll('SELECT `id`, `fio` FROM `stud_teachers` ORDER BY `fio`');
+	$res = $DB->getAll('SELECT `id`, `fio`, DATE(`last_update`) as `update` FROM `stud_teachers` ORDER BY `fio`, `last_update` DESC');
 	$len = sizeof($res);
 	for($i=0; $i<$len; $i++){
 		if(($tmp = array_search($res[$i]['id'], $except['teacher'])) !== false){
 			unset($except['teacher'][$tmp]);
 			continue;
 		}
-		$opt_tch_html .= '<option value="'.$res[$i]['id'].'">'.$res[$i]['fio'].'</option>';
+		$opt_tch_html .= '<option value="'.$res[$i]['id'].'">'.$res[$i]['fio'].' (доб. '.$res[$i]['update'].')</option>';
 	}
 	unset($except['teacher']);
 

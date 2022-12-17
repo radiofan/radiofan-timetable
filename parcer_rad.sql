@@ -1,13 +1,14 @@
 -- phpMyAdmin SQL Dump
--- version 4.6.4
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
--- Хост: 127.0.0.1
--- Время создания: Сен 05 2021 г., 14:22
--- Версия сервера: 5.7.15
--- Версия PHP: 7.0.10
+-- Хост: 127.0.0.1:3306
+-- Время создания: Май 25 2022 г., 22:57
+-- Версия сервера: 5.7.33
+-- Версия PHP: 7.1.33
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
 SET time_zone = "+00:00";
 
 
@@ -19,16 +20,6 @@ SET time_zone = "+00:00";
 --
 -- База данных: `parcer.rad`
 --
-
-DELIMITER $$
---
--- Функции
---
-CREATE DEFINER=`root`@`localhost` FUNCTION `MY_NOW` () RETURNS TIMESTAMP BEGIN
-	RETURN CONVERT_TZ(NOW(), @@global.time_zone, 'Asia/Barnaul');
-END$$
-
-DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -68,6 +59,17 @@ CREATE TABLE `our_u_roles` (
   `description` tinytext NOT NULL,
   `level` tinyint(3) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Дамп данных таблицы `our_u_roles`
+--
+
+INSERT INTO `our_u_roles` (`id`, `role`, `description`, `level`) VALUES
+(1, 'view_debug_info', 'видеть отладочную информацию', 101),
+(2, 'edit_users', 'управлять пользователями', 100),
+(3, 'edit_settings', 'управлять настройками сайта', 100),
+(4, 'ignore_max_token_remember', 'Игнорирование ограничения по количеству запомненных устройств', 100),
+(5, 'view_db_stat', 'Видеть статистику базы данных', 101);
 
 -- --------------------------------------------------------
 
@@ -126,6 +128,16 @@ CREATE TABLE `parameters` (
   `value` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Дамп данных таблицы `parameters`
+--
+
+INSERT INTO `parameters` (`id`, `key`, `value`) VALUES
+(1, 'update_interval_groups', 's:5:\"1 DAY\";'),
+(2, 'update_interval_timetable', 's:5:\"1 DAY\";'),
+(3, 'update_interval_first_week_day', 'i:30;'),
+(4, 'first_week_day', 'O:8:\"DateTime\":3:{s:4:\"date\";s:26:\"2020-09-14 00:00:00.000000\";s:13:\"timezone_type\";i:3;s:8:\"timezone\";s:12:\"Asia/Barnaul\";}');
+
 -- --------------------------------------------------------
 
 --
@@ -151,6 +163,24 @@ CREATE TABLE `stud_faculties` (
   `abbr` tinytext NOT NULL,
   `last_reload` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Дамп данных таблицы `stud_faculties`
+--
+
+INSERT INTO `stud_faculties` (`id`, `name`, `abbr`, `last_reload`) VALUES
+('02', 'Факультет энергомашиностроения и автомобильного транспорта', 'ФЭАТ', '2021-09-01 03:31:53'),
+('03', 'Строительно-технологический факультет', 'СТФ', '2021-09-01 03:31:58'),
+('07', 'Энергетический факультет', 'ЭФ', '2021-09-01 03:32:01'),
+('18', 'Заочный институт', '', '2021-09-01 03:31:34'),
+('20', 'Университетский технологический колледж', '', '2021-09-01 03:31:34'),
+('32', 'Институт архитектуры и дизайна', 'ИнАрхДиз', '2021-09-01 03:32:15'),
+('42', 'Институт развития дополнительного профессионального образования', '', '2021-09-01 03:31:34'),
+('70', 'Факультет информационных технологий', 'ФИТ', '2021-09-01 03:32:26'),
+('72', 'Факультет специальных технологий', 'ФСТ', '2021-09-01 03:32:30'),
+('73', 'Институт экономики и управления', '', '2021-09-01 03:31:34'),
+('74', 'Институт биотехнологии, пищевой и химической инженерии', 'ИнБиоХим', '2021-09-01 03:32:41'),
+('77', 'Аспирантура', '', '2021-09-01 03:31:34');
 
 -- --------------------------------------------------------
 
@@ -192,6 +222,20 @@ CREATE TABLE `stud_lesson_times` (
   `time_start` mediumint(9) NOT NULL COMMENT 'количество секунд [0; 86400)',
   `time_end` mediumint(9) NOT NULL COMMENT 'количество секунд (0; 86400]'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Дамп данных таблицы `stud_lesson_times`
+--
+
+INSERT INTO `stud_lesson_times` (`id`, `type`, `time_start`, `time_end`) VALUES
+(1, 1, 29700, 35100),
+(2, 1, 35700, 41100),
+(3, 1, 41700, 47100),
+(4, 1, 48900, 54300),
+(5, 1, 54900, 60300),
+(6, 1, 60900, 66300),
+(7, 1, 66900, 72300),
+(8, 1, 72900, 78300);
 
 -- --------------------------------------------------------
 
@@ -328,41 +372,49 @@ ALTER TABLE `stud_timetable`
 --
 ALTER TABLE `log_events`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
 --
 -- AUTO_INCREMENT для таблицы `our_u_roles`
 --
 ALTER TABLE `our_u_roles`
   MODIFY `id` smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
 --
 -- AUTO_INCREMENT для таблицы `our_u_users`
 --
 ALTER TABLE `our_u_users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
 --
 -- AUTO_INCREMENT для таблицы `parameters`
 --
 ALTER TABLE `parameters`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
 --
 -- AUTO_INCREMENT для таблицы `stud_cabinets`
 --
 ALTER TABLE `stud_cabinets`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=382;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
 --
 -- AUTO_INCREMENT для таблицы `stud_lessons`
 --
 ALTER TABLE `stud_lessons`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1642;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
 --
 -- AUTO_INCREMENT для таблицы `stud_lesson_times`
 --
 ALTER TABLE `stud_lesson_times`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
 --
 -- AUTO_INCREMENT для таблицы `stud_teachers`
 --
 ALTER TABLE `stud_teachers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=784;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
 --
 -- Ограничения внешнего ключа сохраненных таблиц
 --
@@ -400,6 +452,7 @@ ALTER TABLE `stud_timetable`
   ADD CONSTRAINT `tmt_group_id_key` FOREIGN KEY (`group_id`) REFERENCES `stud_groups` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `tmt_lesson_id_key` FOREIGN KEY (`lesson_id`) REFERENCES `stud_lessons` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `tmt_teacher_id_ley` FOREIGN KEY (`teacher_id`) REFERENCES `stud_teachers` (`id`) ON UPDATE CASCADE;
+COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
