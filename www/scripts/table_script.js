@@ -94,7 +94,7 @@ jQuery(document).ready(function($){
 	}
 
 	//TODO добавить скролл при наведении на палку
-	//TODO скролл при наведении на статики
+
 	//прокручивание заголовка
 	$table_body_cont.on('scroll.table', function(e){
 		//console.log($table_body.scrollLeft());

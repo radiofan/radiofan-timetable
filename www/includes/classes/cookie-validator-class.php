@@ -129,7 +129,7 @@ class rad_cookie{
 					$this->validated['timetable_parts'][$i] = array('html_type' => 'Препод: '.$tmp, 'type' => 'teacher');
 					break;
 				case 2://кабинет
-					$tmp = $parts[$i]['i'] ? $dat['cabinet'].$dat['cabinet_additive'].' '.$dat['building'] : 'Без кабинета';
+					$tmp = $parts[$i]['i'] ? $dat['cabinet'].$dat['additive'].' '.$dat['building'] : 'Без кабинета';
 					$this->validated['timetable_parts'][$i] = array('html_type' => 'Кабинет: '.$tmp, 'type' => 'cabinet');
 
 					break;
